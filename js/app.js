@@ -1,6 +1,7 @@
 ﻿/**
  * LUMA 🌟 - Controlador Principal de Aplicación
  * Plataforma social de grupos privados (Clean Luxury Edition).
+ * 100% Feature Parity con ATRIA (Recuerdos Trail, Películas con Rating Bar, Paper Notes, Frasco de Metas con Stats).
  */
 
 class LumaApp {
@@ -416,7 +417,6 @@ class LumaApp {
 
   // --- PERSONALIZADOR DE PERFIL INTERACTIVO ---
   bindProfileCustomizerInteractions() {
-    // 1. Pestañas internas
     document.querySelectorAll('.profile-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
@@ -428,7 +428,6 @@ class LumaApp {
       });
     });
 
-    // 2. Presets de Avatar
     document.querySelectorAll('.avatar-preset-item').forEach(item => {
       item.addEventListener('click', () => {
         document.querySelectorAll('.avatar-preset-item').forEach(i => i.classList.remove('active'));
@@ -439,7 +438,6 @@ class LumaApp {
       });
     });
 
-    // 3. Swatches de Color
     document.querySelectorAll('.color-swatch-circle').forEach(swatch => {
       swatch.addEventListener('click', () => {
         document.querySelectorAll('.color-swatch-circle').forEach(s => s.classList.remove('active'));
@@ -451,7 +449,6 @@ class LumaApp {
       });
     });
 
-    // 4. Status Quick Pills
     document.querySelectorAll('.status-quick-pill').forEach(pill => {
       pill.addEventListener('click', () => {
         document.querySelectorAll('.status-quick-pill').forEach(p => p.classList.remove('active'));
@@ -462,14 +459,12 @@ class LumaApp {
       });
     });
 
-    // 5. Inputs en vivo (Nombre, Handle, Bio, Estado)
     ['profile-name-input', 'profile-handle-input', 'profile-bio-input', 'profile-status-input'].forEach(id => {
       document.getElementById(id)?.addEventListener('input', () => {
         this.updateProfileLivePreview();
       });
     });
 
-    // 6. Subida de Avatar en Vivo
     document.getElementById('profile-avatar-file')?.addEventListener('change', async (e) => {
       if (e.target.files && e.target.files[0]) {
         this.activeUploadedAvatar = await window.Utils.fileToBase64(e.target.files[0]);
@@ -658,7 +653,6 @@ class LumaApp {
     if (hSer) hSer.textContent = stats.topSeries !== 'N/A' ? stats.topSeries : 'Arcane (T2:C1)';
     if (hGoa) hGoa.textContent = `${stats.goalsPct}% (${stats.completedGoals}/${stats.totalGoals || 1})`;
 
-    // Descripciones debajo de los valores
     const dMem = document.getElementById('home-insight-desc-memories');
     const dMon = document.getElementById('home-insight-desc-month');
     const dMov = document.getElementById('home-insight-desc-movie');
@@ -836,7 +830,7 @@ class LumaApp {
     document.getElementById('edit-group-cover-url').value = group.coverImage || '';
 
     this.openModal('modal-edit-group');
-  }  // --- 2. RENDER RECUERDOS ---
+  }  // --- 2. RENDER RECUERDOS (ATRIA TIMELINE TRAIL) ---
   renderMemories() {
     const container = document.getElementById('memories-grid-list');
     if (!container) return;
@@ -852,22 +846,18 @@ class LumaApp {
 
     if (memories.length === 0) {
       container.innerHTML = `
-        <div class="memory-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+        <div class="glass-card" style="text-align: center; padding: 2.5rem; color: var(--color-text-secondary); background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);">
           <span style="font-size: 2.2rem;">📸</span>
           <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">Aún no hay recuerdos guardados en este grupo.</p>
           <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-memory').click()">
-            + Añadir el Primer Recuerdo
+            + Añadir el Primer Recuerdo 🌟
           </button>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = '';
-    memories.forEach(mem => {
-      const card = document.createElement('div');
-      card.className = 'memory-card';
-
+    container.innerHTML = memories.map(mem => {
       const coverSrc = mem.coverImage || (mem.photos && mem.photos[0]) || '';
       const photosCount = (mem.photos && mem.photos.length) || (mem.coverImage ? 1 : 0);
 
@@ -896,34 +886,41 @@ class LumaApp {
         `;
       }
 
-      card.innerHTML = `
-        ${coverHtml}
-        <div class="memory-body">
-          <div class="memory-header-row">
-            <span class="memory-date">${window.Utils.formatDateES(mem.date)}</span>
-            ${mem.location ? `<span class="memory-location-tag">📍 ${window.Utils.sanitizeHTML(mem.location)}</span>` : ''}
-          </div>
-          <h3 class="memory-title">${window.Utils.sanitizeHTML(mem.title)}</h3>
-          ${mem.description ? `<p class="memory-desc">${window.Utils.sanitizeHTML(mem.description)}</p>` : ''}
-          ${songHtml}
-          <div class="memory-footer">
-            <span class="memory-author-tag">👤 ${window.Utils.sanitizeHTML(mem.author?.name || 'Miembro')}</span>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <button type="button" class="memory-comments-btn" onclick="window.app.openMemoryComments('${mem.id}')">
-                💬 ${(mem.comments || []).length}
-              </button>
-              <button type="button" class="btn-ghost" style="padding: 0.15rem 0.35rem; font-size: 0.75rem;" onclick="window.app.editMemory('${mem.id}')" title="Editar">
-                ✏️
-              </button>
-              <button type="button" class="btn-ghost" style="padding: 0.15rem 0.35rem; font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteMemory('${mem.id}')" title="Eliminar">
-                🗑️
-              </button>
+      return `
+        <div class="memory-node" data-id="${mem.id}">
+          <div class="luma-star-pin" title="Abrir recuerdo">🌟</div>
+          <div class="memory-card-body">
+            ${coverHtml}
+            <div class="memory-body">
+              <div class="memory-header-row">
+                <div class="memory-date">
+                  <span>📅 ${window.Utils.formatDateES(mem.date)}</span>
+                  ${mem.status === 'Destacado' ? '<span style="color: var(--color-gold); font-weight: 700;">⭐ Destacado</span>' : ''}
+                </div>
+                ${mem.location ? `<span class="memory-location-tag">📍 ${window.Utils.sanitizeHTML(mem.location)}</span>` : ''}
+              </div>
+              <h3 class="memory-title">${window.Utils.sanitizeHTML(mem.title)}</h3>
+              ${mem.description ? `<p class="memory-desc">${window.Utils.sanitizeHTML(mem.description)}</p>` : ''}
+              ${songHtml}
+              <div class="memory-footer">
+                <span class="memory-author-tag">👤 ${window.Utils.sanitizeHTML(mem.author?.name || 'Miembro')}</span>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <button type="button" class="memory-comments-btn" onclick="window.app.openMemoryComments('${mem.id}')">
+                    💬 ${(mem.comments || []).length}
+                  </button>
+                  <button type="button" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.78rem;" onclick="window.app.editMemory('${mem.id}')">
+                    Editar
+                  </button>
+                  <button type="button" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.78rem; color: var(--color-error);" onclick="window.app.deleteMemory('${mem.id}')">
+                    Eliminar
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       `;
-      container.appendChild(card);
-    });
+    }).join('');
 
     const sortSelect = document.getElementById('select-sort-memories');
     if (sortSelect) {
@@ -949,7 +946,7 @@ class LumaApp {
   }
 
   deleteMemory(id) {
-    if (confirm('¿Eliminar este recuerdo?')) {
+    if (confirm('¿Seguro que deseas eliminar este recuerdo?')) {
       this.storage.deleteMemory(id);
       window.Utils.showToast('Recuerdo eliminado', 'info');
       this.renderMemories();
@@ -1071,106 +1068,115 @@ class LumaApp {
     }
   }
 
-  // --- 4. RENDER CINE (PELÍCULAS) ---
+  // --- 4. RENDER CINE (ATRIA MOVIE RATING BAR & COMMENTS) ---
   renderMovies() {
     const container = document.getElementById('movies-grid-list');
+    const filter = document.getElementById('filter-movies-status')?.value || 'all';
     if (!container) return;
 
-    let movies = this.storage.getMovies();
-    const filterStatus = document.getElementById('filter-movies-status')?.value || 'all';
-
-    if (filterStatus !== 'all') {
-      movies = movies.filter(m => m.status === filterStatus);
+    let list = this.storage.getMovies();
+    if (filter !== 'all') {
+      list = list.filter(m => m.status === filter);
     }
 
-    if (movies.length === 0) {
-      container.innerHTML = `
-        <div class="movie-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
-          <span style="font-size: 2.2rem;">🎬</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay películas en esta lista.</p>
-          <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-movie').click()">
-            + Añadir Película desde TMDb
-          </button>
-        </div>
-      `;
+    if (list.length === 0) {
+      container.innerHTML = `<div class="glass-card" style="grid-column: 1 / -1; text-align: center; color: var(--color-text-secondary); background: #fff; padding: 2rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border);">No hay películas registradas en esta categoría.</div>`;
       return;
     }
 
-    container.innerHTML = '';
-    movies.forEach(movie => {
-      const card = document.createElement('div');
-      card.className = 'movie-card';
+    const group = this.storage.getActiveGroup();
+    const members = (group && group.members) || [];
 
-      const poster = movie.poster || 'assets/icon.png';
-      const avgBadge = movie.groupAverage ? `<div class="movie-score-badge">⭐ ${movie.groupAverage}</div>` : '';
-      const platform = movie.platform ? `<div class="movie-platform-badge">${window.Utils.sanitizeHTML(movie.platform)}</div>` : '';
+    container.innerHTML = list.map(m => {
+      const ratingsObj = m.ratings || {};
+      const ratingEntries = Object.entries(ratingsObj).filter(([k, v]) => v !== null && v !== undefined && v !== '');
 
-      const ratingsObj = movie.ratings || {};
-      const ratingsHtml = Object.entries(ratingsObj).map(([uid, r]) => {
-        return `<span class="user-rating-chip">⭐ ${r}/10</span>`;
+      let ratingHtml = '';
+      if (ratingEntries.length > 0) {
+        const sum = ratingEntries.reduce((acc, [, val]) => acc + parseFloat(val), 0);
+        const avg = sum / ratingEntries.length;
+        const breakdown = ratingEntries.map(([uid, score]) => {
+          const mem = members.find(x => x.id === uid);
+          const name = mem ? mem.name.split(' ')[0] : 'U';
+          return `${name}: ${window.Utils.formatDecimalES(score, 1)}`;
+        }).join(' | ');
+
+        ratingHtml = `<span>Promedio: <strong style="color: var(--color-gold);">${window.Utils.formatDecimalES(avg, 2)}/10</strong></span> <span>(${breakdown})</span>`;
+      } else {
+        ratingHtml = `<span style="color: var(--color-text-muted); font-size: 0.8rem;">Sin calificar</span>`;
+      }
+
+      const commentsObj = m.comments || {};
+      const commentsHtml = Object.entries(commentsObj).map(([uid, c]) => {
+        if (!c) return '';
+        const mem = members.find(x => x.id === uid);
+        const name = mem ? mem.name : 'Miembro';
+        return `<p class="movie-comment-quote">“${window.Utils.sanitizeHTML(c)}” — ${window.Utils.sanitizeHTML(name)}</p>`;
       }).join('');
 
-      card.innerHTML = `
-        <div class="movie-poster-wrap">
-          <img src="${poster}" class="movie-poster-img" alt="${window.Utils.sanitizeHTML(movie.title)}" loading="lazy" />
-          ${avgBadge}
-          ${platform}
-        </div>
-        <div class="movie-info">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <h3 class="movie-title">${window.Utils.sanitizeHTML(movie.title)} ${movie.year ? `(${movie.year})` : ''}</h3>
-            <span style="font-size: 0.72rem; font-weight: 700; color: ${movie.status === 'Favorita' ? 'var(--color-error)' : movie.status === 'Vista' ? 'var(--color-gold)' : 'var(--color-success)'};">
-              ${movie.status === 'Favorita' ? '❤️ Favorita' : movie.status === 'Vista' ? '🍿 Vista' : '🌱 Por ver'}
-            </span>
+      const statusClass = m.status === 'Favorita' ? 'Favorita' : m.status === 'Vista' ? 'Vista' : 'PorVer';
+      const statusLabel = m.status === 'Favorita' ? '❤️ Favorita' : m.status === 'Vista' ? '🍿 Vista' : '🌱 Por ver';
+
+      return `
+        <div class="movie-card" data-id="${m.id}">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+              <span class="movie-badge-status ${statusClass}">${statusLabel}</span>
+              <span style="font-size: 0.75rem; color: var(--color-text-muted); font-family: var(--font-mono);">${'⭐'.repeat(m.priority || 5)}</span>
+            </div>
+            <h3 class="movie-title-heading">
+              ${window.Utils.sanitizeHTML(m.title)} <span style="font-size: 0.9rem; color: var(--color-text-secondary); font-family: var(--font-mono);">(${m.year || ''})</span>
+            </h3>
+            <p class="movie-meta-sub">Propuesta por: <strong>${window.Utils.sanitizeHTML(m.proposedBy || 'Miembro')}</strong> · Prioridad: ${m.priority || 5}/5 ⭐</p>
+            ${commentsHtml ? `<div class="movie-comments-list">${commentsHtml}</div>` : ''}
           </div>
-          <div class="movie-recommender">Por: ${window.Utils.sanitizeHTML(movie.proposedBy || 'Miembro')}</div>
-          ${ratingsHtml ? `<div class="movie-ratings-pills">${ratingsHtml}</div>` : ''}
-          <div style="margin-top: auto; padding-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;" onclick="window.app.openRateMovieModal('${movie.id}')">
-              ⭐ Calificar
-            </button>
-            <div style="display: flex; gap: 0.3rem;">
-              <button type="button" class="btn-ghost" style="font-size: 0.75rem;" onclick="window.app.toggleMovieFavorite('${movie.id}')" title="Marcar favorita">
-                ${movie.status === 'Favorita' ? '❤️' : '🤍'}
+          <div>
+            <div class="movie-rating-bar">${ratingHtml}</div>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.85rem;">
+              <button type="button" class="btn-secondary" onclick="window.app.openEditMovieModal('${m.id}')" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                Editar
               </button>
-              <button type="button" class="btn-ghost" style="font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteMovie('${movie.id}')" title="Eliminar">
-                🗑️
+              <button type="button" class="btn-secondary" onclick="window.app.deleteMovie('${m.id}')" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; color: var(--color-error);">
+                Eliminar
               </button>
             </div>
           </div>
         </div>
       `;
-      container.appendChild(card);
-    });
+    }).join('');
 
-    const statusFilter = document.getElementById('filter-movies-status');
-    if (statusFilter) statusFilter.onchange = () => this.renderMovies();
+    document.getElementById('filter-movies-status')?.addEventListener('change', () => this.renderMovies());
   }
 
-  toggleMovieFavorite(movieId) {
-    const movie = this.storage.getMovies().find(m => m.id === movieId);
-    if (movie) {
-      movie.status = movie.status === 'Favorita' ? 'Vista' : 'Favorita';
-      this.storage.saveMovie(movie);
-      this.renderMovies();
-    }
-  }
-
-  openRateMovieModal(movieId) {
+  openEditMovieModal(movieId) {
     const movie = this.storage.getMovies().find(m => m.id === movieId);
     if (!movie) return;
 
+    const group = this.storage.getActiveGroup();
+    const members = (group && group.members) || [];
     const user = this.storage.getUserProfile();
-    document.getElementById('rate-movie-id').value = movieId;
-    document.getElementById('rate-movie-title').textContent = `${movie.title} (${movie.year || ''})`;
-    document.getElementById('movie-user-rating-input').value = (movie.ratings && movie.ratings[user?.id]) || 10;
-    document.getElementById('movie-user-comment-input').value = (movie.comments && movie.comments[user?.id]) || '';
 
-    this.openModal('modal-rate-movie');
+    document.getElementById('movie-id').value = movie.id;
+    document.getElementById('movie-title-input').value = movie.title || '';
+    document.getElementById('movie-year-input').value = movie.year || new Date().getFullYear();
+
+    const propSelect = document.getElementById('movie-proposed-select');
+    if (propSelect) {
+      propSelect.innerHTML = members.map(m => `
+        <option value="${window.Utils.sanitizeHTML(m.name)}" ${m.name === movie.proposedBy ? 'selected' : ''}>${window.Utils.sanitizeHTML(m.name)}</option>
+      `).join('');
+    }
+
+    document.getElementById('movie-priority-select').value = movie.priority || 5;
+    document.getElementById('movie-status-select').value = movie.status || 'Por ver';
+    document.getElementById('movie-rating-input').value = (movie.ratings && movie.ratings[user?.id]) || '';
+    document.getElementById('movie-comment-input').value = (movie.comments && movie.comments[user?.id]) || '';
+
+    this.openModal('modal-movie');
   }
 
   deleteMovie(movieId) {
-    if (confirm('¿Eliminar esta película de la lista?')) {
+    if (confirm('¿Eliminar esta película de la biblioteca?')) {
       this.storage.deleteMovie(movieId);
       window.Utils.showToast('Película eliminada', 'info');
       this.renderMovies();
@@ -1196,7 +1202,7 @@ class LumaApp {
           <span style="font-size: 2.2rem;">📺</span>
           <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay series en esta sección.</p>
           <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-series').click()">
-            + Añadir Serie desde TMDb
+            + Añadir Serie 📺
           </button>
         </div>
       `;
@@ -1214,22 +1220,22 @@ class LumaApp {
       const progressPct = Math.min(100, Math.round((curEp / totEp) * 100));
 
       card.innerHTML = `
-        <div class="movie-poster-wrap">
-          <img src="${poster}" class="movie-poster-img" alt="${window.Utils.sanitizeHTML(series.title)}" loading="lazy" />
-          ${series.platform ? `<div class="movie-platform-badge">${window.Utils.sanitizeHTML(series.platform)}</div>` : ''}
+        <div class="movie-poster-wrap" style="height: 160px; overflow: hidden; position: relative;">
+          <img src="${poster}" class="movie-poster-img" alt="${window.Utils.sanitizeHTML(series.title)}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" />
+          ${series.platform ? `<div class="movie-platform-badge" style="position:absolute; top:0.5rem; right:0.5rem; background:rgba(0,0,0,0.7); color:#fff; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">${window.Utils.sanitizeHTML(series.platform)}</div>` : ''}
         </div>
-        <div class="movie-info">
+        <div style="padding: 1.15rem; display: flex; flex-direction: column; flex: 1;">
           <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <h3 class="movie-title">${window.Utils.sanitizeHTML(series.title)}</h3>
+            <h3 class="movie-title-heading" style="font-size: 1.15rem;">${window.Utils.sanitizeHTML(series.title)}</h3>
             <button type="button" class="btn-ghost" style="padding: 0.1rem 0.3rem; font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteSeries('${series.id}')">🗑️</button>
           </div>
-          <div style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700;">
-            Temp. ${series.currentSeason || 1} · Cap. ${curEp} / ${totEp}
+          <div style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700; margin-top: 0.2rem;">
+            Temp. ${series.currentSeason || 1} · Cap. ${curEp} / ${totEp} (${progressPct}%)
           </div>
           <div class="series-progress-bar-wrap">
             <div class="series-progress-fill" style="width: ${progressPct}%;"></div>
           </div>
-          <div style="display: flex; gap: 0.4rem; margin-top: auto; padding-top: 0.5rem;">
+          <div style="display: flex; gap: 0.4rem; margin-top: auto; padding-top: 0.6rem;">
             <button type="button" class="btn-secondary" style="flex: 1; padding: 0.35rem; font-size: 0.78rem;" onclick="window.app.stepSeriesEpisode('${series.id}', -1)">
               ◀ -1 Cap
             </button>
@@ -1272,153 +1278,146 @@ class LumaApp {
     }
   }
 
-  // --- 6. RENDER NOTAS ---
+  // --- 6. RENDER NOTAS (ATRIA PAPER NOTES) ---
   renderNotes() {
     const container = document.getElementById('notes-grid-list');
     if (!container) return;
 
-    let notes = this.storage.getNotes();
-    const filterType = document.getElementById('filter-notes-type')?.value || 'all';
+    let list = this.storage.getNotes();
+    list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    if (filterType !== 'all') {
-      notes = notes.filter(n => n.type === filterType);
-    }
-
-    if (notes.length === 0) {
-      container.innerHTML = `
-        <div class="note-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
-          <span style="font-size: 2.2rem;">📝</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">El tablero está despejado.</p>
-          <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-note').click()">
-            + Escribir una Nota o Idea
-          </button>
-        </div>
-      `;
+    if (list.length === 0) {
+      container.innerHTML = `<div class="glass-card" style="grid-column: 1 / -1; text-align: center; color: var(--color-text-secondary); background: #fff; padding: 2.5rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border);">El muro está esperando vuestras primeras palabras. 💌</div>`;
       return;
     }
 
-    container.innerHTML = '';
-    notes.forEach(note => {
-      const card = document.createElement('div');
-      card.className = 'note-card';
-
-      const typeClass = (note.type || 'nota').toLowerCase();
+    container.innerHTML = list.map(n => {
       let imgHtml = '';
-      if (note.image) {
-        imgHtml = `<img src="${note.image}" class="note-img-thumb" alt="Adjunto" onclick="window.app.openLightbox('${note.image}')" loading="lazy" />`;
+      if (n.image) {
+        imgHtml = `<img src="${n.image}" class="note-img-thumb" alt="Adjunto" onclick="window.app.openLightbox('${n.image}')" loading="lazy" />`;
       }
 
-      card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span class="note-type-badge ${typeClass}">${window.Utils.sanitizeHTML(note.type || 'Nota')}</span>
-          <button type="button" class="btn-ghost" style="padding: 0.2rem; font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteNote('${note.id}')">🗑️</button>
-        </div>
-        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-main); margin-top: 0.2rem;">
-          ${window.Utils.sanitizeHTML(note.title)}
-        </h3>
-        <p class="note-content">${window.Utils.sanitizeHTML(note.content || note.message || '')}</p>
-        ${imgHtml}
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--color-border); font-size: 0.75rem; color: var(--color-text-muted);">
-          <span>👤 ${window.Utils.sanitizeHTML(note.author || 'Miembro')}</span>
-          <span>${window.Utils.formatDateES(note.createdAt)}</span>
+      return `
+        <div class="paper-note" data-id="${n.id}">
+          <div class="paper-note-header">
+            <span class="paper-author">${window.Utils.sanitizeHTML(n.author || 'Miembro')}</span>
+            <span class="paper-date">${window.Utils.formatDateTimeES(n.createdAt)}</span>
+          </div>
+          <div class="paper-content">${window.Utils.sanitizeHTML(n.content || n.message || '')}</div>
+          ${imgHtml}
+          <div style="display: flex; justify-content: flex-end; gap: 0.4rem; margin-top: 1rem;">
+            <button type="button" class="btn-secondary" onclick="window.app.editNote('${n.id}')" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;">Editar</button>
+            <button type="button" class="btn-secondary" onclick="window.app.deleteNote('${n.id}')" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; color: var(--color-error);">Eliminar</button>
+          </div>
         </div>
       `;
-      container.appendChild(card);
-    });
+    }).join('');
+  }
 
-    const typeFilter = document.getElementById('filter-notes-type');
-    if (typeFilter) typeFilter.onchange = () => this.renderNotes();
+  editNote(noteId) {
+    const note = this.storage.getNotes().find(n => n.id === noteId);
+    if (!note) return;
+
+    document.getElementById('note-title-input').value = note.title || 'Nota';
+    document.getElementById('note-content-input').value = note.content || note.message || '';
+    this.openModal('modal-note');
   }
 
   deleteNote(noteId) {
-    if (confirm('¿Eliminar esta nota del tablero?')) {
+    if (confirm('¿Eliminar esta nota del muro?')) {
       this.storage.deleteNote(noteId);
       this.renderNotes();
+      window.Utils.showToast('Nota eliminada', 'info');
     }
   }
 
-  // --- 7. RENDER OBJETIVOS ---
+  // --- 7. RENDER OBJETIVOS (ATRIA FRASCO DE SUEÑOS & STATS) ---
   renderGoals() {
     const container = document.getElementById('goals-grid-list');
     if (!container) return;
 
-    let goals = this.storage.getGoals();
-    const filterCat = document.getElementById('filter-goals-category')?.value || 'all';
-    const filterStatus = document.getElementById('filter-goals-status')?.value || 'all';
+    const list = this.storage.getGoals();
+    const total = list.length;
+    const completed = list.filter(d => d.status === 'Cumplido').length;
+    const pending = total - completed;
+    const pct = total > 0 ? (completed / total) * 100 : 0;
 
-    if (filterCat !== 'all') goals = goals.filter(g => g.category === filterCat);
-    if (filterStatus !== 'all') goals = goals.filter(g => g.status === filterStatus);
+    const statTotal = document.getElementById('stat-goals-total');
+    const statCompleted = document.getElementById('stat-goals-completed');
+    const statPending = document.getElementById('stat-goals-pending');
+    const statPct = document.getElementById('stat-goals-pct');
 
-    if (goals.length === 0) {
-      container.innerHTML = `
-        <div class="goal-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
-          <span style="font-size: 2.2rem;">🎯</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay metas en esta categoría.</p>
-          <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-goal').click()">
-            + Crear Objetivo Compartido
-          </button>
-        </div>
-      `;
+    if (statTotal) statTotal.textContent = window.Utils.formatNumberES(total);
+    if (statCompleted) statCompleted.textContent = window.Utils.formatNumberES(completed);
+    if (statPending) statPending.textContent = window.Utils.formatNumberES(pending);
+    if (statPct) statPct.textContent = window.Utils.formatDecimalES(pct, 2) + ' %';
+
+    if (total === 0) {
+      container.innerHTML = `<div class="glass-card" style="text-align: center; color: var(--color-text-secondary); background: #fff; padding: 2.5rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border);">El frasco está listo para guardar nuevas metas y sueños juntos. ✨</div>`;
       return;
     }
 
-    container.innerHTML = '';
-    goals.forEach(goal => {
-      const card = document.createElement('div');
-      const isDone = goal.status === 'Cumplido';
-      card.className = `goal-card ${isDone ? 'completed' : ''}`;
-
-      card.innerHTML = `
-        <div class="goal-top-row">
-          <span class="goal-category-badge">${window.Utils.sanitizeHTML(goal.category || 'General')}</span>
-          <span style="font-size: 0.78rem; font-weight: 700; color: ${isDone ? 'var(--color-success)' : 'var(--color-primary)'};">
-            ${isDone ? '✅ Cumplido' : '🌱 Pendiente'}
-          </span>
-        </div>
-        <h3 class="goal-title">${window.Utils.sanitizeHTML(goal.title)}</h3>
-        ${goal.targetDate ? `<div style="font-size: 0.8rem; color: var(--color-text-secondary);">📅 Fecha objetivo: <strong>${window.Utils.formatDateES(goal.targetDate)}</strong></div>` : ''}
-        ${goal.participants && goal.participants.length > 0 ? `
-          <div class="goal-participants">
-            <span>👥 Participantes:</span>
-            <span>${window.Utils.sanitizeHTML(goal.participants.join(', '))}</span>
+    container.innerHTML = list.map(d => {
+      const isDone = d.status === 'Cumplido';
+      return `
+        <div class="dream-item-card ${isDone ? 'completed' : ''}" data-id="${d.id}">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <button type="button" class="btn-toggle-dream" onclick="window.app.toggleGoal('${d.id}')" title="Marcar como cumplido">
+              ${isDone ? '🌟' : '🌱'}
+            </button>
+            <div>
+              <span class="dream-title-text">${window.Utils.sanitizeHTML(d.title)}</span>
+              <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.2rem;">
+                ${d.completedAt ? `Cumplido: ${window.Utils.formatDateES(d.completedAt)}` : `Añadido: ${window.Utils.formatDateES(d.createdAt)}`}
+                ${d.category ? ` · <span style="font-weight:600; color:var(--color-primary);">${window.Utils.sanitizeHTML(d.category)}</span>` : ''}
+              </div>
+            </div>
           </div>
-        ` : ''}
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.6rem;">
-          <button type="button" class="${isDone ? 'btn-secondary' : 'btn-primary'}" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;" onclick="window.app.toggleGoal('${goal.id}')">
-            ${isDone ? 'Desmarcar' : '✨ ¡Cumplido!'}
-          </button>
-          <button type="button" class="btn-ghost" style="color: var(--color-error); font-size: 0.8rem;" onclick="window.app.deleteGoal('${goal.id}')">
-            🗑️
-          </button>
+          <div style="display: flex; gap: 0.4rem;">
+            <button type="button" class="btn-secondary" onclick="window.app.editGoal('${d.id}')" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;">Editar</button>
+            <button type="button" class="btn-secondary" onclick="window.app.deleteGoal('${d.id}')" style="padding: 0.2rem 0.55rem; font-size: 0.75rem; color: var(--color-error);">Eliminar</button>
+          </div>
         </div>
       `;
-      container.appendChild(card);
-    });
+    }).join('');
 
-    const catFilter = document.getElementById('filter-goals-category');
-    if (catFilter) catFilter.onchange = () => this.renderGoals();
-    const statFilter = document.getElementById('filter-goals-status');
-    if (statFilter) statFilter.onchange = () => this.renderGoals();
+    document.getElementById('filter-goals-category')?.addEventListener('change', () => this.filterGoalsList());
+    document.getElementById('filter-goals-status')?.addEventListener('change', () => this.filterGoalsList());
+  }
+
+  filterGoalsList() {
+    this.renderGoals();
   }
 
   toggleGoal(goalId) {
-    this.storage.toggleGoalStatus(goalId);
-    const goal = this.storage.getGoals().find(g => g.id === goalId);
-    if (goal && goal.status === 'Cumplido') {
+    const { justCompleted } = this.storage.toggleGoalStatus(goalId);
+    if (justCompleted) {
       window.Animations.triggerLumaBurst();
-      window.Utils.showToast('¡Objetivo cumplido con éxito! 🎯✨', 'success');
+      window.Utils.showToast('¡Meta cumplida con éxito! 🌟✨', 'success');
     } else {
-      window.Utils.showToast('Estado del objetivo actualizado', 'info');
+      window.Utils.showToast('Estado de la meta actualizado', 'info');
     }
     this.renderGoals();
     this.renderInicio();
   }
 
+  editGoal(goalId) {
+    const goal = this.storage.getGoals().find(g => g.id === goalId);
+    if (!goal) return;
+
+    document.getElementById('goal-title-input').value = goal.title || '';
+    document.getElementById('goal-category-select').value = goal.category || 'General';
+    document.getElementById('goal-date-input').value = goal.targetDate || '';
+    document.getElementById('goal-participants-input').value = (goal.participants || []).join(', ');
+    this.openModal('modal-goal');
+  }
+
   deleteGoal(goalId) {
-    if (confirm('¿Eliminar este objetivo?')) {
+    if (confirm('¿Eliminar este sueño del frasco?')) {
       this.storage.deleteGoal(goalId);
       this.renderGoals();
       this.renderInicio();
+      window.Utils.showToast('Meta eliminada', 'info');
     }
   }  // --- REPRODUCTOR DE AUDIO BAR ---
   renderAudioPlayerBar(state) {
@@ -1475,6 +1474,12 @@ class LumaApp {
       });
     });
 
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+      }
+    });
+
     document.getElementById('btn-new-memory')?.addEventListener('click', () => {
       document.getElementById('form-memory')?.reset();
       document.getElementById('memory-edit-id').value = '';
@@ -1488,8 +1493,19 @@ class LumaApp {
     });
 
     document.getElementById('btn-new-movie')?.addEventListener('click', () => {
-      window.location.hash = '#cine';
-      document.getElementById('movie-search-input')?.focus();
+      document.getElementById('form-movie')?.reset();
+      document.getElementById('movie-id').value = '';
+      document.getElementById('movie-year-input').value = new Date().getFullYear();
+      
+      const group = this.storage.getActiveGroup();
+      const members = (group && group.members) || [];
+      const propSelect = document.getElementById('movie-proposed-select');
+      if (propSelect) {
+        propSelect.innerHTML = members.map(m => `
+          <option value="${window.Utils.sanitizeHTML(m.name)}">${window.Utils.sanitizeHTML(m.name)}</option>
+        `).join('');
+      }
+      this.openModal('modal-movie');
     });
 
     document.getElementById('btn-new-series')?.addEventListener('click', () => {
@@ -1652,7 +1668,7 @@ class LumaApp {
       };
     }
 
-    // 5. Formulario Recuerdo
+    // 5. Formulario Recuerdo (ATRIA PARITY)
     const formMemory = document.getElementById('form-memory');
     if (formMemory) {
       formMemory.onsubmit = async (e) => {
@@ -1689,13 +1705,65 @@ class LumaApp {
 
         this.storage.saveMemory(newMem);
         this.closeModal('modal-memory');
-        window.Utils.showToast('Recuerdo guardado para siempre 📸', 'success');
+        window.Utils.showToast('Recuerdo guardado con éxito 📸🌻', 'success');
         this.renderMemories();
         this.renderInicio();
       };
     }
 
-    // 6. Formulario Canción
+    // 6. Formulario Película (ATRIA FULL PARITY)
+    const formMovie = document.getElementById('form-movie');
+    if (formMovie) {
+      formMovie.onsubmit = (e) => {
+        e.preventDefault();
+        const id = document.getElementById('movie-id').value;
+        const title = document.getElementById('movie-title-input').value.trim();
+        const year = parseInt(document.getElementById('movie-year-input').value, 10);
+        const proposedBy = document.getElementById('movie-proposed-select').value;
+        const priority = parseInt(document.getElementById('movie-priority-select').value, 10) || 5;
+        const status = document.getElementById('movie-status-select').value;
+        const ratingVal = document.getElementById('movie-rating-input').value;
+        const comment = document.getElementById('movie-comment-input').value.trim();
+        const poster = document.getElementById('movie-poster-url').value;
+
+        const user = this.storage.getUserProfile();
+        const movieObj = {
+          id: id || null,
+          title,
+          year,
+          proposedBy,
+          priority,
+          status,
+          poster: poster || null,
+          ratings: {},
+          comments: {}
+        };
+
+        if (id) {
+          const existing = this.storage.getMovies().find(m => m.id === id);
+          if (existing) {
+            movieObj.ratings = { ...(existing.ratings || {}) };
+            movieObj.comments = { ...(existing.comments || {}) };
+            movieObj.poster = existing.poster || poster;
+          }
+        }
+
+        if (ratingVal !== '') {
+          movieObj.ratings[user?.id] = parseFloat(ratingVal);
+        }
+        if (comment !== '') {
+          movieObj.comments[user?.id] = comment;
+        }
+
+        this.storage.saveMovie(movieObj);
+        this.closeModal('modal-movie');
+        window.Utils.showToast('Película guardada en la biblioteca 🎬', 'success');
+        this.renderMovies();
+        this.renderInicio();
+      };
+    }
+
+    // 7. Formulario Canción
     const formSong = document.getElementById('form-song');
     if (formSong) {
       formSong.onsubmit = (e) => {
@@ -1721,23 +1789,6 @@ class LumaApp {
         this.closeModal('modal-song');
         window.Utils.showToast('Canción añadida al grupo 🎵', 'success');
         this.renderSongs();
-        this.renderInicio();
-      };
-    }
-
-    // 7. Formulario Calificar Película
-    const formRateMovie = document.getElementById('form-rate-movie');
-    if (formRateMovie) {
-      formRateMovie.onsubmit = (e) => {
-        e.preventDefault();
-        const movieId = document.getElementById('rate-movie-id').value;
-        const rating = parseFloat(document.getElementById('movie-user-rating-input').value);
-        const comment = document.getElementById('movie-user-comment-input').value.trim();
-
-        this.storage.addMovieRating(movieId, rating, comment);
-        this.closeModal('modal-rate-movie');
-        window.Utils.showToast('¡Calificación guardada! ⭐', 'success');
-        this.renderMovies();
         this.renderInicio();
       };
     }
@@ -1768,7 +1819,7 @@ class LumaApp {
       };
     }
 
-    // 9. Formulario Objetivo
+    // 9. Formulario Objetivo / Sueño (ATRIA PARITY)
     const formGoal = document.getElementById('form-goal');
     if (formGoal) {
       formGoal.onsubmit = (e) => {
@@ -1787,13 +1838,13 @@ class LumaApp {
         });
 
         this.closeModal('modal-goal');
-        window.Utils.showToast('Objetivo compartido creado ✨', 'success');
+        window.Utils.showToast('Sueño guardado en el frasco ✨🌟', 'success');
         this.renderGoals();
         this.renderInicio();
       };
     }
 
-    // 10. Formulario Nota
+    // 10. Formulario Nota (ATRIA PARITY)
     const formNote = document.getElementById('form-note');
     if (formNote) {
       formNote.onsubmit = async (e) => {
@@ -1810,11 +1861,12 @@ class LumaApp {
           title,
           type,
           content,
-          image
+          image,
+          author: this.storage.getUserProfile()?.name || 'Miembro'
         });
 
         this.closeModal('modal-note');
-        window.Utils.showToast('Nota publicada en el tablero 📝', 'success');
+        window.Utils.showToast('Nota publicada en el muro 💌', 'success');
         this.renderNotes();
       };
     }
