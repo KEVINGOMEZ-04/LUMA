@@ -82,7 +82,6 @@ class LumaApp {
       if (appContainer) appContainer.style.display = 'none';
       this.bindOnboardingActions();
     } else {
-      // Si ya hay grupo activo, entra directamente a la aplicación
       if (onboardingScreen) onboardingScreen.style.display = 'none';
       if (appContainer) appContainer.style.display = 'flex';
       
@@ -500,7 +499,6 @@ class LumaApp {
     if (genderSelect) genderSelect.value = p.gender || 'No especificado';
     if (colorInput) colorInput.value = this.activeProfileColor;
 
-    // Activar preset correspondiente
     document.querySelectorAll('.avatar-preset-item').forEach(item => {
       if (item.getAttribute('data-preset') === this.activePresetAvatar && !this.activeUploadedAvatar) {
         item.classList.add('active');
@@ -509,7 +507,6 @@ class LumaApp {
       }
     });
 
-    // Activar swatch correspondiente
     document.querySelectorAll('.color-swatch-circle').forEach(swatch => {
       if (swatch.getAttribute('data-color').toLowerCase() === this.activeProfileColor.toLowerCase()) {
         swatch.classList.add('active');
@@ -813,7 +810,6 @@ class LumaApp {
           this.storage.switchGroup(g.id);
           this.closeModal('modal-groups-list');
           
-          // Entrar directamente a la app
           document.getElementById('onboarding-screen').style.display = 'none';
           document.getElementById('app-container').style.display = 'flex';
           this.updateHeader();
@@ -912,9 +908,17 @@ class LumaApp {
           ${songHtml}
           <div class="memory-footer">
             <span class="memory-author-tag">👤 ${window.Utils.sanitizeHTML(mem.author?.name || 'Miembro')}</span>
-            <button type="button" class="memory-comments-btn" onclick="window.app.openMemoryComments('${mem.id}')">
-              💬 ${(mem.comments || []).length} comentarios
-            </button>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button type="button" class="memory-comments-btn" onclick="window.app.openMemoryComments('${mem.id}')">
+                💬 ${(mem.comments || []).length}
+              </button>
+              <button type="button" class="btn-ghost" style="padding: 0.15rem 0.35rem; font-size: 0.75rem;" onclick="window.app.editMemory('${mem.id}')" title="Editar">
+                ✏️
+              </button>
+              <button type="button" class="btn-ghost" style="padding: 0.15rem 0.35rem; font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteMemory('${mem.id}')" title="Eliminar">
+                🗑️
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -924,6 +928,32 @@ class LumaApp {
     const sortSelect = document.getElementById('select-sort-memories');
     if (sortSelect) {
       sortSelect.onchange = () => this.renderMemories();
+    }
+  }
+
+  editMemory(memId) {
+    const mem = this.storage.getMemories().find(m => m.id === memId);
+    if (!mem) return;
+
+    document.getElementById('memory-edit-id').value = mem.id;
+    document.getElementById('memory-title-input').value = mem.title || '';
+    document.getElementById('memory-date-input').value = mem.date || '';
+    document.getElementById('memory-location-input').value = mem.location || '';
+    document.getElementById('memory-desc-input').value = mem.description || '';
+    if (mem.song) {
+      document.getElementById('memory-song-title').value = mem.song.title || '';
+      document.getElementById('memory-song-artist').value = mem.song.artist || '';
+      document.getElementById('memory-song-preview').value = mem.song.previewUrl || '';
+    }
+    this.openModal('modal-memory');
+  }
+
+  deleteMemory(id) {
+    if (confirm('¿Eliminar este recuerdo?')) {
+      this.storage.deleteMemory(id);
+      window.Utils.showToast('Recuerdo eliminado', 'info');
+      this.renderMemories();
+      this.renderInicio();
     }
   }
 
@@ -979,18 +1009,34 @@ class LumaApp {
             <div class="song-rating-stars">${'⭐'.repeat(song.rating || 5)}</div>
           </div>
         </div>
-        ${song.review ? `<div style="font-size: 0.82rem; color: var(--color-text-secondary); font-style: italic;">«${window.Utils.sanitizeHTML(song.review)}»</div>` : ''}
+        ${song.review ? `<div style="font-size: 0.82rem; color: var(--color-text-secondary); font-style: italic;">«${window.Utils.sanitizeHTML(song.review)}» — ${window.Utils.sanitizeHTML(song.addedBy || 'Miembro')}</div>` : ''}
         <div class="song-actions">
           <button type="button" class="btn-play-preview" onclick="window.app.playTrackDirectly('${song.id}')">
             <span>▶</span> Reproducir Preview
           </button>
-          <button type="button" class="btn-ghost" style="font-size: 0.78rem;" onclick="window.app.showLyrics('${window.Utils.sanitizeHTML(song.artist)}', '${window.Utils.sanitizeHTML(song.title)}')">
-            📄 Letra
-          </button>
+          <div style="display: flex; gap: 0.3rem;">
+            <button type="button" class="btn-ghost" style="font-size: 0.78rem;" onclick="window.app.showLyrics('${window.Utils.sanitizeHTML(song.artist)}', '${window.Utils.sanitizeHTML(song.title)}')">
+              📄 Letra
+            </button>
+            <button type="button" class="btn-ghost" style="font-size: 0.78rem; color: var(--color-error);" onclick="window.app.deleteSong('${song.id}')">
+              🗑️
+            </button>
+          </div>
         </div>
       `;
       container.appendChild(card);
     });
+  }
+
+  deleteSong(songId) {
+    if (confirm('¿Eliminar esta canción de la lista del grupo?')) {
+      const data = this.storage.getGroupData();
+      data.songs = (data.songs || []).filter(s => s.id !== songId);
+      this.storage.saveGroupData(null, data);
+      window.Utils.showToast('Canción eliminada', 'info');
+      this.renderSongs();
+      this.renderInicio();
+    }
   }
 
   playTrackDirectly(songId) {
@@ -1071,16 +1117,26 @@ class LumaApp {
           ${platform}
         </div>
         <div class="movie-info">
-          <h3 class="movie-title">${window.Utils.sanitizeHTML(movie.title)} ${movie.year ? `(${movie.year})` : ''}</h3>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <h3 class="movie-title">${window.Utils.sanitizeHTML(movie.title)} ${movie.year ? `(${movie.year})` : ''}</h3>
+            <span style="font-size: 0.72rem; font-weight: 700; color: ${movie.status === 'Favorita' ? 'var(--color-error)' : movie.status === 'Vista' ? 'var(--color-gold)' : 'var(--color-success)'};">
+              ${movie.status === 'Favorita' ? '❤️ Favorita' : movie.status === 'Vista' ? '🍿 Vista' : '🌱 Por ver'}
+            </span>
+          </div>
           <div class="movie-recommender">Por: ${window.Utils.sanitizeHTML(movie.proposedBy || 'Miembro')}</div>
           ${ratingsHtml ? `<div class="movie-ratings-pills">${ratingsHtml}</div>` : ''}
-          <div style="margin-top: auto; padding-top: 0.75rem; display: flex; justify-content: space-between;">
+          <div style="margin-top: auto; padding-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
             <button type="button" class="btn-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;" onclick="window.app.openRateMovieModal('${movie.id}')">
               ⭐ Calificar
             </button>
-            <button type="button" class="btn-ghost" style="font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteMovie('${movie.id}')">
-              🗑️
-            </button>
+            <div style="display: flex; gap: 0.3rem;">
+              <button type="button" class="btn-ghost" style="font-size: 0.75rem;" onclick="window.app.toggleMovieFavorite('${movie.id}')" title="Marcar favorita">
+                ${movie.status === 'Favorita' ? '❤️' : '🤍'}
+              </button>
+              <button type="button" class="btn-ghost" style="font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteMovie('${movie.id}')" title="Eliminar">
+                🗑️
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -1089,6 +1145,15 @@ class LumaApp {
 
     const statusFilter = document.getElementById('filter-movies-status');
     if (statusFilter) statusFilter.onchange = () => this.renderMovies();
+  }
+
+  toggleMovieFavorite(movieId) {
+    const movie = this.storage.getMovies().find(m => m.id === movieId);
+    if (movie) {
+      movie.status = movie.status === 'Favorita' ? 'Vista' : 'Favorita';
+      this.storage.saveMovie(movie);
+      this.renderMovies();
+    }
   }
 
   openRateMovieModal(movieId) {
@@ -1109,6 +1174,7 @@ class LumaApp {
       this.storage.deleteMovie(movieId);
       window.Utils.showToast('Película eliminada', 'info');
       this.renderMovies();
+      this.renderInicio();
     }
   }
 
@@ -1153,7 +1219,10 @@ class LumaApp {
           ${series.platform ? `<div class="movie-platform-badge">${window.Utils.sanitizeHTML(series.platform)}</div>` : ''}
         </div>
         <div class="movie-info">
-          <h3 class="movie-title">${window.Utils.sanitizeHTML(series.title)}</h3>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <h3 class="movie-title">${window.Utils.sanitizeHTML(series.title)}</h3>
+            <button type="button" class="btn-ghost" style="padding: 0.1rem 0.3rem; font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteSeries('${series.id}')">🗑️</button>
+          </div>
           <div style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700;">
             Temp. ${series.currentSeason || 1} · Cap. ${curEp} / ${totEp}
           </div>
@@ -1181,8 +1250,25 @@ class LumaApp {
     const series = this.storage.getSeries().find(s => s.id === seriesId);
     if (series) {
       series.currentEpisode = Math.max(1, (series.currentEpisode || 1) + delta);
+      if (series.totalEpisodes && series.currentEpisode >= series.totalEpisodes) {
+        series.status = 'Completada';
+        window.Animations.triggerLumaBurst();
+        window.Utils.showToast(`¡Completaron "${series.title}"! 🎉✨`, 'success');
+      }
       this.storage.saveSeries(series);
       this.renderSeries();
+      this.renderInicio();
+    }
+  }
+
+  deleteSeries(seriesId) {
+    if (confirm('¿Eliminar esta serie?')) {
+      const data = this.storage.getGroupData();
+      data.series = (data.series || []).filter(s => s.id !== seriesId);
+      this.storage.saveGroupData(null, data);
+      window.Utils.showToast('Serie eliminada', 'info');
+      this.renderSeries();
+      this.renderInicio();
     }
   }
 
@@ -1230,7 +1316,7 @@ class LumaApp {
         <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--color-text-main); margin-top: 0.2rem;">
           ${window.Utils.sanitizeHTML(note.title)}
         </h3>
-        <p class="note-content">${window.Utils.sanitizeHTML(note.content)}</p>
+        <p class="note-content">${window.Utils.sanitizeHTML(note.content || note.message || '')}</p>
         ${imgHtml}
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--color-border); font-size: 0.75rem; color: var(--color-text-muted);">
           <span>👤 ${window.Utils.sanitizeHTML(note.author || 'Miembro')}</span>
@@ -1317,14 +1403,22 @@ class LumaApp {
 
   toggleGoal(goalId) {
     this.storage.toggleGoalStatus(goalId);
-    window.Utils.showToast('Estado del objetivo actualizado ✨', 'success');
+    const goal = this.storage.getGoals().find(g => g.id === goalId);
+    if (goal && goal.status === 'Cumplido') {
+      window.Animations.triggerLumaBurst();
+      window.Utils.showToast('¡Objetivo cumplido con éxito! 🎯✨', 'success');
+    } else {
+      window.Utils.showToast('Estado del objetivo actualizado', 'info');
+    }
     this.renderGoals();
+    this.renderInicio();
   }
 
   deleteGoal(goalId) {
     if (confirm('¿Eliminar este objetivo?')) {
       this.storage.deleteGoal(goalId);
       this.renderGoals();
+      this.renderInicio();
     }
   }  // --- REPRODUCTOR DE AUDIO BAR ---
   renderAudioPlayerBar(state) {
@@ -1494,7 +1588,6 @@ class LumaApp {
         this.closeModal('modal-create-group');
         window.Utils.showToast(`¡Grupo "${newGroup.name}" creado! Código: ${newGroup.code}`, 'success');
         
-        // Entrar directamente
         this.enterActiveGroupDirectly();
       };
     }
@@ -1523,7 +1616,7 @@ class LumaApp {
       };
     }
 
-    // 4. Formulario Personalizar Perfil Ultra-Rich
+    // 4. Formulario Personalizar Perfil
     const formProfile = document.getElementById('form-profile');
     if (formProfile) {
       formProfile.onsubmit = async (e) => {
