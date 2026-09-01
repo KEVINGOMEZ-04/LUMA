@@ -36,6 +36,20 @@
       <p class="onboarding-slogan">Comparte · Guarda · Revive</p>
       <p class="onboarding-desc">La plataforma de grupos privados para compartir recuerdos, cine, música y metas.</p>
 
+      <!-- Botón de Entrada Rápida si ya hay un grupo activo -->
+      <div id="onboarding-quick-enter-banner" class="onboarding-quick-enter-box" style="display: none;">
+        <div class="quick-enter-left">
+          <span class="quick-enter-icon" id="quick-enter-group-icon">🌟</span>
+          <div style="text-align: left; min-width: 0;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #A5B4FC; font-weight: 700;">Tu Grupo Activo</div>
+            <strong id="quick-enter-group-name" style="font-size: 1.05rem; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">Grupo LUMA</strong>
+          </div>
+        </div>
+        <button type="button" class="btn-primary" id="btn-onboarding-enter-active" style="padding: 0.55rem 1.25rem;">
+          <span>Entrar al Grupo</span> ➔
+        </button>
+      </div>
+
       <div class="onboarding-options-grid">
         <!-- 1. Crear Host -->
         <div class="onboarding-option-card host" id="btn-onboarding-host" role="button" tabindex="0">
@@ -72,7 +86,7 @@
           <div class="onboarding-option-icon">👤</div>
           <div class="onboarding-option-content">
             <h3 class="onboarding-option-title">Personalizar Perfil</h3>
-            <p class="onboarding-option-desc">Configura tu nombre, foto, biografía y color favorito para tus grupos.</p>
+            <p class="onboarding-option-desc">Configura tu avatar, insignia, bio, color y estado para tus amigos.</p>
           </div>
           <div class="onboarding-option-arrow">➔</div>
         </div>
@@ -464,7 +478,131 @@
        MODALES DEL SISTEMA LUMA
        ========================================= -->
 
-  <!-- MODAL: MENÚ DE OPCIONES DE GRUPO -->
+  <!-- 1. MODAL ULTRA-PREMIUM: PERSONALIZAR PERFIL -->
+  <div id="modal-profile" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-profile">
+    <div class="modal-content profile-customizer-modal" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3 id="modal-title-profile" class="modal-title"><span>👤</span> Personalizar Mi Perfil</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-profile">✕</button>
+      </div>
+
+      <!-- Live Profile Card Preview -->
+      <div class="profile-live-preview-card" id="profile-preview-card">
+        <div class="profile-preview-banner" id="profile-preview-banner"></div>
+        <div class="profile-preview-body">
+          <div class="profile-preview-avatar-wrap" id="profile-preview-avatar-wrap">
+            <div class="profile-preview-avatar-circle" id="profile-preview-avatar-circle">
+              <span id="profile-preview-avatar-text">U</span>
+            </div>
+            <span class="profile-preview-status-dot" id="profile-preview-status-dot"></span>
+          </div>
+          <div class="profile-preview-info">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <strong class="profile-preview-name" id="profile-preview-name">Usuario LUMA</strong>
+              <span class="profile-preview-handle" id="profile-preview-handle">@usuario</span>
+            </div>
+            <div class="profile-preview-status-msg" id="profile-preview-status-msg">✨ En línea</div>
+            <p class="profile-preview-bio" id="profile-preview-bio">¡Hola! Compartiendo momentos increíbles en LUMA 🌟</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Personalización -->
+      <form id="form-profile" class="modal-form" style="margin-top: 1.25rem;">
+        
+        <!-- Pestañas internas de configuración rápida -->
+        <div class="profile-tabs-nav">
+          <button type="button" class="profile-tab-btn active" data-tab="ptab-identity">👤 Datos</button>
+          <button type="button" class="profile-tab-btn" data-tab="ptab-avatar">🎨 Avatar & Aura</button>
+          <button type="button" class="profile-tab-btn" data-tab="ptab-status">✨ Estado & Bio</button>
+        </div>
+
+        <!-- Pestaña 1: Datos Básicos -->
+        <div class="profile-tab-pane active" id="ptab-identity">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="profile-name-input">Nombre o Apodo *</label>
+              <input type="text" id="profile-name-input" class="form-control" placeholder="Tu nombre..." required maxlength="30">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="profile-handle-input">Nombre de usuario (@handle)</label>
+              <input type="text" id="profile-handle-input" class="form-control" placeholder="@usuario" maxlength="20">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="profile-gender-select">Pronombres / Género</label>
+            <select id="profile-gender-select" class="form-control">
+              <option value="No especificado">Prefiero no decir</option>
+              <option value="Él / He">Él / He</option>
+              <option value="Ella / She">Ella / She</option>
+              <option value="Elle / They">Elle / They</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Pestaña 2: Avatar & Apariencia -->
+        <div class="profile-tab-pane" id="ptab-avatar">
+          <div class="form-group">
+            <label class="form-label">Elige un Avatar Ilustrado o Sube tu Foto</label>
+            <div class="avatar-preset-grid" id="avatar-presets-container">
+              <div class="avatar-preset-item active" data-preset="👨‍🚀">👨‍🚀</div>
+              <div class="avatar-preset-item" data-preset="🌟">🌟</div>
+              <div class="avatar-preset-item" data-preset="👑">👑</div>
+              <div class="avatar-preset-item" data-preset="🔮">🔮</div>
+              <div class="avatar-preset-item" data-preset="⚡">⚡</div>
+              <div class="avatar-preset-item" data-preset="🐱">🐱</div>
+              <div class="avatar-preset-item" data-preset="🦊">🦊</div>
+              <div class="avatar-preset-item" data-preset="🎨">🎨</div>
+            </div>
+            <input type="file" id="profile-avatar-file" class="form-control" accept="image/*" style="margin-top: 0.6rem;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Color de Aura / Identificador</label>
+            <div class="color-palette-swatches" id="profile-color-swatches">
+              <div class="color-swatch-circle active" data-color="#6366F1" style="background-color: #6366F1;"></div>
+              <div class="color-swatch-circle" data-color="#3B82F6" style="background-color: #3B82F6;"></div>
+              <div class="color-swatch-circle" data-color="#06B6D4" style="background-color: #06B6D4;"></div>
+              <div class="color-swatch-circle" data-color="#10B981" style="background-color: #10B981;"></div>
+              <div class="color-swatch-circle" data-color="#F59E0B" style="background-color: #F59E0B;"></div>
+              <div class="color-swatch-circle" data-color="#F43F5E" style="background-color: #F43F5E;"></div>
+              <div class="color-swatch-circle" data-color="#A855F7" style="background-color: #A855F7;"></div>
+              <div class="color-swatch-circle" data-color="#0F172A" style="background-color: #0F172A;"></div>
+            </div>
+            <input type="color" id="profile-color-input" value="#6366F1" style="display: none;">
+          </div>
+        </div>
+
+        <!-- Pestaña 3: Estado & Biografía -->
+        <div class="profile-tab-pane" id="ptab-status">
+          <div class="form-group">
+            <label class="form-label">Estado Actual / Modo</label>
+            <div class="status-quick-pills" id="status-quick-pills">
+              <button type="button" class="status-quick-pill" data-status="✨ En línea">✨ En línea</button>
+              <button type="button" class="status-quick-pill" data-status="🎵 Con música">🎵 Con música</button>
+              <button type="button" class="status-quick-pill" data-status="🎬 Modo cine">🎬 Modo cine</button>
+              <button type="button" class="status-quick-pill" data-status="☕ Tomando café">☕ Tomando café</button>
+              <button type="button" class="status-quick-pill" data-status="🚀 Creando cosas">🚀 Creando</button>
+            </div>
+            <input type="text" id="profile-status-input" class="form-control" placeholder="O escribe tu estado personalizado..." maxlength="40" style="margin-top: 0.5rem;">
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between;">
+              <label class="form-label" for="profile-bio-input">Biografía</label>
+              <span id="profile-bio-counter" style="font-size: 0.75rem; color: var(--color-text-muted);">0 / 120</span>
+            </div>
+            <textarea id="profile-bio-input" class="form-control" rows="2" maxlength="120" placeholder="Escribe algo sobre ti..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="modal-profile">Cancelar</button>
+          <button type="submit" class="btn-primary"><span>Guardar Perfil</span> ✨</button>
+        </div>
+      </form>
+    </div>
+  </div>  <!-- 2. MODAL: MENÚ DE OPCIONES DE GRUPO -->
   <div id="modal-group-menu" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-content" style="max-width: 420px;">
       <div class="modal-header">
@@ -504,7 +642,7 @@
     </div>
   </div>
 
-  <!-- MODAL: PERFILES Y PRESENCIA DE MIEMBROS -->
+  <!-- 3. MODAL: PERFILES Y PRESENCIA DE MIEMBROS -->
   <div id="modal-members-presence" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-content" style="max-width: 480px;">
       <div class="modal-header">
@@ -520,6 +658,7 @@
             <strong id="presence-modal-my-name" style="font-size: 1.05rem; color: var(--color-text-main);">Mi Nombre</strong>
             <span class="user-role-badge self">Tú</span>
           </div>
+          <div id="presence-modal-my-status" style="font-size: 0.78rem; color: var(--color-primary); font-weight: 600; margin-top: 0.1rem;">✨ En línea</div>
           <p id="presence-modal-my-bio" style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.15rem;"></p>
         </div>
         <button type="button" class="btn-secondary" id="btn-presence-modal-edit-profile" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
@@ -535,7 +674,7 @@
     </div>
   </div>
 
-  <!-- MODAL: EDITAR GRUPO -->
+  <!-- 4. MODAL: EDITAR GRUPO -->
   <div id="modal-edit-group" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-content">
       <div class="modal-header">
@@ -576,7 +715,7 @@
     </div>
   </div>
 
-  <!-- 1. MODAL CREAR GRUPO -->
+  <!-- 5. MODAL CREAR GRUPO -->
   <div id="modal-create-group" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-create-group">
     <div class="modal-content">
       <div class="modal-header">
@@ -591,7 +730,7 @@
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label" for="new-group-icon">Icono / Emoji *</label>
-            <input type="text" id="new-group-icon" class="form-control" value="⭐" maxlength="4" required>
+            <input type="text" id="new-group-icon" class="form-control" value="🌟" maxlength="4" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="new-group-color">Color Identificador *</label>
@@ -609,13 +748,13 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-secondary" data-close-modal="modal-create-group">Cancelar</button>
-          <button type="submit" class="btn-primary"><span>Crear Grupo & Obtener Código</span> ✨</button>
+          <button type="submit" class="btn-primary"><span>Crear Grupo & Entrar</span> ✨</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 2. MODAL UNIRSE CON CÓDIGO -->
+  <!-- 6. MODAL UNIRSE CON CÓDIGO -->
   <div id="modal-join-group" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-join-group">
     <div class="modal-content">
       <div class="modal-header">
@@ -625,66 +764,20 @@
       <form id="form-join-group" class="modal-form">
         <div class="form-group">
           <label class="form-label" for="join-group-code-input">Código de 6 Caracteres *</label>
-          <input type="text" id="join-group-code-input" class="form-control code-input" placeholder="A7KF92" required maxlength="6" autocomplete="off" style="text-transform: uppercase; font-size: 1.5rem; text-align: center; letter-spacing: 0.35em;">
+          <input type="text" id="join-group-code-input" class="form-control code-input" placeholder="LUMA01" required maxlength="6" autocomplete="off" style="text-transform: uppercase; font-size: 1.5rem; text-align: center; letter-spacing: 0.35em;">
           <p style="font-size: 0.78rem; color: var(--color-text-secondary); margin-top: 0.4rem; text-align: center;">Pídele el código al creador o administrador del grupo.</p>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-secondary" data-close-modal="modal-join-group">Cancelar</button>
-          <button type="submit" class="btn-primary"><span>Unirse al Grupo</span> 🚀</button>
+          <button type="submit" class="btn-primary"><span>Unirse al Grupo & Entrar</span> 🚀</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 3. MODAL PERFIL DE USUARIO -->
-  <div id="modal-profile" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-profile">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modal-title-profile" class="modal-title"><span>👤</span> Mi Perfil Global</h3>
-        <button type="button" class="btn-modal-close" data-close-modal="modal-profile">✕</button>
-      </div>
-      <form id="form-profile" class="modal-form">
-        <div class="form-group">
-          <label class="form-label" for="profile-name-input">Nombre o Apodo *</label>
-          <input type="text" id="profile-name-input" class="form-control" placeholder="Tu nombre..." required maxlength="30">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Foto de Perfil / Avatar</label>
-          <input type="file" id="profile-avatar-file" class="form-control" accept="image/*">
-        </div>
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between;">
-            <label class="form-label" for="profile-bio-input">Biografía Corta</label>
-            <span id="profile-bio-counter" style="font-size: 0.75rem; color: var(--color-text-muted);">0 / 120</span>
-          </div>
-          <textarea id="profile-bio-input" class="form-control" rows="2" maxlength="120" placeholder="Unas palabras sobre ti..."></textarea>
-        </div>
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label" for="profile-gender-select">Género</label>
-            <select id="profile-gender-select" class="form-control">
-              <option value="No especificado">Prefiero no decir</option>
-              <option value="Femenino">Femenino</option>
-              <option value="Masculino">Masculino</option>
-              <option value="No binario">No binario</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="profile-color-input">Color de Avatar</label>
-            <input type="color" id="profile-color-input" class="form-control" value="#6366F1" style="height: 44px; padding: 0.2rem;">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" data-close-modal="modal-profile">Cancelar</button>
-          <button type="submit" class="btn-primary"><span>Guardar Perfil</span> 💾</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 4. MODAL MIS GRUPOS / SWITCHER -->
+  <!-- 7. MODAL MIS GRUPOS / SWITCHER -->
   <div id="modal-groups-list" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-groups-list">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 480px;">
       <div class="modal-header">
         <h3 id="modal-title-groups-list" class="modal-title"><span>👥</span> Mis Grupos Privados</h3>
         <button type="button" class="btn-modal-close" data-close-modal="modal-groups-list">✕</button>
@@ -692,14 +785,14 @@
       <div class="groups-switcher-body">
         <div id="groups-switcher-list" class="groups-list-grid" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
         <div class="groups-actions-row" style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
-          <button type="button" class="btn-secondary" id="btn-modal-open-join" style="flex: 1;">🔑 Unirse con Código</button>
+          <button type="button" class="btn-secondary" id="btn-modal-open-join" style="flex: 1;">🔑 Usar Código</button>
           <button type="button" class="btn-primary" id="btn-modal-open-create" style="flex: 1;">✨ Crear Grupo</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 5. MODAL NUEVO RECUERDO -->
+  <!-- 8. MODAL NUEVO RECUERDO -->
   <div id="modal-memory" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-memory">
     <div class="modal-content">
       <div class="modal-header">
@@ -750,7 +843,7 @@
     </div>
   </div>
 
-  <!-- 6. MODAL AÑADIR CANCIÓN MANUAL -->
+  <!-- 9. MODAL AÑADIR CANCIÓN MANUAL -->
   <div id="modal-song" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-song">
     <div class="modal-content">
       <div class="modal-header">
@@ -798,7 +891,7 @@
     </div>
   </div>
 
-  <!-- 7. MODAL CALIFICAR PELÍCULA -->
+  <!-- 10. MODAL CALIFICAR PELÍCULA -->
   <div id="modal-rate-movie" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rate-movie-title">
     <div class="modal-content">
       <div class="modal-header">
@@ -823,7 +916,7 @@
     </div>
   </div>
 
-  <!-- 8. MODAL NUEVA SERIE -->
+  <!-- 11. MODAL NUEVA SERIE -->
   <div id="modal-series" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-series">
     <div class="modal-content">
       <div class="modal-header">
@@ -858,7 +951,7 @@
     </div>
   </div>
 
-  <!-- 9. MODAL NUEVO OBJETIVO -->
+  <!-- 12. MODAL NUEVO OBJETIVO -->
   <div id="modal-goal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-goal">
     <div class="modal-content">
       <div class="modal-header">
@@ -898,7 +991,7 @@
     </div>
   </div>
 
-  <!-- 10. MODAL NUEVA NOTA -->
+  <!-- 13. MODAL NUEVA NOTA -->
   <div id="modal-note" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-note">
     <div class="modal-content">
       <div class="modal-header">
@@ -935,7 +1028,7 @@
     </div>
   </div>
 
-  <!-- 11. MODAL LETRA DE CANCIÓN -->
+  <!-- 14. MODAL LETRA DE CANCIÓN -->
   <div id="modal-lyrics" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-content">
       <div class="modal-header">
@@ -950,7 +1043,7 @@
     </div>
   </div>
 
-  <!-- 12. MODAL COMENTARIOS DE RECUERDO -->
+  <!-- 15. MODAL COMENTARIOS DE RECUERDO -->
   <div id="modal-memory-comments" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-content">
       <div class="modal-header">
@@ -966,7 +1059,7 @@
     </div>
   </div>
 
-  <!-- 13. MODAL LIGHTBOX FOTOS -->
+  <!-- 16. MODAL LIGHTBOX FOTOS -->
   <div id="modal-lightbox" class="modal-overlay lightbox-overlay" role="dialog" aria-modal="true">
     <button type="button" class="btn-lightbox-close" data-close-modal="modal-lightbox">✕</button>
     <img src="" id="lightbox-img" class="lightbox-img-element" alt="Vista ampliada">
