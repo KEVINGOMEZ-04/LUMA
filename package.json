@@ -1,0 +1,14 @@
+{
+  "name": "atria-app",
+  "version": "1.0.0",
+  "description": "ATRIA — La puerta de entrada a nuestro mundo compartido",
+  "scripts": {
+    "build": "echo 'Ready'"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/local-notifications": "^6.0.0"
+  }
+}

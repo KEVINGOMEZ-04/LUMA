@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#120E1C">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ATRIA">
+  <meta name="application-name" content="ATRIA">
+  <link rel="manifest" href="manifest.json">
+  <title>ATRIA ✨ La entrada a nuestro mundo · Kevin & Wendy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://patico-diario-default-rtdb.firebaseio.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/sections.css">
+</head>
+<body>
+  <canvas id="stars-canvas" aria-hidden="true"></canvas>
+  <canvas id="effects-canvas" aria-hidden="true"></canvas>
+  <!-- PANTALLA DE DESBLOQUEO / INICIO DE SESIÓN -->
+  <div id="lock-screen" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+    <div class="lock-card glass-card" id="lock-card">
+
+      <!-- Emblema ATRIA -->
+      <div class="lock-hero-emblem">
+        <div class="lock-emblem-glow"></div>
+        <img src="assets/icon.jpg" alt="Logo ATRIA" class="lock-emblem-logo-img">
+      </div>
+      <h1 id="lock-title" class="lock-title" style="letter-spacing: 3px; font-family: 'Space Grotesk', sans-serif;">ATRIA</h1>
+      <p class="lock-subtitle">La puerta de entrada a nuestro mundo compartido ✨</p>
+
+      <form id="lock-form" class="lock-form" autocomplete="off">
+        <!-- Selector de Perfil con Tarjetas Clicables -->
+        <div class="lock-selector-section">
+          <label class="lock-section-label">¿Quién está entrando hoy?</label>
+          <div class="lock-user-cards-grid">
+            <div class="lock-user-card active" data-user="Kevin" id="lock-user-kevin" role="button" tabindex="0">
+              <span class="lock-user-emoji">👦🏻</span>
+              <div class="lock-user-text">
+                <span class="lock-user-name">Kevin</span>
+                <span class="lock-user-tag kevin-color" id="lock-kevin-subtag">Su Cielo ☁️</span>
+              </div>
+            </div>
+            <div class="lock-user-card" data-user="Wendy" id="lock-user-wendy" role="button" tabindex="0">
+              <span class="lock-user-emoji">👧🏻</span>
+              <div class="lock-user-text">
+                <span class="lock-user-name">Wendy</span>
+                <span class="lock-user-tag wendy-color" id="lock-wendy-subtag">Patico ♥️</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="lock-username" value="Kevin" />
+
+        <!-- Campo de Contraseña -->
+        <div class="form-group" style="text-align: left; margin-top: 1rem;">
+          <label for="lock-password" class="lock-section-label" style="text-align: left; margin-bottom: 0.35rem;">Contraseña</label>
+          <div class="lock-pass-input-wrapper">
+            <input type="password" id="lock-password" class="form-control lock-input" placeholder="Contraseña (por defecto: 1234)" aria-label="Contraseña" autocomplete="current-password" required />
+            <button type="button" id="btn-toggle-lock-password" class="btn-toggle-pass" title="Ver / Ocultar contraseña" aria-label="Ver contraseña">👁️</button>
+          </div>
+        </div>
+
+        <div id="lock-error" class="lock-error-msg" role="alert"></div>
+
+        <button type="submit" class="btn-primary btn-lock-submit" id="btn-submit-lock">
+          <span>Entrar a ATRIA</span> ✨🏛️
+        </button>
+      </form>
+    </div>
+  </div>
+  <div id="app-container" style="display: none;">
+    <header class="app-header">
+      <a href="#inicio" class="header-brand" aria-label="Ir al inicio"><span class="sunflower-icon">🏛️</span><span style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: 2px; color: var(--color-sunflower-gold);">ATRIA</span></a>
+      
+      <!-- BARRA DE CONEXIÓN ESTILO WHATSAPP -->
+      <div class="whatsapp-presence-bar" id="whatsapp-presence-bar" title="Toca para ver o personalizar perfiles y apodos" role="button" tabindex="0">
+        <div class="whatsapp-avatars-group">
+          <div class="whatsapp-avatar-wrapper" id="header-avatar-kevin-wrapper">
+            <img id="header-avatar-kevin-img" src="" class="whatsapp-avatar-img" style="display: none;" alt="Kevin">
+            <span id="header-avatar-kevin-fallback" class="whatsapp-avatar-fallback kevin">K</span>
+            <span class="whatsapp-online-dot" id="header-dot-kevin" title="Kevin"></span>
+          </div>
+          <div class="whatsapp-avatar-wrapper" id="header-avatar-wendy-wrapper">
+            <img id="header-avatar-wendy-img" src="" class="whatsapp-avatar-img" style="display: none;" alt="Wendy">
+            <span id="header-avatar-wendy-fallback" class="whatsapp-avatar-fallback wendy">W</span>
+            <span class="whatsapp-online-dot" id="header-dot-wendy" title="Wendy"></span>
+          </div>
+        </div>
+        <div class="whatsapp-info-col">
+          <div class="whatsapp-title-row">
+            <span class="whatsapp-names" id="whatsapp-couple-names">Kevin & Wendy</span>
+          </div>
+          <div class="whatsapp-status-row" id="whatsapp-status-text">
+            <span class="status-offline-text">Conectando en tiempo real…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Monitor en vivo de subida a Google Drive -->
+        <button type="button" class="upload-monitor-pill" id="btn-upload-monitor" title="Ver estado de subida de imágenes y videos a Google Drive" aria-label="Estado de subida a Google Drive">
+          <span class="upload-monitor-icon" id="upload-monitor-icon">☁️</span>
+          <span class="upload-monitor-label" id="upload-monitor-label">Sincronizado</span>
+          <span class="upload-monitor-indicator" id="upload-monitor-indicator" style="display: none;"></span>
+        </button>
+
+        <!-- Botón de Notificaciones en Teléfono -->
+        <button type="button" class="btn-lock" id="btn-enable-notifications" title="Activar notificaciones en tu teléfono"><span>🔔</span><span class="btn-lock-text"> Alertas</span></button>
+
+        <button type="button" class="btn-lock btn-nudge" id="btn-send-nudge" title="Enviar un toquecito de amor con girasoles 🌻✨"><span>🌻</span><span class="btn-lock-text"> Toquecito</span></button>
+        <button type="button" class="btn-lock" id="btn-open-gdrive" title="Google Drive para Recuerdos"><span>📁</span><span class="btn-lock-text"> Drive</span></button>
+        <button type="button" class="btn-lock" id="btn-open-profiles" title="Personalizar fotos de perfil y apodos"><span>👤</span><span class="btn-lock-text"> Perfiles</span></button>
+        <button type="button" class="btn-lock" id="btn-change-password" title="Cambiar contraseña"><span>⚙️</span><span class="btn-lock-text"> Contraseña</span></button>
+        <button type="button" class="btn-lock" id="btn-re-lock" title="Bloquear sesión sin borrar datos"><span>🔒</span><span class="btn-lock-text"> Bloquear</span></button>
+      </div>
+    </header>
+    <nav class="app-nav" aria-label="Navegación principal de ATRIA">
+      <div class="nav-wrapper">
+        <div class="nav-pills" id="nav-pills-container" role="tablist"></div>
+      </div>
+    </nav>
+    <main class="main-content">
+      <!-- INICIO & UNIVERSO ATRIA -->
+      <section id="section-inicio" class="wrapped-section" role="tabpanel">
+        <div class="section-header">
+          <h1 class="section-title">Hola, <span id="dashboard-user">Kevin</span> 🌻</h1>
+          <p class="section-quote">Lo importante de ustedes, a mano y sin relleno.</p>
+        </div>
+        
+        <div class="daily-actions">
+          <a href="#recuerdos" class="action-pill"><span>🌻</span> Añadir recuerdo</a>
+          <a href="#musica" class="action-pill"><span>🎵</span> Recomendar canción</a>
+          <a href="#cine" class="action-pill"><span>🎬</span> Elegir película</a>
+          <a href="#series" class="action-pill"><span>📺</span> Maratón de series</a>
+          <a href="#muro" class="action-pill"><span>💌</span> Dejar una nota</a>
+          <a href="#suenos" class="action-pill"><span>🌟</span> Nuevo sueño</a>
+        </div>
+
+        <div class="daily-summary" id="daily-summary"></div>
+        
+        <!-- SIGNIFICADO & ORIGEN DE ATRIA 🏛️✨ -->
+        <div class="glass-card atria-origin-card" style="margin: 1.25rem 0; border-left: 4px solid var(--color-sunflower-gold); background: linear-gradient(135deg, rgba(38, 26, 60, 0.75) 0%, rgba(20, 14, 34, 0.9) 100%);">
+          <div style="display: flex; align-items: flex-start; gap: 1rem;">
+            <span style="font-size: 2.2rem; filter: drop-shadow(0 2px 10px rgba(244, 197, 66, 0.45));">🏛️</span>
+            <div>
+              <h3 style="font-family: var(--font-heading); font-size: 1.25rem; color: var(--color-sunflower-gold); margin: 0 0 0.35rem 0; letter-spacing: 1px; display: flex; align-items: center; gap: 0.5rem;">
+                ¿Por qué ATRIA? <span style="font-size: 0.8rem; font-family: var(--font-body); color: var(--color-lilac); font-weight: normal;">(El origen de nuestro espacio)</span>
+              </h3>
+              <p style="font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.55; margin: 0;">
+                La inspiración viene del <em>atrio</em>: el espacio de entrada y bienvenida a un hogar. 
+                <strong>ATRIA</strong> es la puerta de entrada a nuestro mundo compartido: el lugar donde convergen nuestros recuerdos, música, películas, series, notas y cada uno de nuestros sueños y metas.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECORDATORIOS DE FECHAS ESPECIALES (1 MES, 1 SEMANA, 1 DÍA) -->
+        <div id="special-dates-reminders-container"></div>
+
+        <div class="glass-card daily-tip">
+          <strong>Para hoy</strong>
+          <p id="daily-tip-text"></p>
+        </div>
+
+        <!-- WIDGET INTERACTIVO DE LA PREGUNTA DIARIA 💌✨ -->
+        <div class="glass-card daily-prompt-container" id="daily-prompt-card">
+          <!-- Se renderiza dinámicamente desde js/app.js -->
+        </div>
+
+        <!-- =========================================
+             UNIVERSO ATRIA ✨ — ESTADÍSTICAS DEL CHAT
+             ========================================= -->
+        <div class="wrapped-container" id="patico-wrapped-hub">
+          
+          <!-- BANNER HERO CON INSIGNIA DE ACTUALIZACIÓN -->
+          <div class="wrapped-hero-banner">
+            <div class="wrapped-badge-updated animate-shimmer">
+              <span class="badge-dot"></span>
+              <span>📅 Universo actualizado a: <strong>29 de agosto de 2026</strong></span>
+            </div>
+            
+            <h2 class="wrapped-main-title" style="letter-spacing: 1px;">Universo ATRIA ✨</h2>
+            <p class="wrapped-lead-quote">
+              «Durante 648 días, dos personas construyeron una historia de 25.378 mensajes. No es una conversación cualquiera; es un diario escrito entre risas, chismes, audios y pequeños momentos cotidianos.»
+            </p>
+
+            <div class="wrapped-cta-group">
+              <button type="button" class="btn-launch-wrapped" id="btn-open-story-mode">
+                <span class="sparkle">✨</span>
+                <span>Vivir experiencia ATRIA (Modo Historia)</span>
+                <span>▶</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- GRID DE MÉTRICAS INTERACTIVAS -->
+          <div class="wrapped-stats-grid">
+            
+            <!-- 1. RESUMEN GENERAL & ACTIVIDAD -->
+            <article class="wrapped-card col-12">
+              <div class="wrapped-card-header">
+                <span class="wrapped-card-tag">📊 1. Estadísticas Generales</span>
+                <span class="wrapped-card-icon">🌻</span>
+              </div>
+              <div>
+                <div class="giant-number-row">
+                  <span class="giant-number animate-counter" data-target="25378">25.378</span>
+                  <span class="giant-number-unit">mensajes intercambiados</span>
+                </div>
+                <p style="color: var(--color-text-secondary); margin-bottom: 1.25rem;">
+                  <strong>Periodo analizado:</strong> 20 de noviembre de 2024 – 29 de agosto de 2026 (<strong>648 días</strong> · ~1 año, 9 meses y 9 días)
+                </p>
+
+                <!-- Barra Proporcional -->
+                <div class="proportion-bar-container">
+                  <div class="proportion-bar-track">
+                    <div class="proportion-fill-kevin" style="width: 56.9%;" title="Kevin: 56,9%"></div>
+                    <div class="proportion-fill-wendy" style="width: 43.1%;" title="Wendy: 43,1%"></div>
+                  </div>
+                  <div class="proportion-legend">
+                    <span style="color: var(--color-lilac);">🟣 Kevin: 14.428 msgs (56,9%)</span>
+                    <span style="color: var(--color-sunflower-gold);">🟡 Wendy (Patico ♥️): 10.950 msgs (43,1%)</span>
+                  </div>
+                </div>
+
+                <!-- Comparación detallada -->
+                <div class="participants-comparison">
+                  <div class="participant-box kevin">
+                    <div class="participant-name kevin-name">Kevin Gómez 👦🏻</div>
+                    <div class="participant-pct">56,9%</div>
+                    <div class="participant-stats-list">
+                      <div class="participant-stat-item"><span>Mensajes enviados</span><strong>14.428</strong></div>
+                      <div class="participant-stat-item"><span>Palabras escritas</span><strong>43.198</strong></div>
+                      <div class="participant-stat-item"><span>Multimedia compartida</span><strong>2.164</strong></div>
+                    </div>
+                  </div>
+
+                  <div class="participant-box wendy">
+                    <div class="participant-name wendy-name">Wendy (Patico ♥️) 👧🏻</div>
+                    <div class="participant-pct">43,1%</div>
+                    <div class="participant-stats-list">
+                      <div class="participant-stat-item"><span>Mensajes enviados</span><strong>10.950</strong></div>
+                      <div class="participant-stat-item"><span>Palabras escritas</span><strong>41.403</strong></div>
+                      <div class="participant-stat-item"><span>Multimedia compartida</span><strong>1.565</strong></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="insight-highlight-box">
+                  💡 <strong>Dato importante:</strong> Aunque Kevin envió 3.478 mensajes más, la diferencia final fue de solamente <strong>1.795 palabras</strong> (84.601 palabras en total), demostrando que ambos aportan prácticamente la misma cantidad de contenido a la conversación.
+                  <div style="font-family: var(--font-heading); font-style: italic; color: var(--color-light-yellow); font-size: 1.15rem; margin-top: 0.5rem;">
+                    «Kevin habla más veces. Wendy habla casi igual de profundo.»
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 2. VELOCIDAD DE RESPUESTA -->
+            <article class="wrapped-card col-5">
+              <div class="wrapped-card-header">
+                <span class="wrapped-card-tag">⚡ 2. Velocidad de Respuesta</span>
+                <span class="wrapped-card-icon">⏱️</span>
+              </div>
+              <div>
+                <div class="speed-comparison-grid">
+                  <div class="speed-card">
+                    <div class="speed-val">1 min</div>
+                    <div class="speed-label">Mediana de Kevin 👦🏻</div>
+                  </div>
+                  <div class="speed-card">
+                    <div class="speed-val">3 min</div>
+                    <div class="speed-label">Mediana de Wendy 👧🏻</div>
+                  </div>
+                </div>
+                <div class="speed-avg-pill">
+                  🌙 Promedio general del chat: <strong>75 minutos</strong><br>
+                  <small style="color: var(--color-text-muted);">(Influenciado por noches, jornadas laborales y descansos)</small>
+                </div>
+              </div>
+              <div class="chapter-quote" style="margin-top: 1rem;">
+                «Cuando alguno escribía, el otro casi siempre estaba ahí. En conversación activa, el chat funcionaba prácticamente en tiempo real.»
+              </div>
+            </article>
+
+            <!-- 3. IDENTIDAD DE LA CONVERSACIÓN -->
+            <article class="wrapped-card col-7">
+              <div class="wrapped-card-header">
+                <span class="wrapped-card-tag">💬 3. Identidad del Chat</span>
+                <span class="wrapped-card-icon">✨</span>
+              </div>
+              <div>
+                <div class="identities-grid">
+                  <div class="identity-col">
+                    <div class="identity-author" style="color: var(--color-lilac);">👦🏻 Expresiones de Kevin</div>
+                    <div class="expression-chips">
+                      <span class="expression-chip">Holi</span>
+                      <span class="expression-chip">JSJSJS</span>
+                      <span class="expression-chip">Chisme</span>
+                      <span class="expression-chip">Parce</span>
+                      <span class="expression-chip">:3</span>
+                    </div>
+                  </div>
+
+                  <div class="identity-col">
+                    <div class="identity-author" style="color: var(--color-sunflower-gold);">👧🏻 Expresiones de Wendy</div>
+                    <div class="expression-chips">
+                      <span class="expression-chip">Holap</span>
+                      <span class="expression-chip">Jummm</span>
+                      <span class="expression-chip">Lindo</span>
+                      <span class="expression-chip">Pjs</span>
+                      <span class="expression-chip">💁🏻‍♀️</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="top-phrase-spotlight">
+                  <div class="top-phrase-title">Frase más repetida de toda la historia</div>
+                  <div class="top-phrase-text">“¿Cómo estás?”</div>
+                  <div class="top-phrase-desc">Es la pregunta que más aparece durante toda la conversación y funciona como el verdadero hilo conductor de su historia.</div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 4. EVOLUCIÓN DE LA RELACIÓN EN 4 CAPÍTULOS -->
+            <article class="wrapped-card col-12">
+              <div class="wrapped-card-header">
+                <span class="wrapped-card-tag">📖 4. Evolución de la Relación</span>
+                <span class="wrapped-card-icon">🌻</span>
+              </div>
+              <div>
+                <div class="chapters-nav" id="chapters-nav-tabs">
+                  <button type="button" class="chapter-tab-btn active" data-chapter="1">Capítulo 1 · El reencuentro</button>
+                  <button type="button" class="chapter-tab-btn" data-chapter="2">Capítulo 2 · La confianza</button>
+                  <button type="button" class="chapter-tab-btn" data-chapter="3">Capítulo 3 · Conversaciones reales</button>
+                  <button type="button" class="chapter-tab-btn" data-chapter="4">Capítulo 4 · La rutina bonita</button>
+                </div>
+
+                <div class="chapter-content-box" id="chapter-active-display">
+                  <div class="chapter-badge-dates">20 noviembre – diciembre 2024</div>
+                  <span class="chapter-msg-count">~3.361 mensajes</span>
+                  <h3 class="chapter-title">Capítulo 1 — El reencuentro</h3>
+                  <p class="chapter-desc">
+                    Todo comienza cuando Kevin recupera contacto con Wendy después del robo de su celular. Los primeros días están llenos de saludos, preguntas simples y la sensación de volver a conocerse. En esta etapa aparecen los primeros audios largos y los chismes que terminarían siendo una tradición.
+                  </p>
+                  <div class="chapter-quote">
+                    «Todo comenzó con un simple “Holi”.»
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 5. RÉCORDS DEL CHAT & TOP 10 DÍAS HISTÓRICOS -->
+            <article class="wrapped-card col-7">
+              <div class="wrapped-card-header">
+                <span class="wrapped-card-tag">🏆 5. Récords del Chat</span>
+                <span class="wrapped-card-icon">🔥</span>
+              </div>
+              <div>
+                <div class="record-peak-card">
+                  <div class="record-peak-date">👑 Día más activo de toda la historia: 28 de agosto de 2026</div>
+                  <div class="record-peak-count">872</div>
+                  <div style="font-size: 0.9rem; color: var(--color-light-yellow);">mensajes en un solo día (Pico absoluto)</div>
+                </div>
+
+                <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.6rem; font-weight: 500;">
+                  Top 10 días con más mensajes en la historia:
+                </div>
+
+                <div class="historical-days-bars">
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">28 ago 2026 👑</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 100%;"></div></div>
+                    <span class="hist-day-count">872 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">2 dic 2025</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 47.5%;"></div></div>
+                    <span class="hist-day-count">414 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">27 ago 2026</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 46.4%;"></div></div>
+                    <span class="hist-day-count">405 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">10 nov 2025</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 40.1%;"></div></div>
+                    <span class="hist-day-count">350 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">5 sep 2025</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 39.7%;"></div></div>
+                    <span class="hist-day-count">346 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">11 dic 2024</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 38.0%;"></div></div>
+                    <span class="hist-day-count">331 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">13 jul 2025</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 28.3%;"></div></div>
+                    <span class="hist-day-count">247 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">22 nov 2024</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 25.3%;"></div></div>
+                    <span class="hist-day-count">221 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">15 dic 2024</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 22.7%;"></div></div>
+                    <span class="hist-day-count">198 msgs</span>
+                  </div>
+                  <div class="hist-day-row">
+                    <span class="hist-day-date">20 abr 2025</span>
+                    <div class="hist-day-bar-bg"><div class="hist-day-bar-fill" style="width: 20.8%;"></div></div>
+                    <span class="hist-day-count">181 msgs</span>
+                  </div>
+                </div>
+              </div>
+              <div class="chapter-quote" style="margin-top: 1rem;">
+                «Hubo días donde dejaron de usar WhatsApp como una aplicación… y prácticamente vivieron dentro del chat.»
+              </div>
+            </article>
+
+            <!-- 6. TEMAS MÁS FRECUENTES & MULTIMEDIA -->
+            <article class="wrapped-card col-5">
+              <div class="wrapped-card-header">
+                <span class="wrapped-card-tag">🏷️ 6. Temas & Multimedia</span>
+                <span class="wrapped-card-icon">🎙️</span>
+              </div>
+              <div>
+                <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.5rem; font-weight: 500;">
+                  De qué hablan siempre:
+                </div>
+                <div class="topic-tags-cloud">
+                  <span class="topic-tag-pill">💼 Trabajo y oficina</span>
+                  <span class="topic-tag-pill">🎓 Estudios y colegio</span>
+                  <span class="topic-tag-pill">🏡 Familia</span>
+                  <span class="topic-tag-pill">🗣️ Chismes infinitos</span>
+                  <span class="topic-tag-pill">✈️ Vacaciones</span>
+                  <span class="topic-tag-pill">🎬 Películas</span>
+                  <span class="topic-tag-pill">⚽ Fútbol (Nacional y América)</span>
+                  <span class="topic-tag-pill">🎙️ Audios largos</span>
+                  <span class="topic-tag-pill">🍿 Planes de fin de semana</span>
+                  <span class="topic-tag-pill">☕ Rutina diaria</span>
+                </div>
+
+                <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 1.25rem 0 0.5rem; font-weight: 500;">
+                  Multimedia compartida (3.729 en total):
+                </div>
+                <div class="multimedia-stats-grid">
+                  <div class="multi-stat-card">
+                    <div class="multi-stat-icon">🎙️</div>
+                    <div class="multi-stat-val">Audios</div>
+                    <div class="multi-stat-lbl">extensos</div>
+                  </div>
+                  <div class="multi-stat-card">
+                    <div class="multi-stat-icon">👦🏻</div>
+                    <div class="multi-stat-val">2.164</div>
+                    <div class="multi-stat-lbl">Kevin</div>
+                  </div>
+                  <div class="multi-stat-card">
+                    <div class="multi-stat-icon">👧🏻</div>
+                    <div class="multi-stat-val">1.565</div>
+                    <div class="multi-stat-lbl">Wendy</div>
+                  </div>
+                </div>
+              </div>
+              <div class="chapter-quote" style="margin-top: 0.75rem;">
+                «Algunas conversaciones se escribieron con palabras. Otras duraron más de un minuto en un audio.»
+              </div>
+            </article>
+
+            <!-- 7. CURIOSIDADES DESTACADAS -->
+            <article class="wrapped-card col-12">
+              <div class="wrapped-card-header">
+                <span class="wrapped-card-tag">💡 7. Curiosidades del Chat</span>
+                <span class="wrapped-card-icon">🌟</span>
+              </div>
+              <div class="curiosities-grid">
+                <div class="curiosity-card">
+                  <span class="curiosity-icon">📅</span>
+                  <div class="curiosity-text"><strong>25.378</strong> mensajes escritos a lo largo de <strong>648 días</strong>.</div>
+                </div>
+                <div class="curiosity-card">
+                  <span class="curiosity-icon">💬</span>
+                  <div class="curiosity-text"><strong>84.601</strong> palabras intercambiadas entre los dos.</div>
+                </div>
+                <div class="curiosity-card">
+                  <span class="curiosity-icon">🔥</span>
+                  <div class="curiosity-text">Racha de <strong>69 días seguidos</strong> sin romper continuidad de conversación.</div>
+                </div>
+                <div class="curiosity-card">
+                  <span class="curiosity-icon">⚖️</span>
+                  <div class="curiosity-text">La diferencia real entre ambos fue de apenas <strong>1.795 palabras</strong>.</div>
+                </div>
+                <div class="curiosity-card">
+                  <span class="curiosity-icon">👑</span>
+                  <div class="curiosity-text">El día más activo de la historia sumó <strong>872 mensajes</strong> en 24 horas.</div>
+                </div>
+                <div class="curiosity-card">
+                  <span class="curiosity-icon">🎙️</span>
+                  <div class="curiosity-text">Los <strong>audios de más de 1 minuto</strong> se volvieron la marca del chat.</div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 8. CIERRE EMOCIONAL -->
+            <article class="wrapped-card col-12" style="background: transparent; border: none; padding: 0;">
+              <div class="emotional-closing-box">
+                <div style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 2px; color: var(--color-sunflower-gold); margin-bottom: 0.5rem;">
+                  El dato más bonito 💛
+                </div>
+                <div class="emotional-words-compare">
+                  <span>Kevin: 43.198 palabras</span>
+                  <span class="divider">vs</span>
+                  <span>Wendy: 41.403 palabras</span>
+                </div>
+                <p class="emotional-quote-main">
+                  «Kevin envió miles de mensajes más. Wendy escribió casi la misma cantidad de palabras. Dos maneras distintas de conversar que terminaron construyendo exactamente la misma historia.»
+                </p>
+                <div class="emotional-final-tagline">
+                  «648 días. 25.378 mensajes. Una historia que jamás podría resumirse en una sola conversación.» 🌻
+                </div>
+              </div>
+            </article>
+
+          </div>
+        </div>
+      </section>
+      <!-- RECUERDOS -->
+      <section id="section-recuerdos" class="wrapped-section" role="tabpanel">
+        <div class="section-header">
+          <h2 class="section-title">Campo de girasoles 🌻</h2>
+          <p class="section-quote">«Cada recuerdo florece como un girasol en nuestro camino.»</p>
+        </div>
+
+        <!-- CALENDARIO ANUAL INTERACTIVO -->
+        <div class="glass-card annual-calendar-card" id="annual-calendar-widget">
+          <div class="calendar-header-bar">
+            <div class="calendar-title-group">
+              <span class="calendar-icon">📅</span>
+              <div>
+                <h3 class="calendar-heading">Calendario de Recuerdos</h3>
+                <p class="calendar-subtext">Selecciona un año para explorar momentos, festivos y fechas especiales:</p>
+              </div>
+            </div>
+            
+            <div class="calendar-year-pills" id="calendar-year-pills">
+              <button type="button" class="year-pill-btn" data-year="2024">2024</button>
+              <button type="button" class="year-pill-btn" data-year="2025">2025</button>
+              <button type="button" class="year-pill-btn active" data-year="2026">2026</button>
+            </div>
+          </div>
+
+          <div class="calendar-legend-bar">
+            <div class="legend-item"><span class="legend-dot kevin-bday-dot"></span><span>Cumple Kevin 👦🏻 (2 de Agosto)</span></div>
+            <div class="legend-item"><span class="legend-dot wendy-bday-dot"></span><span>Cumple Wendy 👧🏻 (26 de Junio - Patico ♥️)</span></div>
+            <div class="legend-item"><span class="legend-dot holiday-dot"></span><span>Festivos oficiales</span></div>
+            <div class="legend-item"><span class="legend-dot memory-dot"></span><span>Recuerdos</span></div>
+            <div class="legend-item"><span class="legend-dot today-dot"></span><span>Hoy</span></div>
+          </div>
+
+          <!-- Cuadrícula de 12 Meses del Año -->
+          <div class="annual-months-grid" id="annual-months-container">
+            <!-- Se llena dinámicamente con los 12 meses -->
+          </div>
+        </div>
+
+        <!-- CÁPSULAS DEL TIEMPO ⏳💎 -->
+        <div class="glass-card time-capsules-section-card" id="time-capsules-widget" style="margin-top: 1.5rem;">
+          <div class="time-capsules-header-bar">
+            <div class="time-capsules-title-group">
+              <span class="capsule-header-icon" style="font-size: 1.6rem;">⏳</span>
+              <div>
+                <h3 class="capsule-heading" style="font-size: 1.15rem; color: var(--color-sunflower-gold); margin: 0;">Cápsulas del Tiempo</h3>
+                <p class="capsule-subtext" style="font-size: 0.82rem; color: var(--color-text-secondary); margin: 0.2rem 0 0;">Mensajes y audios sellados para abrir en fechas futuras especiales:</p>
+              </div>
+            </div>
+            <button type="button" class="btn-primary" id="btn-new-capsule" style="padding: 0.45rem 1rem; font-size: 0.85rem; white-space: nowrap;">
+              <span>+ Sellar Cápsula ⏳✨</span>
+            </button>
+          </div>
+
+          <div class="time-capsules-grid" id="time-capsules-grid" style="margin-top: 1rem;">
+            <!-- Renderizado dinámico de cápsulas -->
+          </div>
+        </div>
+
+        <div class="trail-controls" style="margin-top: 2rem;">
+          <button type="button" class="btn-primary" id="btn-new-memory"><span>+ Nuevo recuerdo</span> 🌻</button>
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <label for="select-sort-memories" style="font-size: 0.85rem; color: var(--color-text-secondary);">Orden:</label>
+            <select id="select-sort-memories" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="desc">Más recientes primero</option>
+              <option value="asc">Cronológico (antiguos primero)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="trail-container" id="memories-trail-list">
+          <div class="trail-line"></div>
+        </div>
+      </section>
+      <!-- 7. NUESTRA MÚSICA -->
+      <section id="section-musica" class="wrapped-section" role="tabpanel">
+        <div class="section-header">
+          <h2 class="section-title">Nuestra música 🎵</h2>
+          <p class="section-quote">«Canciones que nos recomendamos para seguir cerca.»</p>
+        </div>
+        <div class="trail-controls">
+          <form id="music-search-form" class="media-search compact">
+            <input id="music-search-input" class="form-control" placeholder="Busca una canción o artista (ej. Yellow Coldplay, Morat)..." required>
+            <button type="submit" class="btn-primary">Buscar</button>
+          </form>
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <select id="filter-songs-rating" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">⭐ Todas las calificaciones</option>
+              <option value="5">⭐⭐⭐⭐⭐ (5 estrellas)</option>
+              <option value="4">⭐⭐⭐⭐ (4+ estrellas)</option>
+              <option value="3">⭐⭐⭐ (3+ estrellas)</option>
+              <option value="unrated">Sin calificar aún</option>
+            </select>
+            <button type="button" id="btn-new-song" class="btn-secondary">+ Recomendar canción</button>
+          </div>
+        </div>
+        <div id="music-search-results" class="media-results"></div>
+        <div class="section-subtitle">Nuestras recomendaciones</div>
+        <div class="music-grid" id="songs-grid-list"></div>
+      </section>
+      <!-- 8. NUESTRO CINE -->
+      <section id="section-cine" class="wrapped-section" role="tabpanel">
+        <div class="section-header">
+          <h2 class="section-title">Nuestro cine 🎬</h2>
+          <p class="section-quote">«Historias que vimos juntos y se quedaron para siempre.»</p>
+        </div>
+        <div class="trail-controls">
+          <button type="button" class="btn-primary" id="btn-new-movie"><span>+ Añadir película</span> 🍿</button>
+          <form id="movie-search-form" class="media-search compact">
+            <input id="movie-search-input" class="form-control" placeholder="Buscar película (ej. Elementos, Enredados)..." required>
+            <button type="submit" class="btn-secondary">Buscar</button>
+          </form>
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <select id="filter-movies-status" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">Todas las películas</option>
+              <option value="Vista">🍿 Vistas</option>
+              <option value="Por ver">🌱 Por ver</option>
+            </select>
+            <select id="filter-movies-genre" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">🎭 Todos los géneros</option>
+            </select>
+            <select id="filter-movies-rating" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">⭐ Calificación (Todas)</option>
+              <option value="10">⭐⭐⭐⭐⭐ (10 / 10)</option>
+              <option value="9">⭐ 9+ estrellas</option>
+              <option value="8">⭐ 8+ estrellas</option>
+              <option value="7">⭐ 7+ estrellas</option>
+              <option value="unrated">Sin calificar aún</option>
+            </select>
+          </div>
+        </div>
+        <div id="movie-search-results" class="media-results"></div>
+        <div class="movies-grid" id="movies-grid-list"></div>
+      </section>
+      <!-- NUESTRAS SERIES & ANIME -->
+      <section id="section-series" class="wrapped-section" role="tabpanel">
+        <div class="section-header">
+          <h2 class="section-title">Nuestras Series 📺</h2>
+          <p class="section-quote">«Capítulos, animes y maratones que vivimos juntos.»</p>
+        </div>
+        <div class="trail-controls">
+          <button type="button" class="btn-primary" id="btn-new-series"><span>+ Añadir serie</span> 📺</button>
+          <form id="series-search-form" class="media-search compact">
+            <input id="series-search-input" class="form-control" placeholder="Buscar serie o anime (ej. Arcane, Stranger Things, One Piece)..." required>
+            <button type="submit" class="btn-secondary">Buscar</button>
+          </form>
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <select id="filter-series-status" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">Todas las series</option>
+              <option value="Viendo">🍿 Viendo actualmente</option>
+              <option value="Completada">✨ Completadas</option>
+              <option value="Por ver">🌱 Por ver</option>
+            </select>
+            <select id="filter-series-genre" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">🎭 Todos los géneros</option>
+            </select>
+            <select id="filter-series-rating" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">⭐ Calificación (Todas)</option>
+              <option value="10">⭐⭐⭐⭐⭐ (10 / 10)</option>
+              <option value="9">⭐ 9+ estrellas</option>
+              <option value="8">⭐ 8+ estrellas</option>
+              <option value="7">⭐ 7+ estrellas</option>
+              <option value="unrated">Sin calificar aún</option>
+            </select>
+          </div>
+        </div>
+        <div id="series-search-results" class="media-results"></div>
+        <div class="series-grid" id="series-grid-list"></div>
+      </section>
+      <!-- 8. MURO COMPARTIDO -->
+      <section id="section-muro" class="wrapped-section" role="tabpanel">
+        <div class="section-header">
+          <h2 class="section-title">Muro compartido 💬</h2>
+          <p class="section-quote">«Un diario para dejar pequeñas notas en el corazón.»</p>
+        </div>
+        <div class="trail-controls">
+          <button type="button" class="btn-primary" id="btn-new-note"><span>+ Escribir una nota</span> 💌</button>
+          <span style="font-size: 0.85rem; color: var(--color-text-secondary);">Orden: Más recientes primero</span>
+        </div>
+        <div class="notes-container" id="notes-grid-list"></div>
+      </section>
+      <!-- 9. FRASCO DE SUEÑOS -->
+      <section id="section-suenos" class="wrapped-section" role="tabpanel">
+        <div class="section-header">
+          <h2 class="section-title">Frasco de sueños ✨</h2>
+          <p class="section-quote">«Metas, viajes y deseos que florecerán a su debido tiempo.»</p>
+        </div>
+
+        <!-- Tarjeta Visual del Frasco de Cristal Mágico -->
+        <div class="jar-hero-visual glass-card" id="jar-hero-container">
+          <div class="jar-glass-body">
+            <div class="jar-lid"></div>
+            <div class="jar-stars-chamber" id="jar-stars-chamber">
+              <!-- Luces / Estrellas flotantes interactivas -->
+            </div>
+            <div class="jar-glow-halo"></div>
+          </div>
+          <div class="jar-hero-text">
+            <h3 class="jar-hero-title">Nuestro Frasco de Deseos 🏺✨</h3>
+            <p class="jar-hero-desc">Cada sueño es una luz brillante en nuestro camino juntos. ¡Elige uno al azar o añade un nuevo deseo!</p>
+            <div class="jar-hero-actions">
+              <button type="button" class="btn-primary" id="btn-spin-dreams"><span>🎲 Ruleta del Destino</span></button>
+              <button type="button" class="btn-secondary" id="btn-new-dream"><span>+ Añadir Sueño 🌟</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dreams-stats-banner" id="dreams-stats-container">
+          <div class="glass-card" style="text-align: center;"><span class="stat-label">Total de sueños</span><div class="stat-value" id="stat-dreams-total">0</div></div>
+          <div class="glass-card" style="text-align: center;"><span class="stat-label">Cumplidos</span><div class="stat-value" style="color: var(--color-sunflower-gold);" id="stat-dreams-completed">0</div></div>
+          <div class="glass-card" style="text-align: center;"><span class="stat-label">Pendientes</span><div class="stat-value" style="color: var(--color-lilac);" id="stat-dreams-pending">0</div></div>
+          <div class="glass-card" style="text-align: center;"><span class="stat-label">% Cumplido</span><div class="stat-value" style="color: var(--color-light-yellow);" id="stat-dreams-pct">0,00 %</div></div>
+        </div>
+
+        <div class="trail-controls" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <select id="filter-dreams-category" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">🏷️ Todas las categorías</option>
+              <option value="✈️ Viajes & Aventuras">✈️ Viajes & Aventuras</option>
+              <option value="🏡 Hogar & Futuro">🏡 Hogar & Futuro</option>
+              <option value="🍽️ Citas & Momentos">🍽️ Citas & Momentos</option>
+              <option value="🎒 Locuras & Retos">🎒 Locuras & Retos</option>
+              <option value="✨ General">✨ General</option>
+            </select>
+            <select id="filter-dreams-status" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+              <option value="all">🌱 Todos los estados</option>
+              <option value="Pendiente">🌱 Pendientes</option>
+              <option value="Cumplido">🌟 Cumplidos con Foto</option>
+            </select>
+          </div>
+          <p class="stats-note-legend" style="margin: 0;">* Respaldado en Google Drive: /Frasco de Sueños</p>
+        </div>
+
+        <div id="dreams-list-container" class="dreams-cards-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL CAMBIAR CONTRASEÑA -->
+  <div id="modal-password" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-password-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-password-title">Cambiar contraseña</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-password">&times;</button>
+      </div>
+      <form id="form-password">
+        <div class="form-group"><label for="current-password">Contraseña actual</label><input id="current-password" type="password" class="form-control" required></div>
+        <div class="form-group"><label for="new-password">Nueva contraseña (mínimo 4 caracteres)</label><input id="new-password" type="password" minlength="4" class="form-control" required></div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close-modal="modal-password">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CANCIÓN -->
+  <div id="modal-song" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-song-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-song-title">Recomendar canción 🎵</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-song" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-song">
+        <input type="hidden" id="song-id">
+        <div class="form-group"><label for="song-title">Nombre de la canción *</label><input id="song-title" class="form-control" placeholder="Ej. Yellow" required></div>
+        <div class="form-group"><label for="song-artist">Artista *</label><input id="song-artist" class="form-control" placeholder="Ej. Coldplay" required></div>
+        <div class="form-group"><label for="song-cover">Enlace de portada (URL)</label><input id="song-cover" type="url" class="form-control" placeholder="https://..."></div>
+        <div class="form-group">
+          <label for="song-lyrics">Letra de la canción</label>
+          <textarea id="song-lyrics" class="form-control" rows="5" placeholder="Escribe o pega la letra aquí para leerla juntos..."></textarea>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group"><label for="song-spotify">Enlace de Spotify</label><input id="song-spotify" type="url" class="form-control" placeholder="https://open.spotify.com/..."></div>
+          <div class="form-group"><label for="song-youtube">Enlace de YouTube</label><input id="song-youtube" type="url" class="form-control" placeholder="https://www.youtube.com/..."></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="song-kevin-score">Estrellas Kevin</label>
+            <select id="song-kevin-score" class="form-control">
+              <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+              <option value="4">⭐⭐⭐⭐ (4/5)</option>
+              <option value="3">⭐⭐⭐ (3/5)</option>
+              <option value="2">⭐⭐ (2/5)</option>
+              <option value="1">⭐ (1/5)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="song-wendy-score">Estrellas Wendy</label>
+            <select id="song-wendy-score" class="form-control">
+              <option value="0">Sin calificar aún</option>
+              <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+              <option value="4">⭐⭐⭐⭐ (4/5)</option>
+              <option value="3">⭐⭐⭐ (3/5)</option>
+              <option value="2">⭐⭐ (2/5)</option>
+              <option value="1">⭐ (1/5)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Recomendada automáticamente por</label>
+          <div id="song-author-display" class="form-control" style="background: rgba(109, 74, 153, 0.25); font-weight: 600; color: var(--color-sunflower-gold); display: flex; align-items: center; gap: 0.5rem;">
+            <span class="author-badge-circle" id="song-author-badge">K</span>
+            <span id="song-author-name">Kevin</span>
+          </div>
+          <input type="hidden" id="song-proposed" value="Kevin" />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close-modal="modal-song">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar canción 🎵</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL LETRA DE CANCIÓN -->
+  <div id="modal-lyrics" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-lyrics-title">
+    <div class="modal-box modal-box-lyrics">
+      <div class="modal-header" style="align-items: center;">
+        <div style="display: flex; align-items: center; gap: 0.85rem; overflow: hidden;">
+          <img id="lyrics-modal-cover" src="" alt="" style="width: 52px; height: 52px; border-radius: 10px; object-fit: cover; background: var(--color-purple); flex-shrink: 0;">
+          <div style="overflow: hidden;">
+            <h3 id="modal-lyrics-title" style="font-size: 1.25rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Letra</h3>
+            <p id="modal-lyrics-artist" style="font-size: 0.88rem; color: var(--color-sunflower-gold); margin: 0.2rem 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-lyrics" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="lyrics-scroll-body" id="modal-lyrics-body">
+        <!-- Letra formateada -->
+      </div>
+      <div class="lyrics-footer-links" id="modal-lyrics-links" style="display: flex; gap: 0.75rem; justify-content: space-between; align-items: center; margin-top: 1.25rem; border-top: 1px solid var(--color-border); padding-top: 1rem;">
+        <div id="modal-lyrics-actions" style="display: flex; gap: 0.6rem; flex-wrap: wrap;"></div>
+        <button type="button" class="btn-primary" data-close-modal="modal-lyrics" style="padding: 0.4rem 1.2rem; font-size: 0.9rem;">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL RECUERDO MEJORADO -->
+  <div id="modal-memory" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-memory-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <h3 id="modal-memory-title">Nuevo Recuerdo 🌻</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-memory" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-memory">
+        <input type="hidden" id="mem-id" />
+        
+        <!-- Fecha con selector desprendible / atajos rápidos -->
+        <div class="form-group">
+          <label for="mem-date">Fecha del recuerdo *</label>
+          <div class="date-input-wrapper">
+            <input type="date" id="mem-date" class="form-control custom-date-input" required />
+            <div class="date-quick-buttons">
+              <button type="button" class="btn-quick-date" data-val="today">Hoy</button>
+              <button type="button" class="btn-quick-date" data-val="yesterday">Ayer</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="mem-title">Título del recuerdo *</label>
+          <input type="text" id="mem-title" class="form-control" placeholder="Ej. Nuestro picnic bajo el sol" required />
+        </div>
+
+        <div class="form-group">
+          <label for="mem-desc">Descripción / Historia *</label>
+          <textarea id="mem-desc" class="form-control" rows="3" placeholder="Describe lo que vivimos, anécdotas, risas..." required></textarea>
+        </div>
+
+        <!-- Selector de Color para el Calendario y Tarjeta -->
+        <div class="form-group">
+          <label>Color en el Calendario y Diario</label>
+          <div class="color-picker-group" id="memory-color-picker">
+            <label class="color-swatch-label">
+              <input type="radio" name="mem-color" value="#F4C542" checked>
+              <span class="color-swatch" style="background: #F4C542;" title="Girasol Dorado 🌻"></span>
+            </label>
+            <label class="color-swatch-label">
+              <input type="radio" name="mem-color" value="#B98EE6">
+              <span class="color-swatch" style="background: #B98EE6;" title="Violeta Noche 💜"></span>
+            </label>
+            <label class="color-swatch-label">
+              <input type="radio" name="mem-color" value="#F48FB1">
+              <span class="color-swatch" style="background: #F48FB1;" title="Rosa Amor 💖"></span>
+            </label>
+            <label class="color-swatch-label">
+              <input type="radio" name="mem-color" value="#81C784">
+              <span class="color-swatch" style="background: #81C784;" title="Esmeralda Esperanza 🌿"></span>
+            </label>
+            <label class="color-swatch-label">
+              <input type="radio" name="mem-color" value="#64B5F6">
+              <span class="color-swatch" style="background: #64B5F6;" title="Azul Cielo 🌌"></span>
+            </label>
+            <label class="color-swatch-label">
+              <input type="radio" name="mem-color" value="#FFA726">
+              <span class="color-swatch" style="background: #FFA726;" title="Ámbar Cálido 🍯"></span>
+            </label>
+            <label class="color-swatch-label">
+              <input type="radio" name="mem-color" value="#EC407A">
+              <span class="color-swatch" style="background: #EC407A;" title="Magenta Dulce 🌸"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Multimedia de Portada (Foto o Video) -->
+        <div class="form-group">
+          <label for="mem-cover-url">Foto o Video de Portada</label>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <input type="url" id="mem-cover-url" class="form-control" style="flex: 1; min-width: 220px;" placeholder="URL de imagen o video (https://...)" />
+            <label class="btn-secondary" style="white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+              📁 Subir archivo
+              <input type="file" id="mem-cover-file" accept="image/*,video/*" style="display: none;">
+            </label>
+          </div>
+          <div id="mem-cover-preview" class="media-preview-box" style="display: none; margin-top: 0.5rem;"></div>
+        </div>
+
+        <!-- Fotos y Videos Adicionales Guardados -->
+        <div class="form-group">
+          <label>Fotos y Videos Adicionales (Galería)</label>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+            <input type="url" id="mem-gallery-item-input" class="form-control" style="flex: 1; min-width: 220px;" placeholder="Añadir enlace URL de foto o video..." />
+            <button type="button" class="btn-secondary" id="btn-add-gallery-item">+ Añadir enlace</button>
+            <label class="btn-secondary" style="white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+              📁 Subir archivos
+              <input type="file" id="mem-gallery-file" accept="image/*,video/*" multiple style="display: none;">
+            </label>
+          </div>
+          <div id="mem-gallery-list" class="gallery-thumbs-grid"></div>
+        </div>
+
+        <!-- Canción Enlazada al Recuerdo 🎵 -->
+        <div class="form-group">
+          <label for="mem-song-select">Canción del Recuerdo 🎵 (Opcional)</label>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <select id="mem-song-select" class="form-control" style="flex: 1;">
+              <option value="">-- Sin canción enlazada --</option>
+            </select>
+            <button type="button" class="btn-secondary" id="btn-preview-mem-song" style="display: none; padding: 0.5rem 0.8rem;" title="Escuchar canción">▶️</button>
+          </div>
+          <input type="hidden" id="mem-song-id" />
+          <input type="hidden" id="mem-song-title" />
+          <input type="hidden" id="mem-song-artist" />
+          <input type="hidden" id="mem-song-cover" />
+          <input type="hidden" id="mem-song-audio" />
+        </div>
+
+        <!-- Nota de Voz Grabada / Audio de Recuerdos -->
+        <div class="form-group">
+          <label>Nota de Voz / Audio de Recuerdos 🎙️ (Opcional)</label>
+          <div class="voice-recorder-widget" id="mem-voice-recorder">
+            <input type="hidden" id="mem-voice-url" />
+            <input type="hidden" id="mem-voice-duration" />
+            <div class="voice-recorder-controls" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-voice-record" id="btn-mem-record" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border-radius: var(--radius-full); background: rgba(244, 197, 66, 0.15); border: 1px solid rgba(244, 197, 66, 0.4); color: var(--color-sunflower-gold); font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+                <span class="mic-icon">🎙️</span>
+                <span class="record-label">Grabar nota de voz</span>
+              </button>
+              <button type="button" class="btn-voice-stop" id="btn-mem-stop" style="display: none; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border-radius: var(--radius-full); background: rgba(255, 82, 82, 0.2); border: 1px solid #FF5252; color: #FF5252; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                <span class="recording-pulse-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #FF5252; animation: gentlePulse 1s infinite;"></span>
+                <span>Detener (<span class="record-timer" id="mem-record-timer">00:00</span>)</span>
+              </button>
+              <button type="button" class="btn-voice-delete" id="btn-mem-delete-audio" style="display: none; padding: 0.4rem 0.7rem; border-radius: var(--radius-full); background: rgba(255, 82, 82, 0.15); border: 1px solid rgba(255, 82, 82, 0.3); color: #FF5252; font-size: 0.82rem; cursor: pointer;" title="Eliminar audio grabado">
+                🗑️ Eliminar audio
+              </button>
+            </div>
+            <div class="voice-audio-preview" id="mem-voice-preview" style="display: none; margin-top: 0.6rem;">
+              <audio id="mem-voice-audio-player" controls style="width: 100%; height: 38px; border-radius: 8px;"></audio>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="mem-status">Estado</label>
+            <select id="mem-status" class="form-control">
+              <option value="Guardado">Guardado 🌱</option>
+              <option value="Destacado">Destacado ⭐</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Añadido automáticamente por</label>
+            <div id="mem-author-display" class="form-control" style="background: rgba(109, 74, 153, 0.25); font-weight: 600; color: var(--color-sunflower-gold); display: flex; align-items: center; gap: 0.5rem;">
+              <span class="author-badge-circle" id="mem-author-badge">K</span>
+              <span id="mem-author-name">Kevin</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close-modal="modal-memory">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar recuerdo 🌻</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL PELÍCULA -->
+  <div id="modal-movie" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-movie-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <h3 id="modal-movie-title">Película 🎬</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-movie" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-movie">
+        <input type="hidden" id="movie-id" />
+        <div class="form-group"><label for="movie-title">Título de la película *</label><input type="text" id="movie-title" class="form-control" placeholder="Ej. Elementos" required /></div>
+        <div class="form-group"><label for="movie-genre">Género(s) de la película</label><input type="text" id="movie-genre" class="form-control" placeholder="Ej. Romance, Comedia, Animación, Aventura" /></div>
+        <div class="form-group"><label for="movie-poster">Enlace del póster (URL)</label><input type="url" id="movie-poster" class="form-control" placeholder="https://image.tmdb.org/..." /></div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group"><label for="movie-year">Año (4 dígitos) *</label><input type="number" id="movie-year" class="form-control" min="1900" max="2099" required /></div>
+          <div class="form-group">
+            <label>Propuesta automáticamente por</label>
+            <div id="movie-author-display" class="form-control" style="background: rgba(109, 74, 153, 0.25); font-weight: 600; color: var(--color-sunflower-gold); display: flex; align-items: center; gap: 0.5rem;">
+              <span class="author-badge-circle" id="movie-author-badge">K</span>
+              <span id="movie-author-name">Kevin</span>
+            </div>
+            <input type="hidden" id="movie-proposed" value="Kevin" />
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group"><label for="movie-priority">Prioridad (1 a 5) *</label><select id="movie-priority" class="form-control" required><option value="5">⭐⭐⭐⭐⭐ (5/5)</option><option value="4">⭐⭐⭐⭐ (4/5)</option><option value="3">⭐⭐⭐ (3/5)</option><option value="2">⭐⭐ (2/5)</option><option value="1">⭐ (1/5)</option></select></div>
+          <div class="form-group"><label for="movie-status">Etiqueta de estado *</label><select id="movie-status" class="form-control" required><option value="Por ver">🌱 Por ver</option><option value="Vista">🍿 Vista</option></select></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem;">
+          <div class="form-group"><label for="movie-platforms">Plataformas disponibles</label><input type="text" id="movie-platforms" class="form-control" placeholder="Ej. Netflix, Disney+, Prime Video" /></div>
+          <div class="form-group"><label for="movie-imdb-score">Calificación IMDb</label><input type="text" id="movie-imdb-score" class="form-control" placeholder="Ej. 8.4" /></div>
+        </div>
+        <div class="form-group"><label for="movie-imdb-url">Enlace IMDb (opcional)</label><input type="url" id="movie-imdb-url" class="form-control" placeholder="https://www.imdb.com/title/..." /></div>
+
+        <div class="form-group"><label for="movie-synopsis">Sinopsis</label><textarea id="movie-synopsis" class="form-control" rows="3" placeholder="Resumen de la película..."></textarea></div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="movie-kevin-score">Estrellas Kevin</label>
+            <select id="movie-kevin-score" class="form-control">
+              <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+              <option value="4">⭐⭐⭐⭐ (4/5)</option>
+              <option value="3">⭐⭐⭐ (3/5)</option>
+              <option value="2">⭐⭐ (2/5)</option>
+              <option value="1">⭐ (1/5)</option>
+              <option value="0">Sin calificar aún</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="movie-wendy-score">Estrellas Wendy</label>
+            <select id="movie-wendy-score" class="form-control">
+              <option value="0">Sin calificar aún</option>
+              <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+              <option value="4">⭐⭐⭐⭐ (4/5)</option>
+              <option value="3">⭐⭐⭐ (3/5)</option>
+              <option value="2">⭐⭐ (2/5)</option>
+              <option value="1">⭐ (1/5)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close-modal="modal-movie">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar película 🎬</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR / PERSONALIZAR SERIE -->
+  <div id="modal-series" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-series-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <h3 id="modal-series-title">Serie o Anime 📺</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-series" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-series">
+        <input type="hidden" id="series-id" />
+        <input type="hidden" id="series-tmdb-id" />
+        <div class="form-group"><label for="series-title">Título de la serie o anime *</label><input type="text" id="series-title" class="form-control" placeholder="Ej. Arcane, Stranger Things" required /></div>
+        <div class="form-group"><label for="series-genre">Género(s) de la serie o anime</label><input type="text" id="series-genre" class="form-control" placeholder="Ej. Anime, Romance, Misterio, Fantasía" /></div>
+        <div class="form-group"><label for="series-poster">Enlace del póster (URL)</label><input type="url" id="series-poster" class="form-control" placeholder="https://image.tmdb.org/..." /></div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group"><label for="series-year">Año de estreno *</label><input type="number" id="series-year" class="form-control" min="1900" max="2099" required /></div>
+          <div class="form-group"><label for="series-seasons-count">Cantidad de temporadas *</label><input type="number" id="series-seasons-count" class="form-control" min="1" max="99" value="1" required /></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group"><label for="series-status">Estado *</label><select id="series-status" class="form-control" required><option value="Viendo">🍿 Viendo actualmente</option><option value="Por ver">🌱 Por ver</option><option value="Completada">✨ Completada</option></select></div>
+          <div class="form-group">
+            <label>Añadida por</label>
+            <div id="series-author-display" class="form-control" style="background: rgba(109, 74, 153, 0.25); font-weight: 600; color: var(--color-sunflower-gold); display: flex; align-items: center; gap: 0.5rem;">
+              <span class="author-badge-circle" id="series-author-badge">K</span>
+              <span id="series-author-name">Kevin</span>
+            </div>
+            <input type="hidden" id="series-proposed" value="Kevin" />
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem;">
+          <div class="form-group"><label for="series-platforms">Plataformas de streaming</label><input type="text" id="series-platforms" class="form-control" placeholder="Ej. Netflix, Disney+, Max, Crunchyroll" /></div>
+          <div class="form-group"><label for="series-imdb-score">Calificación IMDb / TMDb</label><input type="text" id="series-imdb-score" class="form-control" placeholder="Ej. 9.0" /></div>
+        </div>
+
+        <div class="form-group"><label for="series-synopsis">Sinopsis</label><textarea id="series-synopsis" class="form-control" rows="3" placeholder="Resumen de la serie o anime..."></textarea></div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close-modal="modal-series">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar serie 📺</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL VISOR INTERACTIVO DE TEMPORADAS Y CAPÍTULOS DE SERIE -->
+  <div id="modal-series-viewer" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="series-viewer-title">
+    <div class="modal-box modal-box-viewer">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.5rem;">📺</span>
+          <div>
+            <h3 id="series-viewer-title" style="margin: 0; line-height: 1.2;">Cargando serie…</h3>
+            <span id="series-viewer-subtitle" style="font-size: 0.82rem; color: var(--color-text-secondary);">Temporadas y capítulos</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-series-viewer" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div class="series-viewer-body" id="series-viewer-content">
+        <!-- Se llena dinámicamente con la cabecera, barra de temporadas, capítulos y comentarios -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIGURACIÓN GOOGLE DRIVE -->
+  <div id="modal-gdrive" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-gdrive-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <h3 id="modal-gdrive-title">Carpeta de Google Drive 📁🌻</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-gdrive" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-pad">
+        <p style="font-size: 0.9rem; color: var(--color-text-secondary); margin-bottom: 1.2rem; line-height: 1.5;">
+          Accede y gestiona la carpeta compartida en Google Drive donde guardan las fotos, videos y recuerdos de ambos.
+        </p>
+
+        <div class="glass-card" style="padding: 1.2rem; margin-bottom: 1.2rem; border-color: rgba(244, 197, 66, 0.35);">
+          <h4 style="color: var(--color-sunflower-gold); margin-bottom: 0.5rem; font-size: 1.05rem;">📁 Enlace de la Carpeta Principal</h4>
+          <p style="font-size: 0.83rem; color: var(--color-text-secondary); margin-bottom: 0.85rem;">
+            Enlace de acceso a la carpeta en Google Drive:
+          </p>
+          <div class="form-group">
+            <label for="input-gdrive-folder-url">URL de la Carpeta Compartida</label>
+            <input type="url" id="input-gdrive-folder-url" class="form-control" value="https://drive.google.com/drive/folders/1qXPifAHV5fTVX7HdI1ab6UzAjDTpiwjm?usp=sharing" placeholder="https://drive.google.com/drive/folders/..." />
+          </div>
+          <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.85rem;">
+            <a id="btn-open-gdrive-link" href="https://drive.google.com/drive/folders/1qXPifAHV5fTVX7HdI1ab6UzAjDTpiwjm?usp=sharing" target="_blank" rel="noopener" class="btn-primary" style="padding: 0.45rem 1.1rem; font-size: 0.88rem;">
+              <span>Abrir Carpeta en Google Drive ↗</span>
+            </a>
+            <button type="button" class="btn-secondary" id="btn-save-gdrive-url" style="padding: 0.45rem 1.1rem; font-size: 0.88rem;">
+              <span>Guardar Enlace</span> 💾
+            </button>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 1rem; font-size: 0.82rem; color: var(--color-text-muted);">
+          <strong>💡 Tip:</strong> En cada recuerdo individual también puedes pegar el enlace a su subcarpeta específica para abrirla en un solo toque desde la línea de tiempo.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NOTA MURO -->
+  <div id="modal-note" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-note-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <h3 id="modal-note-title">Nota para el Muro 💌</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-note" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-note">
+        <input type="hidden" id="note-id" />
+        <input type="hidden" id="note-author" />
+
+        <!-- Insignia del Autor Activo Automático -->
+        <div class="glass-card" style="padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; border-color: rgba(244, 197, 66, 0.4);">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <div id="note-modal-author-badge" class="author-badge-circle kevin" style="width: 32px; height: 32px; font-size: 0.95rem;">K</div>
+            <div>
+              <span style="font-size: 0.75rem; color: var(--color-text-secondary); display: block;">Publicando nota como:</span>
+              <strong id="note-modal-author-name" style="font-size: 0.95rem; color: var(--color-sunflower-gold);">Kevin 👦🏻</strong>
+            </div>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--color-text-muted);">🔒 Asignado automáticamente</span>
+        </div>
+
+        <!-- 1. Estilo / Tipo de Papelito -->
+        <div class="form-group">
+          <label style="margin-bottom: 0.4rem; display: block;">Estilo de Papelito 🎨</label>
+          <div class="note-styles-picker">
+            <label class="note-style-opt">
+              <input type="radio" name="note-style" value="sunflower" checked />
+              <span class="note-style-box style-sunflower">🌻 Girasol Dorado</span>
+            </label>
+            <label class="note-style-opt">
+              <input type="radio" name="note-style" value="love" />
+              <span class="note-style-box style-love">💌 Carta de Amor</span>
+            </label>
+            <label class="note-style-opt">
+              <input type="radio" name="note-style" value="surprise" />
+              <span class="note-style-box style-surprise">🤫 Raspa & Revela</span>
+            </label>
+            <label class="note-style-opt">
+              <input type="radio" name="note-style" value="reminder" />
+              <span class="note-style-box style-reminder">⏰ Recordatorio</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. Mensaje -->
+        <div class="form-group">
+          <label for="note-message">Mensaje *</label>
+          <textarea id="note-message" class="form-control" rows="4" placeholder="Escribe tus palabras con todo el cariño..." required></textarea>
+        </div>
+
+        <!-- 3. Foto Polaroid Adjunta (Opcional) -->
+        <div class="glass-card" style="padding: 0.85rem; margin-bottom: 1rem; border-color: rgba(255, 255, 255, 0.1);">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--color-sunflower-gold); margin-bottom: 0.35rem; display: block;">
+            📸 Pegar Foto Polaroid (Opcional)
+          </label>
+          <input type="url" id="note-photo-url" class="form-control" placeholder="Enlace de imagen o foto (https://...)" style="margin-bottom: 0.4rem;" />
+          <input type="file" id="note-photo-file" accept="image/*" class="form-control" style="padding: 0.3rem; font-size: 0.78rem;" />
+          <div id="note-photo-preview-wrap" style="display: none; margin-top: 0.5rem; text-align: center;">
+            <img id="note-photo-preview-img" src="" alt="Vista previa polaroid" style="max-height: 120px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);" />
+          </div>
+        </div>
+
+        <!-- Nota de Voz para el Muro -->
+        <div class="glass-card" style="padding: 0.85rem; margin-bottom: 1rem; border-color: rgba(255, 255, 255, 0.1);">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--color-sunflower-gold); margin-bottom: 0.35rem; display: block;">
+            🎙️ Nota de Voz / Dedicatoria de Audio (Opcional)
+          </label>
+          <div class="voice-recorder-widget" id="note-voice-recorder">
+            <input type="hidden" id="note-voice-url" />
+            <input type="hidden" id="note-voice-duration" />
+            <div class="voice-recorder-controls" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-voice-record" id="btn-note-record" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border-radius: var(--radius-full); background: rgba(244, 197, 66, 0.15); border: 1px solid rgba(244, 197, 66, 0.4); color: var(--color-sunflower-gold); font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+                <span class="mic-icon">🎙️</span>
+                <span class="record-label">Grabar nota de voz</span>
+              </button>
+              <button type="button" class="btn-voice-stop" id="btn-note-stop" style="display: none; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border-radius: var(--radius-full); background: rgba(255, 82, 82, 0.2); border: 1px solid #FF5252; color: #FF5252; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                <span class="recording-pulse-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #FF5252; animation: gentlePulse 1s infinite;"></span>
+                <span>Detener (<span class="record-timer" id="note-record-timer">00:00</span>)</span>
+              </button>
+              <button type="button" class="btn-voice-delete" id="btn-note-delete-audio" style="display: none; padding: 0.4rem 0.7rem; border-radius: var(--radius-full); background: rgba(255, 82, 82, 0.15); border: 1px solid rgba(255, 82, 82, 0.3); color: #FF5252; font-size: 0.82rem; cursor: pointer;" title="Eliminar audio grabado">
+                🗑️ Eliminar audio
+              </button>
+            </div>
+            <div class="voice-audio-preview" id="note-voice-preview" style="display: none; margin-top: 0.6rem;">
+              <audio id="note-voice-audio-player" controls style="width: 100%; height: 38px; border-radius: 8px;"></audio>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Sticker Decorativo -->
+        <div class="form-group">
+          <label style="margin-bottom: 0.35rem; display: block; font-size: 0.85rem;">Sticker Flotante ✨</label>
+          <div class="note-stickers-selector">
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="" checked /><span>Ninguno</span></label>
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="🦆" /><span>🦆 Patico</span></label>
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="🌻" /><span>🌻 Girasol</span></label>
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="💖" /><span>💖 Corazón</span></label>
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="☕" /><span>☕ Café</span></label>
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="🌙" /><span>🌙 Luna</span></label>
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="✨" /><span>✨ Brillo</span></label>
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="🧸" /><span>🧸 Osito</span></label>
+            <label class="sticker-opt"><input type="radio" name="note-sticker" value="🐱" /><span>🐱 Gatito</span></label>
+          </div>
+        </div>
+
+        <!-- 5. Fijar al inicio -->
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+            <input type="checkbox" id="note-is-pinned" style="width: 18px; height: 18px; accent-color: var(--color-sunflower-gold);" />
+            <span>📌 <strong>Fijar con chincheta</strong> en la parte superior del muro</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close-modal="modal-note">Cancelar</button>
+          <button type="submit" class="btn-primary">Publicar nota 💌</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL SUEÑO (CREAR / EDITAR) -->
+  <div id="modal-dream" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-dream-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <h3 id="modal-dream-title">Nuevo Sueño ✨</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-dream" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-dream">
+        <input type="hidden" id="dream-id" />
+        <input type="hidden" id="dream-photo-data" />
+
+        <div class="form-group">
+          <label for="dream-title">Título del sueño o meta *</label>
+          <input type="text" id="dream-title" class="form-control" placeholder="Ej. Viajar juntos a Japón, tener un gato..." required />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+          <div class="form-group">
+            <label for="dream-category">Categoría 🏷️</label>
+            <select id="dream-category" class="form-control">
+              <option value="✈️ Viajes & Aventuras">✈️ Viajes & Aventuras</option>
+              <option value="🏡 Hogar & Futuro">🏡 Hogar & Futuro</option>
+              <option value="🍽️ Citas & Momentos">🍽️ Citas & Momentos</option>
+              <option value="🎒 Locuras & Retos">🎒 Locuras & Retos</option>
+              <option value="✨ General">✨ General</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="dream-desire">Nivel de Ilusión 🔥</label>
+            <select id="dream-desire" class="form-control">
+              <option value="3">🔥🔥🔥 ¡Nos urge hacerlo!</option>
+              <option value="2">🔥🔥 Muchas ganas</option>
+              <option value="1">🔥 Con calma y amor</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="dream-status">Estado</label>
+          <select id="dream-status" class="form-control">
+            <option value="Pendiente">Pendiente 🌱 (En el frasco)</option>
+            <option value="Cumplido">Cumplido 🌟 (¡Logro desbloqueado!)</option>
+          </select>
+        </div>
+
+        <!-- Sección de Cumplimiento (Foto del Momento) -->
+        <div id="dream-completion-fields" class="glass-card" style="display: none; padding: 1rem; margin-top: 1rem; border-color: rgba(244, 197, 66, 0.4);">
+          <h4 style="color: var(--color-sunflower-gold); margin-bottom: 0.5rem; font-size: 1rem;">📸 Foto del Sueño Cumplido</h4>
+          <p style="font-size: 0.8rem; color: var(--color-text-secondary); margin-bottom: 0.85rem;">
+            Se guardará en la carpeta <strong>/Frasco de Sueños</strong> en Google Drive con el nombre del sueño y fecha.
+          </p>
+
+          <div class="form-group">
+            <label for="dream-completed-date">Fecha en que lo cumplieron</label>
+            <input type="date" id="dream-completed-date" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <label for="dream-photo-input">Foto del momento</label>
+            <input type="file" id="dream-photo-input" class="form-control" accept="image/*" />
+          </div>
+
+          <div id="dream-photo-preview-wrap" style="display: none; margin-top: 0.65rem; text-align: center;">
+            <img id="dream-photo-preview-img" src="" alt="Foto del sueño" style="max-height: 180px; max-width: 100%; border-radius: 12px; border: 2px solid var(--color-sunflower-gold);" />
+            <button type="button" id="btn-remove-dream-photo" class="btn-secondary" style="margin-top: 0.4rem; padding: 0.25rem 0.75rem; font-size: 0.78rem; color: var(--color-danger);">Quitar foto 🗑️</button>
+          </div>
+
+          <div class="form-group" style="margin-top: 0.65rem;">
+            <label for="dream-notes">Nota o recuerdo de este día (opcional)</label>
+            <textarea id="dream-notes" class="form-control" rows="2" placeholder="¿Qué sentimos al lograrlo juntos?..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 1.25rem;">
+          <button type="button" class="btn-secondary" data-close-modal="modal-dream">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar sueño 🌟</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CÁPSULA DE SUEÑO CUMPLIDO 🎉 -->
+  <div id="modal-dream-fulfill" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-dream-fulfill-title">
+    <div class="modal-box modal-box-large" style="text-align: center;">
+      <div class="modal-header">
+        <h3 id="modal-dream-fulfill-title">🏆 ¡Sueño Cumplido! 🎉</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-dream-fulfill" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-dream-fulfill" style="text-align: left; margin-top: 1rem;">
+        <input type="hidden" id="fulfill-dream-id" />
+        <input type="hidden" id="fulfill-dream-photo-data" />
+
+        <div class="glass-card" style="text-align: center; padding: 1.2rem; margin-bottom: 1rem; border-color: rgba(244, 197, 66, 0.5);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.4rem;">🌟✨💑</div>
+          <h4 id="fulfill-dream-title-display" style="font-family: var(--font-heading); font-size: 1.35rem; color: var(--color-sunflower-gold); margin-bottom: 0.3rem;"></h4>
+          <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin: 0;">¡Un nuevo logro desbloqueado en nuestra historia!</p>
+        </div>
+
+        <div class="form-group">
+          <label for="fulfill-dream-date">Fecha de cumplimiento</label>
+          <input type="date" id="fulfill-dream-date" class="form-control" required />
+        </div>
+
+        <div class="form-group">
+          <label for="fulfill-dream-photo-file">Foto especial de este momento 📸 (Se sube a Google Drive /Frasco de Sueños)</label>
+          <input type="file" id="fulfill-dream-photo-file" class="form-control" accept="image/*" />
+        </div>
+
+        <div id="fulfill-photo-preview-wrap" style="display: none; margin-bottom: 0.85rem; text-align: center;">
+          <img id="fulfill-photo-preview-img" src="" alt="Foto" style="max-height: 180px; max-width: 100%; border-radius: 12px; border: 2px solid var(--color-sunflower-gold);" />
+        </div>
+
+        <div class="form-group">
+          <label for="fulfill-dream-notes">Nota o anécdota (opcional)</label>
+          <textarea id="fulfill-dream-notes" class="form-control" rows="2" placeholder="Escribe algo lindo sobre cómo fue lograrlo..."></textarea>
+        </div>
+
+        <div class="form-actions" style="margin-top: 1.2rem;">
+          <button type="button" class="btn-secondary" data-close-modal="modal-dream-fulfill">Cerrar</button>
+          <button type="submit" class="btn-primary">Guardar en el Frasco 🌟</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL RULETA DEL DESTINO 🎲✨ -->
+  <div id="modal-dream-roulette" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-roulette-title">
+    <div class="modal-box" style="text-align: center;">
+      <div class="modal-header">
+        <h3 id="modal-roulette-title">🎲 Ruleta del Destino ✨</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-dream-roulette" aria-label="Cerrar">&times;</button>
+      </div>
+      <div style="padding: 1.5rem 0.5rem;">
+        <div id="roulette-jar-anim" class="roulette-jar-animation">
+          <span style="font-size: 3.5rem; display: block; animation: floatJar 2s infinite ease-in-out;">🏺</span>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--color-text-secondary); margin-bottom: 1.25rem;">
+          ¿No saben qué plan hacer hoy o cuál será su próxima meta? ¡El universo elige un deseo del frasco!
+        </p>
+
+        <div id="roulette-result-box" class="glass-card" style="display: none; padding: 1.4rem; margin-bottom: 1.25rem; border-color: var(--color-sunflower-gold);">
+          <span id="roulette-category-badge" class="platform-pill" style="margin-bottom: 0.5rem; display: inline-block;"></span>
+          <h3 id="roulette-dream-title" style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--color-text-main); margin: 0.5rem 0;"></h3>
+          <p id="roulette-desire-badge" style="font-size: 0.9rem; margin: 0; color: #FFA726;"></p>
+        </div>
+
+        <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
+          <button type="button" class="btn-primary" id="btn-spin-again"><span>🎲 Sacar otro deseo</span></button>
+          <button type="button" class="btn-secondary" data-close-modal="modal-dream-roulette">Listo ✨</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PERFILES Y APODOS -->
+  <div id="modal-profiles" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-profiles-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <h3 id="modal-profiles-title">Perfiles y Apodos 👤💖</h3>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-profiles" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-profiles">
+        <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 1.25rem;">
+          Personalicen sus fotos de perfil y sus nombres o apodos especiales. Se sincronizan en tiempo real en la barra de conexión y en todo el diario compartido.
+        </p>
+
+        <!-- SECCIÓN PERFIL KEVIN -->
+        <div class="glass-card" style="padding: 1.2rem; margin-bottom: 1.2rem; border-color: rgba(0, 229, 255, 0.35);">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.85rem;">
+            <div class="profile-avatar-preview-box">
+              <img id="kevin-avatar-preview-img" src="" style="display: none;" class="profile-avatar-img-round" alt="Kevin" />
+              <span id="kevin-avatar-preview-fallback" class="whatsapp-avatar-fallback kevin" style="width: 52px; height: 52px; font-size: 1.4rem;">K</span>
+            </div>
+            <div>
+              <h4 style="margin: 0; color: #00E5FF; font-size: 1.1rem;">Perfil de Kevin 👦🏻</h4>
+              <span style="font-size: 0.78rem; color: var(--color-text-muted);">Foto de avatar y apodo especial</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="profile-kevin-nickname">Apodo para Kevin</label>
+            <input type="text" id="profile-kevin-nickname" class="form-control" placeholder="Ej. Kevin 👦🏻" required />
+          </div>
+
+          <div class="form-group">
+            <label for="profile-kevin-avatar-url">Enlace URL de foto (opcional)</label>
+            <input type="url" id="profile-kevin-avatar-url" class="form-control" placeholder="https://... o sube una imagen abajo" />
+          </div>
+
+          <div class="form-group">
+            <label for="profile-kevin-avatar-file" style="font-size: 0.8rem; color: var(--color-text-secondary);">O sube una foto desde este dispositivo:</label>
+            <input type="file" id="profile-kevin-avatar-file" accept="image/*" class="form-control" style="padding: 0.35rem;" />
+          </div>
+        </div>
+
+        <!-- SECCIÓN PERFIL WENDY -->
+        <div class="glass-card" style="padding: 1.2rem; margin-bottom: 1.2rem; border-color: rgba(224, 64, 251, 0.35);">
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.85rem;">
+            <div class="profile-avatar-preview-box">
+              <img id="wendy-avatar-preview-img" src="" style="display: none;" class="profile-avatar-img-round" alt="Wendy" />
+              <span id="wendy-avatar-preview-fallback" class="whatsapp-avatar-fallback wendy" style="width: 52px; height: 52px; font-size: 1.4rem;">W</span>
+            </div>
+            <div>
+              <h4 style="margin: 0; color: #E040FB; font-size: 1.1rem;">Perfil de Wendy 👧🏻 (Patico ♥️)</h4>
+              <span style="font-size: 0.78rem; color: var(--color-text-muted);">Foto de avatar y apodo especial</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="profile-wendy-nickname">Apodo para Wendy</label>
+            <input type="text" id="profile-wendy-nickname" class="form-control" placeholder="Ej. Patico ♥️" required />
+          </div>
+
+          <div class="form-group">
+            <label for="profile-wendy-avatar-url">Enlace URL de foto (opcional)</label>
+            <input type="url" id="profile-wendy-avatar-url" class="form-control" placeholder="https://... o sube una imagen abajo" />
+          </div>
+
+          <div class="form-group">
+            <label for="profile-wendy-avatar-file" style="font-size: 0.8rem; color: var(--color-text-secondary);">O sube una foto desde este dispositivo:</label>
+            <input type="file" id="profile-wendy-avatar-file" accept="image/*" class="form-control" style="padding: 0.35rem;" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close-modal="modal-profiles">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar perfiles 💖🌻</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL HISTORIA ATRIA (MODO HISTORIA) -->
+  <div id="modal-wrapped-story" class="wrapped-story-modal" role="dialog" aria-modal="true" aria-label="Experiencia ATRIA en Modo Historia">
+    <div class="story-player-card">
+      
+      <!-- Barras de progreso de historias -->
+      <div class="story-progress-bar-container" id="story-progress-bars"></div>
+
+      <!-- Barra superior de autor y controles -->
+      <div class="story-header-bar">
+        <div class="story-author-badge">
+          <span>🏛️</span>
+          <span>ATRIA · <span id="story-slide-index-label">1/10</span></span>
+        </div>
+        <button type="button" class="story-close-btn" id="btn-close-story" aria-label="Cerrar historias">&times;</button>
+      </div>
+
+      <!-- Zonas de toque táctil / click para anterior / siguiente -->
+      <div class="story-touch-left" id="story-touch-prev" title="Diapositiva anterior"></div>
+      <div class="story-touch-right" id="story-touch-next" title="Siguiente diapositiva"></div>
+
+      <!-- Contenedor del contenido de la diapositiva -->
+      <div class="story-slide-viewport" id="story-viewport"></div>
+
+      <!-- Barra inferior con botones de navegación manual -->
+      <div class="story-nav-footer">
+        <button type="button" class="story-nav-btn" id="btn-story-prev">◀ Anterior</button>
+        <button type="button" class="story-nav-btn" id="btn-story-pause">⏸ Pausar</button>
+        <button type="button" class="story-nav-btn" id="btn-story-next">Siguiente ▶</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- VISOR DE FOTOS Y VIDEOS EN PANTALLA COMPLETA (LIGHTBOX) -->
+  <div id="modal-lightbox-viewer" class="modal-overlay modal-lightbox-overlay" role="dialog" aria-modal="true" aria-label="Visor de foto y video en alta resolución">
+    <div class="lightbox-wrapper">
+      <button type="button" class="lightbox-close-btn" id="btn-close-lightbox" title="Cerrar visor">&times;</button>
+      <button type="button" class="lightbox-nav-btn lightbox-prev" id="btn-lightbox-prev" title="Anterior">&#10094;</button>
+      <div class="lightbox-media-viewport" id="lightbox-viewport"></div>
+      <button type="button" class="lightbox-nav-btn lightbox-next" id="btn-lightbox-next" title="Siguiente">&#10095;</button>
+      <div class="lightbox-caption-bar">
+        <span id="lightbox-caption-title" class="lightbox-title-text">Recuerdo</span>
+        <span id="lightbox-counter" class="lightbox-counter-badge">1 / 1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MONITOR DE SUBIDA A GOOGLE DRIVE ☁️ -->
+  <div id="modal-upload-monitor" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-upload-monitor-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.5rem;">☁️</span>
+          <div>
+            <h3 id="modal-upload-monitor-title" style="margin: 0; line-height: 1.2;">Carga de Medios & Google Drive</h3>
+            <span style="font-size: 0.82rem; color: var(--color-text-secondary);">Progreso en vivo de recuerdos y fotos</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-upload-monitor" aria-label="Cerrar">&times;</button>
+      </div>
+      
+      <div class="upload-monitor-body" id="upload-monitor-body" style="padding: 1.25rem 0; display: flex; flex-direction: column; gap: 1rem;">
+        <div class="glass-card" style="padding: 1rem; border-color: rgba(244, 197, 66, 0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <strong id="upload-monitor-main-status" style="color: var(--color-sunflower-gold); font-size: 0.95rem;">Todo sincronizado con Google Drive ☁️</strong>
+            <span id="upload-monitor-percent-badge" class="badge-pill" style="background: rgba(244, 197, 66, 0.2); color: var(--color-sunflower-gold); font-weight: 700;">100%</span>
+          </div>
+          <div class="upload-progress-track" style="height: 10px; background: rgba(18, 14, 28, 0.8); border-radius: 999px; overflow: hidden; border: 1px solid var(--color-border);">
+            <div id="upload-monitor-progress-fill" style="width: 100%; height: 100%; background: linear-gradient(90deg, #F4C542 0%, #00E5FF 100%); transition: width 0.3s ease;"></div>
+          </div>
+          <div id="upload-monitor-detail-text" style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.5rem;">
+            Las fotos se comprimen en tu teléfono para guardado instantáneo y se respaldan en Google Drive en segundo plano.
+          </div>
+        </div>
+
+        <div style="font-size: 0.88rem; font-weight: 600; color: var(--color-light-yellow); margin-top: 0.25rem;">Historial de Tareas Recientes:</div>
+        <div id="upload-monitor-jobs-list" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 220px; overflow-y: auto;">
+          <div style="font-size: 0.82rem; color: var(--color-text-muted); text-align: center; padding: 1rem;">No hay tareas pendientes en la cola.</div>
+        </div>
+      </div>
+
+      <div class="form-actions" style="justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.75rem;">
+        <a href="https://drive.google.com/drive/folders/1qXPifAHV5fTVX7HdI1ab6UzAjDTpiwjm?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">📁 Abrir carpeta en Google Drive</a>
+        <button type="button" class="btn-primary" data-close-modal="modal-upload-monitor">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL HISTORIAL DE PREGUNTAS DIARIAS 💌📖 -->
+  <div id="modal-daily-prompts-history" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-daily-prompts-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.5rem;">📖</span>
+          <div>
+            <h3 id="modal-daily-prompts-title" style="margin: 0; line-height: 1.2;">Álbum de Preguntas Diarias</h3>
+            <span style="font-size: 0.82rem; color: var(--color-text-secondary);">Respuestas y confesiones compartidas</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-daily-prompts-history" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-pad" style="max-height: 65vh; overflow-y: auto; padding: 1rem 0;">
+        <div id="daily-prompts-history-list" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </div>
+      <div class="form-actions" style="margin-top: 1rem;">
+        <button type="button" class="btn-primary" data-close-modal="modal-daily-prompts-history">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR / SELLAR CÁPSULA DEL TIEMPO ⏳💎 -->
+  <div id="modal-time-capsule" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-capsule-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.5rem;">⏳</span>
+          <div>
+            <h3 id="modal-capsule-title" style="margin: 0; line-height: 1.2;">Sellar Cápsula del Tiempo</h3>
+            <span style="font-size: 0.82rem; color: var(--color-text-secondary);">Un cofre secreto que solo se abrirá en el futuro</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-time-capsule" aria-label="Cerrar">&times;</button>
+      </div>
+      <form id="form-time-capsule">
+        <input type="hidden" id="capsule-id" />
+        
+        <div class="form-group">
+          <label for="capsule-title">Título o Motivo de la Cápsula *</label>
+          <input type="text" id="capsule-title" class="form-control" placeholder="Ej. Para abrir en nuestro próximo aniversario ✨" required />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="capsule-unlock-date">Fecha de Apertura (Desbloqueo) *</label>
+            <input type="date" id="capsule-unlock-date" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="capsule-theme">Estilo del Cofre</label>
+            <select id="capsule-theme" class="form-control">
+              <option value="gold">✨ Relicario de Oro</option>
+              <option value="galaxy">🌌 Cristal Cósmico</option>
+              <option value="rose">💖 Cofre Romántico</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="capsule-message">Carta / Mensaje Secreto *</label>
+          <textarea id="capsule-message" class="form-control" rows="4" placeholder="Escribe lo que sientes hoy, tus promesas, anhelos o lo que quieres que recordemos cuando abramos este cofre..." required></textarea>
+        </div>
+
+        <!-- Foto Opcional -->
+        <div class="glass-card" style="padding: 0.85rem; margin-bottom: 1rem; border-color: rgba(244, 197, 66, 0.3);">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--color-sunflower-gold); margin-bottom: 0.35rem; display: block;">
+            📸 Foto o Recuerdo Oculto (Opcional)
+          </label>
+          <input type="url" id="capsule-photo-url" class="form-control" placeholder="Enlace de foto (https://...)" style="margin-bottom: 0.4rem;" />
+          <input type="file" id="capsule-photo-file" accept="image/*" class="form-control" style="padding: 0.3rem; font-size: 0.78rem;" />
+          <div id="capsule-photo-preview-wrap" style="display: none; margin-top: 0.5rem; text-align: center;">
+            <img id="capsule-photo-preview-img" src="" alt="Vista previa foto" style="max-height: 120px; border-radius: 8px;" />
+          </div>
+        </div>
+
+        <!-- Grabación de Audio Opcional -->
+        <div class="glass-card" style="padding: 0.85rem; margin-bottom: 1rem; border-color: rgba(224, 64, 251, 0.3);">
+          <label style="font-size: 0.85rem; font-weight: 600; color: #F8BBD0; margin-bottom: 0.35rem; display: block;">
+            🎙️ Mensaje de Voz para el Futuro (Opcional)
+          </label>
+          <div class="voice-recorder-widget" id="capsule-voice-recorder">
+            <input type="hidden" id="capsule-voice-url" />
+            <input type="hidden" id="capsule-voice-duration" />
+            <div class="voice-recorder-controls" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-voice-record" id="btn-capsule-record" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border-radius: var(--radius-full); background: rgba(224, 64, 251, 0.15); border: 1px solid rgba(224, 64, 251, 0.4); color: #E040FB; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
+                <span class="mic-icon">🎙️</span>
+                <span class="record-label">Grabar audio futuro</span>
+              </button>
+              <button type="button" class="btn-voice-stop" id="btn-capsule-stop" style="display: none; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border-radius: var(--radius-full); background: rgba(255, 82, 82, 0.2); border: 1px solid #FF5252; color: #FF5252; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+                <span class="recording-pulse-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #FF5252; animation: gentlePulse 1s infinite;"></span>
+                <span>Detener (<span class="record-timer" id="capsule-record-timer">00:00</span>)</span>
+              </button>
+              <button type="button" class="btn-voice-delete" id="btn-capsule-delete-audio" style="display: none; padding: 0.4rem 0.7rem; border-radius: var(--radius-full); background: rgba(255, 82, 82, 0.15); border: 1px solid rgba(255, 82, 82, 0.3); color: #FF5252; font-size: 0.82rem; cursor: pointer;" title="Eliminar audio grabado">
+                🗑️ Eliminar audio
+              </button>
+            </div>
+            <div class="voice-audio-preview" id="capsule-voice-preview" style="display: none; margin-top: 0.6rem;">
+              <audio id="capsule-voice-audio-player" controls style="width: 100%; height: 38px; border-radius: 8px;"></audio>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close-modal="modal-time-capsule">Cancelar</button>
+          <button type="submit" class="btn-primary">Sellar Cápsula 🔒✨</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL VISOR DE CÁPSULA DESBLOQUEADA 💎🔓 -->
+  <div id="modal-capsule-viewer" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-capsule-viewer-title">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.6rem;">🔓</span>
+          <div>
+            <h3 id="modal-capsule-viewer-title" style="margin: 0; line-height: 1.2; color: var(--color-sunflower-gold);">Cápsula Desbloqueada</h3>
+            <span id="modal-capsule-viewer-date" style="font-size: 0.82rem; color: var(--color-text-secondary);">Sellada con amor</span>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" data-close-modal="modal-capsule-viewer" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="modal-body-pad" id="modal-capsule-viewer-body" style="padding: 1rem 0;">
+        <!-- Se llena dinámicamente con la carta, fotos y reproductor de voz -->
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-primary" data-close-modal="modal-capsule-viewer">Cerrar Cofre ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-database-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/media.js"></script>
+  <script src="js/presence.js"></script>
+  <script src="js/animations.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

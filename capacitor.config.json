@@ -1,0 +1,9 @@
+{
+  "appId": "com.kevinwendy.atria",
+  "appName": "ATRIA",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#120E1C",
+    "allowMixedContent": true
+  }
+}

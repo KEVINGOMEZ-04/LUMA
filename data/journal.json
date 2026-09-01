@@ -1,0 +1,125 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-08-29T11:30:00.000Z",
+  "updatedBy": "Kevin",
+  "memories": [
+    {
+      "id": "demo-memory-1",
+      "date": "2026-02-14",
+      "title": "Nuestro primer picnic",
+      "description": "Bajo la sombra de los árboles, compartiendo risas, fresas y la promesa silenciosa de que este era solo el comienzo de nuestra historia.",
+      "photo": "",
+      "status": "Destacado",
+      "color": "#F4C542",
+      "author": "Kevin",
+      "createdAt": "2026-02-14T15:30:00.000Z",
+      "updatedAt": "2026-02-14T15:30:00.000Z",
+      "comments": [],
+      "isDemo": true
+    }
+  ],
+  "movies": [
+    {
+      "id": "demo-movie-1",
+      "title": "Elementos",
+      "year": 2023,
+      "proposedBy": "Kevin",
+      "priority": 5,
+      "status": "Me encantó",
+      "kevinRating": 10,
+      "wendyRating": 10,
+      "kevinComment": "La película donde empezó a escribirse lo nuestro.",
+      "wendyComment": "Nuestra primera película juntos, inolvidable.",
+      "poster": "",
+      "synopsis": "En una ciudad donde conviven los residentes de fuego, agua, tierra y aire, una joven apasionada y un chico que se deja llevar descubren cuánto tienen en común.",
+      "platforms": [
+        "Disney+"
+      ],
+      "imdbRating": "7.0",
+      "imdbUrl": "https://www.imdb.com/title/tt15789038/",
+      "addedAt": "2026-01-10T20:00:00.000Z",
+      "watchedAt": "2026-01-15T22:00:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "demo-movie-2",
+      "title": "Enredados",
+      "year": 2010,
+      "proposedBy": "Wendy",
+      "priority": 5,
+      "status": "Vista",
+      "kevinRating": 9.5,
+      "wendyRating": 10,
+      "kevinComment": "La escena de las linternas flotantes nos recordó nuestro propio brillo.",
+      "wendyComment": "Ver la luz y los girasoles brillar juntos.",
+      "poster": "",
+      "synopsis": "La princesa Rapunzel, de largo y mágico cabello dorado, ha estado encerrada en una torre durante toda su vida. Cuando un astuto ladrón se topa con ella, hacen un trato para escapar al mundo exterior.",
+      "platforms": [
+        "Disney+"
+      ],
+      "imdbRating": "7.7",
+      "imdbUrl": "https://www.imdb.com/title/tt0398286/",
+      "addedAt": "2026-02-01T18:00:00.000Z",
+      "watchedAt": "2026-02-10T21:30:00.000Z",
+      "isDemo": true
+    }
+  ],
+  "notes": [
+    {
+      "id": "demo-note-1",
+      "author": "Kevin",
+      "message": "Gracias por convertir cada día ordinario en algo que merece ser recordado con una sonrisa.",
+      "createdAt": "2026-02-14T09:15:00.000Z",
+      "updatedAt": "2026-02-14T09:15:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "demo-note-2",
+      "author": "Wendy",
+      "message": "Me encanta que el camino que estamos construyendo esté lleno de girasoles y noches compartidas.",
+      "createdAt": "2026-02-14T11:40:00.000Z",
+      "updatedAt": "2026-02-14T11:40:00.000Z",
+      "isDemo": true
+    }
+  ],
+  "dreams": [
+    {
+      "id": "demo-dream-1",
+      "title": "Ver una lluvia de estrellas",
+      "status": "Pendiente",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "completedAt": null,
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "demo-dream-2",
+      "title": "Viajar juntos",
+      "status": "Pendiente",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "completedAt": null,
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "demo-dream-3",
+      "title": "Aprender algo nuevo",
+      "status": "Pendiente",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "completedAt": null,
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "isDemo": true
+    },
+    {
+      "id": "demo-dream-4",
+      "title": "Ver 100 películas",
+      "status": "Pendiente",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "completedAt": null,
+      "updatedAt": "2026-01-01T00:00:00.000Z",
+      "isDemo": true
+    }
+  ],
+  "songs": [],
+  "series": []
+}

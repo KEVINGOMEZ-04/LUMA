@@ -1,0 +1,138 @@
+﻿name: Build ATRIA APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare Local Web Assets & App Icon
+        run: |
+          mkdir -p www
+          cp -r index.html manifest.json css js data assets www/ || true
+          cp sw.js www/ || true
+
+      - name: Install Dependencies & Initialize Capacitor
+        run: |
+          npm install
+          npx cap add android || true
+          npx cap sync android
+
+      - name: Inject Android Permissions & Native Features
+        run: |
+          node scripts/configure-android.js
+
+      - name: Generate App Icons from Official Logo
+        run: |
+          npm install -g @capacitor/assets
+          if [ -f assets/icon.jpg ]; then
+            mkdir -p resources
+            cp assets/icon.jpg resources/icon.jpg
+            cp assets/icon.jpg resources/splash.jpg
+            find android/app/src/main/res -name "ic_launcher*.png" -exec cp assets/icon.jpg {} \; || true
+          fi
+
+      - name: Build Debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Rename & Prepare APK Output
+        run: |
+          mkdir -p build-output
+          cp android/app/build/outputs/apk/debug/app-debug.apk build-output/ATRIA.apk
+
+      - name: Upload APK to Google Drive
+        run: |
+          node -e '
+            const fs = require("fs");
+            const https = require("https");
+            
+            const apkPath = "build-output/ATRIA.apk";
+            if (fs.existsSync(apkPath)) {
+              const apkBuffer = fs.readFileSync(apkPath);
+              const b64 = apkBuffer.toString("base64");
+              const scriptUrl = "https://script.google.com/macros/s/AKfycbwlvCsQoPOFWsE1JEirVv16Fy2IFwzsOAUxwJtFn-QRg9u4HWpv8JowqniTGZ72OY4o/exec";
+              
+              const payload = JSON.stringify({
+                action: "createFolderAndUpload",
+                parentFolderId: "1qXPifAHV5fTVX7HdI1ab6UzAjDTpiwjm",
+                folderName: "App ATRIA Oficial (APK)",
+                files: [
+                  {
+                    name: "ATRIA",
+                    data: "data:application/vnd.android.package-archive;base64," + b64
+                  }
+                ]
+              });
+              
+              console.log("Enviando APK a Google Drive...");
+              const req = https.request(scriptUrl, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain" }
+              }, (res) => {
+                let data = "";
+                res.on("data", chunk => data += chunk);
+                res.on("end", () => console.log("Google Drive Response:", data));
+              });
+              req.on("error", e => console.warn("Notice on Drive upload:", e.message));
+              req.write(payload);
+              req.end();
+            }
+          ' || true
+
+      - name: Upload APK Artifact to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATRIA-APK
+          path: build-output/ATRIA.apk
+
+      - name: Publish Release with ATRIA.apk
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: "ATRIA v1.0.0 (APK Oficial con Permisos Nativos)"
+          body: |
+            # ATRIA - La puerta de entrada a nuestro mundo compartido
+            
+            Aplicacion movil nativa oficial de **Kevin & Wendy**.
+            
+            ### Permisos integrados:
+            - Microfono nativo para notas de voz en recuerdos, muro y capsulas del tiempo.
+            - Notificaciones en la barra superior de Android (estilo WhatsApp / YouTube).
+            - Acceso a almacenamiento y camara para subir fotos y videos.
+            
+            ### Instalacion directa en Android:
+            1. Descarga el archivo **`ATRIA.apk`** adjunto aqui abajo en tu celular.
+            2. Abre el archivo descargado para instalarlo.
+            3. Si tu celular te solicita permiso de *"Instalar aplicaciones desconocidas"*, dale en **Permitir**.
+            4. Al abrir la app, acepta los permisos de microfono y notificaciones.
+            5. Abre **ATRIA** con su icono oficial y pantalla completa.
+          files: build-output/ATRIA.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
