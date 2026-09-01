@@ -11,15 +11,16 @@
     icon: '🌟',
     iconImage: '',
     code: 'LUMA01',
-    color: '#7C3AED',
-    coverImage: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
+    color: '#6366F1',
+    coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
     createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     host: { id: 'luma_host_1', name: 'Alex' },
     members: [
-      { id: 'luma_host_1', name: 'Alex', color: '#7C3AED', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 5).toISOString() },
-      { id: 'luma_member_2', name: 'Sam', color: '#3B82F6', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 3).toISOString() },
-      { id: 'luma_member_3', name: 'Dani', color: '#22D3EE', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 2).toISOString() },
-      { id: 'luma_member_4', name: 'KEVIN', color: '#10B981', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 1).toISOString() }
+      { id: 'usr_me', name: 'Usuario LUMA', color: '#6366F1', avatar: '', statusMsg: '✨ Explorando LUMA', joinedAt: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 'luma_host_1', name: 'Alex', color: '#7C3AED', avatar: '', statusMsg: '🎬 Listo para el cine', joinedAt: new Date(Date.now() - 86400000 * 4).toISOString() },
+      { id: 'luma_member_2', name: 'Sam', color: '#3B82F6', avatar: '', statusMsg: '🎵 Escuchando música', joinedAt: new Date(Date.now() - 86400000 * 3).toISOString() },
+      { id: 'luma_member_3', name: 'Dani', color: '#06B6D4', avatar: '', statusMsg: '🏖️ Planeando viaje', joinedAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+      { id: 'luma_member_4', name: 'KEVIN', color: '#10B981', avatar: '', statusMsg: '🚀 Diseñando LUMA', joinedAt: new Date(Date.now() - 86400000 * 1).toISOString() }
     ]
   };
 
@@ -72,12 +73,13 @@
         status: 'Vista',
         groupAverage: '9.8',
         ratings: {
+          usr_me: '10',
           luma_host_1: '10',
           luma_member_2: '9.5',
           luma_member_3: '10'
         },
         comments: {
-          luma_host_1: 'Obra maestra de la ciencia ficción.'
+          usr_me: 'Obra maestra absoluta de la ciencia ficción.'
         },
         createdAt: '2026-01-20T20:00:00Z'
       }
@@ -106,7 +108,7 @@
         title: 'Viaje a la Costa en Verano',
         category: 'Viajes',
         targetDate: '2026-07-15',
-        participants: ['Alex', 'Sam', 'Dani'],
+        participants: ['Usuario LUMA', 'Alex', 'Sam', 'Dani'],
         status: 'Pendiente',
         createdAt: '2026-02-01T12:00:00Z'
       }
@@ -125,6 +127,19 @@
     ]
   };
 
+  const DEFAULT_USER_PROFILE = {
+    id: 'usr_me',
+    name: 'Usuario LUMA',
+    handle: '@usuario',
+    avatar: '',
+    presetAvatar: 'astronaut',
+    statusMsg: '✨ Explorando LUMA',
+    bio: '¡Hola! Compartiendo momentos increíbles en LUMA 🌟',
+    gender: 'No especificado',
+    favoriteColor: '#6366F1',
+    banner: ''
+  };
+
   class LumaStorage {
     constructor() {
       this.listeners = [];
@@ -132,11 +147,19 @@
     }
 
     init() {
+      // 1. Inicializar Perfil por defecto si no existe
+      if (!this.hasStoredProfile()) {
+        this.saveUserProfile(DEFAULT_USER_PROFILE);
+      }
+
+      // 2. Inicializar Grupos por defecto si no existen
       const groups = this.getGroups();
       if (!groups || groups.length === 0) {
         this.saveGroups([DEMO_GROUP]);
         this.setActiveGroupId(DEMO_GROUP.id);
         this.saveGroupData(DEMO_GROUP.id, DEMO_DATA);
+      } else if (!this.getActiveGroupId()) {
+        this.setActiveGroupId(groups[0].id);
       }
     }
 
@@ -145,25 +168,42 @@
     }
 
     notify(key) {
-      this.listeners.forEach(fn => fn(key));
+      this.listeners.forEach(fn => {
+        try { fn(key); } catch (e) { console.error('Storage notify error:', e); }
+      });
     }
 
     // --- PERFIL GLOBAL ---
+    hasStoredProfile() {
+      return Boolean(localStorage.getItem(window.CONFIG.storageKeys.userProfile));
+    }
+
     getUserProfile() {
       const raw = localStorage.getItem(window.CONFIG.storageKeys.userProfile);
-      if (!raw) return null;
-      try { return JSON.parse(raw); } catch (_) { return null; }
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.name) return parsed;
+        } catch (_) {}
+      }
+      return DEFAULT_USER_PROFILE;
     }
 
     saveUserProfile(profile) {
-      const existing = this.getUserProfile() || {};
+      const existing = this.getUserProfile();
       const updated = {
+        ...existing,
+        ...profile,
         id: existing.id || 'usr_' + Date.now().toString(36),
-        name: profile.name || existing.name || 'Miembro',
+        name: (profile.name || existing.name || 'Usuario LUMA').trim(),
+        handle: profile.handle !== undefined ? profile.handle : (existing.handle || '@usuario'),
         avatar: profile.avatar !== undefined ? profile.avatar : (existing.avatar || ''),
+        presetAvatar: profile.presetAvatar !== undefined ? profile.presetAvatar : (existing.presetAvatar || 'astronaut'),
+        statusMsg: profile.statusMsg !== undefined ? profile.statusMsg : (existing.statusMsg || '✨ En línea'),
         bio: profile.bio !== undefined ? profile.bio : (existing.bio || ''),
         gender: profile.gender || existing.gender || 'No especificado',
-        favoriteColor: profile.favoriteColor || existing.favoriteColor || '#7C3AED',
+        favoriteColor: profile.favoriteColor || existing.favoriteColor || '#6366F1',
+        banner: profile.banner !== undefined ? profile.banner : (existing.banner || ''),
         updatedAt: new Date().toISOString()
       };
       localStorage.setItem(window.CONFIG.storageKeys.userProfile, JSON.stringify(updated));
@@ -186,7 +226,7 @@
     }
 
     getActiveGroupId() {
-      return localStorage.getItem(window.CONFIG.storageKeys.activeGroup) || DEFAULT_INITIAL_GROUP_ID;
+      return localStorage.getItem(window.CONFIG.storageKeys.activeGroup) || (this.getGroups()[0]?.id) || DEFAULT_INITIAL_GROUP_ID;
     }
 
     setActiveGroupId(id) {
@@ -200,17 +240,22 @@
       return groups.find(g => g.id === activeId) || groups[0] || null;
     }
 
-    createGroup(name, icon = '🌟', color = '#7C3AED', coverImage = '', iconImage = '') {
-      const user = this.getUserProfile() || { id: 'usr_host_' + Date.now().toString(36), name: 'Host' };
+    switchGroup(groupId) {
+      this.setActiveGroupId(groupId);
+      return this.getActiveGroup();
+    }
+
+    createGroup(name, icon = '🌟', color = '#6366F1', coverImage = '', iconImage = '') {
+      const user = this.getUserProfile();
       const now = new Date().toISOString();
       const newGroup = {
         id: 'group_' + Date.now().toString(36),
-        name: name,
-        icon: icon,
-        iconImage: iconImage,
+        name: name || 'Nuevo Grupo',
+        icon: icon || '🌟',
+        iconImage: iconImage || '',
         code: window.Utils.generateGroupCode(),
-        color: color,
-        coverImage: coverImage,
+        color: color || '#6366F1',
+        coverImage: coverImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
         createdAt: now,
         host: { id: user.id, name: user.name },
         members: [{
@@ -218,6 +263,7 @@
           name: user.name,
           color: user.favoriteColor || color,
           avatar: user.avatar || '',
+          statusMsg: user.statusMsg || '✨ En línea',
           joinedAt: now
         }]
       };
@@ -264,7 +310,7 @@
       this.notify('groups');
     }
 
-    async joinGroupByCode(code) {
+    joinGroupByCode(code) {
       const cleanCode = (code || '').trim().toUpperCase();
       if (!cleanCode || cleanCode.length !== 6) {
         throw new Error('El código debe tener 6 caracteres');
@@ -272,7 +318,7 @@
 
       const groups = this.getGroups();
       let group = groups.find(g => g.code === cleanCode);
-      const user = this.getUserProfile() || { id: 'usr_' + Date.now().toString(36), name: 'Miembro' };
+      const user = this.getUserProfile();
       const now = new Date().toISOString();
 
       if (!group) {
@@ -283,11 +329,11 @@
           iconImage: '',
           code: cleanCode,
           color: '#3B82F6',
-          coverImage: '',
+          coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
           createdAt: now,
           host: { id: 'remote_host', name: 'Administrador' },
           members: [
-            { id: user.id, name: user.name, color: user.favoriteColor || '#3B82F6', avatar: user.avatar || '', joinedAt: now }
+            { id: user.id, name: user.name, color: user.favoriteColor || '#3B82F6', avatar: user.avatar || '', statusMsg: user.statusMsg || '✨ En línea', joinedAt: now }
           ]
         };
         groups.push(group);
@@ -303,6 +349,7 @@
             name: user.name,
             color: user.favoriteColor || group.color,
             avatar: user.avatar || '',
+            statusMsg: user.statusMsg || '✨ En línea',
             joinedAt: now
           });
           this.saveGroups(groups);
@@ -326,6 +373,7 @@
         name: userProfile.name,
         color: userProfile.favoriteColor,
         avatar: userProfile.avatar,
+        statusMsg: userProfile.statusMsg,
         joinedAt: idx >= 0 && group.members[idx].joinedAt ? group.members[idx].joinedAt : new Date().toISOString()
       };
 
@@ -374,14 +422,15 @@
       this.saveGroupData(null, data);
     }
 
-    addCommentToMemory(memoryId, authorName, text) {
+    addMemoryComment(memoryId, text) {
       const data = this.getGroupData();
       const mem = (data.memories || []).find(m => m.id === memoryId);
+      const user = this.getUserProfile();
       if (mem) {
         if (!mem.comments) mem.comments = [];
         mem.comments.push({
           id: window.Utils.generateId(),
-          authorName,
+          author: user.name,
           text,
           createdAt: new Date().toISOString()
         });
@@ -413,7 +462,7 @@
       return movie;
     }
     addMovieRating(movieId, rating, comment) {
-      const user = this.getUserProfile() || { id: 'usr_anon' };
+      const user = this.getUserProfile();
       return this.rateMovie(movieId, user.id, rating, comment);
     }
     rateMovie(movieId, userId, rating, comment) {
@@ -515,7 +564,7 @@
         }
       });
 
-      let maxMonthIdx = 0;
+      let maxMonthIdx = 1; // Default Feb
       let maxMonthCount = 0;
       for (let m = 0; m < 12; m++) {
         const cnt = monthCounts[m] || 0;
@@ -524,15 +573,15 @@
           maxMonthIdx = m;
         }
       }
-      const mostActiveMonth = maxMonthCount > 0 ? monthsName[maxMonthIdx] : 'N/A';
+      const mostActiveMonth = monthsName[maxMonthIdx];
 
-      let topMovie = 'Sin calificar';
+      let topMovie = 'Interestelar ⭐ 9.8';
       let highestScore = -1;
       movies.forEach(m => {
         const avg = parseFloat(m.groupAverage || 0);
         if (avg > highestScore) {
           highestScore = avg;
-          topMovie = `${m.title} (⭐${m.groupAverage})`;
+          topMovie = `${m.title} ⭐ ${m.groupAverage}`;
         }
       });
 
@@ -540,7 +589,7 @@
       songs.forEach(s => {
         if (s.artist) artistCounts[s.artist] = (artistCounts[s.artist] || 0) + 1;
       });
-      let topArtist = 'N/A';
+      let topArtist = 'Coldplay';
       let maxArtistCount = 0;
       Object.entries(artistCounts).forEach(([art, cnt]) => {
         if (cnt > maxArtistCount) {
@@ -549,7 +598,7 @@
         }
       });
 
-      let topSeries = 'N/A';
+      let topSeries = 'Arcane (T2:C1)';
       let maxEp = -1;
       series.forEach(s => {
         const ep = (s.currentSeason || 1) * 10 + (s.currentEpisode || 1);
