@@ -1,156 +1,122 @@
 ﻿/**
- * LUMA 🌟 - Sistema de Presencia en Tiempo Real Multi-Usuario
+ * LUMA 🌟 - Sistema de Presencia Multi-Usuario en Grupo
  */
 
 (function() {
-  class PresenceService {
+  class GroupPresence {
     constructor() {
-      this.config = window.CONFIG.presence;
-      this.listeners = [];
-      this.heartbeatTimer = null;
-      this.currentGroupPresenceRef = null;
+      this.currentGroupId = null;
+      this.currentUser = null;
+      this.presenceRef = null;
       this.userPresenceRef = null;
-      this.groupMembersPresence = {};
+      this.listeners = [];
+      this.presenceMap = {};
+      this.awayTimer = null;
+      this.isOnline = false;
 
-      this.init();
+      this.initFirebase();
+      this.setupAwayDetection();
     }
 
-    init() {
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          this.setOnlineStatus(true);
-        } else {
-          this.setAwayStatus();
-        }
-      });
-
-      window.addEventListener('beforeunload', () => {
-        this.setOnlineStatus(false);
-      });
-    }
-
-    // Conectar la presencia al grupo activo
-    bindGroup(groupId, userProfile) {
-      if (!groupId || !userProfile || !userProfile.id) return;
-
-      this.currentGroupId = groupId;
-      this.currentUser = userProfile;
-
-      if (window.firebase && this.config.firebaseConfig && this.config.firebaseConfig.databaseURL) {
-        this.initFirebasePresence(groupId, userProfile);
-      } else {
-        this.initLocalPresence(groupId, userProfile);
-      }
-    }
-
-    initFirebasePresence(groupId, userProfile) {
+    initFirebase() {
       try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(this.config.firebaseConfig);
+        if (typeof firebase !== 'undefined' && window.CONFIG?.firebase?.enabled) {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(window.CONFIG.firebase.config);
+          }
+          this.db = firebase.database();
         }
-
-        const db = firebase.database();
-        this.currentGroupPresenceRef = db.ref(`presence/${groupId}`);
-        this.userPresenceRef = db.ref(`presence/${groupId}/${userProfile.id}`);
-
-        const connectedRef = db.ref('.info/connected');
-        connectedRef.on('value', (snap) => {
-          if (snap.val() === true && this.userPresenceRef) {
-            this.userPresenceRef.onDisconnect().set({
-              online: false,
-              state: 'offline',
-              userName: userProfile.name,
-              userAvatar: userProfile.avatar || '',
-              userColor: userProfile.favoriteColor || '#7C3AED',
-              lastSeen: firebase.database.ServerValue.TIMESTAMP
-            });
-
-            this.userPresenceRef.set({
-              online: true,
-              state: 'online',
-              userName: userProfile.name,
-              userAvatar: userProfile.avatar || '',
-              userColor: userProfile.favoriteColor || '#7C3AED',
-              lastSeen: firebase.database.ServerValue.TIMESTAMP
-            });
-          }
-        });
-
-        // Escuchar cambios de todos los miembros del grupo
-        this.currentGroupPresenceRef.on('value', (snapshot) => {
-          const val = snapshot.val() || {};
-          this.groupMembersPresence = val;
-          this.notify();
-        });
-
-        if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
-        this.heartbeatTimer = setInterval(() => {
-          if (this.userPresenceRef && !document.hidden) {
-            this.userPresenceRef.update({
-              online: true,
-              state: 'online',
-              lastSeen: firebase.database.ServerValue.TIMESTAMP
-            });
-          }
-        }, this.config.heartbeatIntervalMs);
-
       } catch (err) {
-        console.warn('Error inicializando presencia en Firebase:', err);
-        this.initLocalPresence(groupId, userProfile);
+        console.warn('Firebase RTDB no inicializado en presencia:', err);
       }
     }
 
-    initLocalPresence(groupId, userProfile) {
-      this.groupMembersPresence[userProfile.id] = {
-        online: true,
-        state: 'online',
-        userName: userProfile.name,
-        userAvatar: userProfile.avatar || '',
-        userColor: userProfile.favoriteColor || '#7C3AED',
-        lastSeen: new Date().toISOString()
-      };
-      this.notify();
-    }
-
-    setOnlineStatus(isOnline) {
-      if (this.userPresenceRef && window.firebase) {
-        this.userPresenceRef.update({
-          online: Boolean(isOnline),
-          state: isOnline ? 'online' : 'offline',
-          lastSeen: firebase.database.ServerValue.TIMESTAMP
-        });
-      }
-    }
-
-    setAwayStatus() {
-      if (this.userPresenceRef && window.firebase) {
-        this.userPresenceRef.update({
-          online: false,
-          state: 'away',
-          lastSeen: firebase.database.ServerValue.TIMESTAMP
-        });
-      }
-    }
-
-    getMembersPresence() {
-      return this.groupMembersPresence || {};
-    }
-
-    subscribe(listener) {
-      this.listeners.push(listener);
-      listener(this.getMembersPresence());
-      return () => {
-        this.listeners = this.listeners.filter(l => l !== listener);
-      };
+    subscribe(callback) {
+      this.listeners.push(callback);
+      callback(this.presenceMap);
     }
 
     notify() {
-      const presence = this.getMembersPresence();
-      this.listeners.forEach(cb => {
-        try { cb(presence); } catch (e) {}
+      this.listeners.forEach(fn => fn(this.presenceMap));
+    }
+
+    bindGroup(groupId, userProfile) {
+      if (!groupId || !userProfile || !userProfile.id) return;
+      this.currentGroupId = groupId;
+      this.currentUser = userProfile;
+
+      if (!this.db) return;
+
+      if (this.userPresenceRef) {
+        this.userPresenceRef.set({
+          online: false,
+          state: 'offline',
+          lastSeen: firebase.database.ServerValue.TIMESTAMP
+        });
+      }
+
+      const presencePath = `presence/${groupId}/${userProfile.id}`;
+      this.userPresenceRef = this.db.ref(presencePath);
+
+      const connectedRef = this.db.ref('.info/connected');
+      connectedRef.on('value', (snap) => {
+        if (snap.val() === true) {
+          this.isOnline = true;
+          this.userPresenceRef.onDisconnect().set({
+            online: false,
+            state: 'offline',
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
+          });
+
+          this.updateState('online');
+        } else {
+          this.isOnline = false;
+        }
+      });
+
+      // Escuchar presencia de todos los miembros del grupo
+      this.presenceRef = this.db.ref(`presence/${groupId}`);
+      this.presenceRef.on('value', (snap) => {
+        this.presenceMap = snap.val() || {};
+        this.notify();
+      });
+    }
+
+    updateState(state) {
+      if (!this.userPresenceRef || !this.currentUser) return;
+      this.userPresenceRef.set({
+        online: state !== 'offline',
+        state: state,
+        name: this.currentUser.name || 'Miembro',
+        avatar: this.currentUser.avatar || '',
+        color: this.currentUser.favoriteColor || '#7C3AED',
+        lastSeen: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+
+    setupAwayDetection() {
+      const resetAway = () => {
+        if (!this.userPresenceRef) return;
+        this.updateState('online');
+        if (this.awayTimer) clearTimeout(this.awayTimer);
+        this.awayTimer = setTimeout(() => {
+          this.updateState('away');
+        }, 180000); // 3 minutos sin interacción -> Ausente
+      };
+
+      window.addEventListener('mousemove', resetAway, { passive: true });
+      window.addEventListener('keydown', resetAway, { passive: true });
+      window.addEventListener('touchstart', resetAway, { passive: true });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.updateState('away');
+        } else {
+          this.updateState('online');
+        }
       });
     }
   }
 
-  window.presence = new PresenceService();
+  window.presence = new GroupPresence();
 })();
