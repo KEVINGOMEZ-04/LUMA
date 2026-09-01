@@ -1,4 +1,4 @@
-﻿name: Build ATRIA APK
+﻿name: Build LUMA APK
 
 on:
   push:
@@ -49,11 +49,11 @@ jobs:
       - name: Generate App Icons from Official Logo
         run: |
           npm install -g @capacitor/assets
-          if [ -f assets/icon.jpg ]; then
+          if [ -f assets/icon.png ]; then
             mkdir -p resources
-            cp assets/icon.jpg resources/icon.jpg
-            cp assets/icon.jpg resources/splash.jpg
-            find android/app/src/main/res -name "ic_launcher*.png" -exec cp assets/icon.jpg {} \; || true
+            cp assets/icon.png resources/icon.png
+            cp assets/icon.png resources/splash.png
+            find android/app/src/main/res -name "ic_launcher*.png" -exec cp assets/icon.png {} \; || true
           fi
 
       - name: Build Debug APK
@@ -65,7 +65,7 @@ jobs:
       - name: Rename & Prepare APK Output
         run: |
           mkdir -p build-output
-          cp android/app/build/outputs/apk/debug/app-debug.apk build-output/ATRIA.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk build-output/LUMA.apk
 
       - name: Upload APK to Google Drive
         run: |
@@ -73,7 +73,7 @@ jobs:
             const fs = require("fs");
             const https = require("https");
             
-            const apkPath = "build-output/ATRIA.apk";
+            const apkPath = "build-output/LUMA.apk";
             if (fs.existsSync(apkPath)) {
               const apkBuffer = fs.readFileSync(apkPath);
               const b64 = apkBuffer.toString("base64");
@@ -82,10 +82,10 @@ jobs:
               const payload = JSON.stringify({
                 action: "createFolderAndUpload",
                 parentFolderId: "1qXPifAHV5fTVX7HdI1ab6UzAjDTpiwjm",
-                folderName: "App ATRIA Oficial (APK)",
+                folderName: "App LUMA Oficial (APK)",
                 files: [
                   {
-                    name: "ATRIA",
+                    name: "LUMA",
                     data: "data:application/vnd.android.package-archive;base64," + b64
                   }
                 ]
@@ -98,41 +98,12 @@ jobs:
               }, (res) => {
                 let data = "";
                 res.on("data", chunk => data += chunk);
-                res.on("end", () => console.log("Google Drive Response:", data));
+                res.on("end", () => {
+                  console.log("Respuesta Google Drive:", data);
+                });
               });
-              req.on("error", e => console.warn("Notice on Drive upload:", e.message));
+              req.on("error", e => console.error("Error subiendo APK:", e));
               req.write(payload);
               req.end();
             }
-          ' || true
-
-      - name: Upload APK Artifact to GitHub
-        uses: actions/upload-artifact@v4
-        with:
-          name: ATRIA-APK
-          path: build-output/ATRIA.apk
-
-      - name: Publish Release with ATRIA.apk
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.0
-          name: "ATRIA v1.0.0 (APK Oficial con Permisos Nativos)"
-          body: |
-            # ATRIA - La puerta de entrada a nuestro mundo compartido
-            
-            Aplicacion movil nativa oficial de **Kevin & Wendy**.
-            
-            ### Permisos integrados:
-            - Microfono nativo para notas de voz en recuerdos, muro y capsulas del tiempo.
-            - Notificaciones en la barra superior de Android (estilo WhatsApp / YouTube).
-            - Acceso a almacenamiento y camara para subir fotos y videos.
-            
-            ### Instalacion directa en Android:
-            1. Descarga el archivo **`ATRIA.apk`** adjunto aqui abajo en tu celular.
-            2. Abre el archivo descargado para instalarlo.
-            3. Si tu celular te solicita permiso de *"Instalar aplicaciones desconocidas"*, dale en **Permitir**.
-            4. Al abrir la app, acepta los permisos de microfono y notificaciones.
-            5. Abre **ATRIA** con su icono oficial y pantalla completa.
-          files: build-output/ATRIA.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          '
