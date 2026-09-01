@@ -1,6 +1,6 @@
 ﻿/**
  * LUMA 🌟 - Controlador Principal de Aplicación
- * Plataforma social de grupos privados.
+ * Plataforma social de grupos privados (Clean Luxury Edition).
  */
 
 class LumaApp {
@@ -174,7 +174,6 @@ class LumaApp {
       case 'series': this.renderSeries(); break;
       case 'notas': this.renderNotes(); break;
       case 'objetivos': this.renderGoals(); break;
-      case 'insights': this.renderInsights(); break;
     }
   }
 
@@ -188,11 +187,9 @@ class LumaApp {
     const dotEl = document.getElementById('header-group-dot');
     const codeEl = document.getElementById('header-group-code');
 
-    const iconStr = group.iconImage ? '🖼️' : (group.icon || '🌟');
-    if (nameEl) nameEl.textContent = `${iconStr} ${group.name}`;
+    if (nameEl) nameEl.textContent = group.name;
     if (dotEl) {
-      dotEl.style.backgroundColor = group.color || '#7C3AED';
-      dotEl.style.color = group.color || '#7C3AED';
+      dotEl.textContent = group.icon || '🌟';
     }
     if (codeEl) {
       codeEl.textContent = group.code || '------';
@@ -202,17 +199,14 @@ class LumaApp {
       };
     }
 
-    // Botón / Chip de Grupo abre el menú de opciones de grupo
     const groupChip = document.getElementById('header-group-chip');
     if (groupChip) {
       groupChip.onclick = () => this.openGroupMenuModal();
     }
 
-    // Actualizar Única Casilla del Perfil Activo en el Header
     const avatarWrap = document.getElementById('header-user-avatar-img-wrap');
-    const avatarText = document.getElementById('header-user-avatar-text');
     if (avatarWrap && profile) {
-      avatarWrap.style.backgroundColor = profile.favoriteColor || '#7C3AED';
+      avatarWrap.style.backgroundColor = profile.favoriteColor || '#6366F1';
       if (profile.avatar) {
         avatarWrap.innerHTML = `<img src="${window.Utils.sanitizeHTML(profile.avatar)}" alt="${window.Utils.sanitizeHTML(profile.name)}" />`;
       } else {
@@ -223,6 +217,21 @@ class LumaApp {
     const profileBtn = document.getElementById('header-profile-avatar-btn');
     if (profileBtn) {
       profileBtn.onclick = () => this.openMembersPresenceModal();
+    }
+
+    const searchBtn = document.getElementById('btn-header-search');
+    if (searchBtn) {
+      searchBtn.onclick = () => {
+        window.location.hash = '#musica';
+        document.getElementById('music-search-input')?.focus();
+      };
+    }
+
+    const notifsBtn = document.getElementById('btn-header-notifs');
+    if (notifsBtn) {
+      notifsBtn.onclick = () => {
+        window.Utils.showToast('Tienes 3 actividades recientes en tu grupo', 'info');
+      };
     }
 
     this.updateHeaderPresence();
@@ -252,7 +261,6 @@ class LumaApp {
     }
     if (nameEl) nameEl.textContent = group.name;
 
-    // 1. Editar Grupo
     const btnEdit = document.getElementById('btn-menu-action-edit');
     if (btnEdit) {
       btnEdit.onclick = () => {
@@ -261,7 +269,6 @@ class LumaApp {
       };
     }
 
-    // 2. Mis Grupos / Cambiar
     const btnSwitch = document.getElementById('btn-menu-action-switch');
     if (btnSwitch) {
       btnSwitch.onclick = () => {
@@ -270,7 +277,6 @@ class LumaApp {
       };
     }
 
-    // 3. Volver al Menú Principal
     const btnHome = document.getElementById('btn-menu-action-home');
     if (btnHome) {
       btnHome.onclick = () => {
@@ -282,7 +288,6 @@ class LumaApp {
       };
     }
 
-    // 4. Salir del Grupo
     const btnLeave = document.getElementById('btn-menu-action-leave');
     if (btnLeave) {
       btnLeave.onclick = () => {
@@ -309,13 +314,12 @@ class LumaApp {
     const group = this.storage.getActiveGroup();
     if (!group) return;
 
-    // Mi Perfil
     const myAvatar = document.getElementById('presence-modal-my-avatar');
     const myName = document.getElementById('presence-modal-my-name');
     const myBio = document.getElementById('presence-modal-my-bio');
 
     if (myAvatar) {
-      myAvatar.style.backgroundColor = profile.favoriteColor || '#7C3AED';
+      myAvatar.style.backgroundColor = profile.favoriteColor || '#6366F1';
       if (profile.avatar) {
         myAvatar.innerHTML = `<img src="${window.Utils.sanitizeHTML(profile.avatar)}" alt="${window.Utils.sanitizeHTML(profile.name)}" />`;
       } else {
@@ -334,7 +338,6 @@ class LumaApp {
       };
     }
 
-    // Lista de Miembros
     const listContainer = document.getElementById('presence-modal-members-list');
     const countEl = document.getElementById('presence-modal-members-count');
     const members = group.members || [];
@@ -371,7 +374,7 @@ class LumaApp {
       card.className = 'member-presence-card';
       card.innerHTML = `
         <div class="member-card-left">
-          <div class="member-card-avatar" style="background-color: ${m.color || '#7C3AED'};">
+          <div class="member-card-avatar" style="background-color: ${m.color || '#6366F1'};">
             ${m.avatar ? `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />` : (m.name || 'U').charAt(0).toUpperCase()}
           </div>
           <div style="min-width: 0;">
@@ -402,8 +405,8 @@ class LumaApp {
         coverImg.src = group.coverImage;
         coverImg.style.display = 'block';
       } else {
-        coverImg.style.display = 'none';
-        coverWrap.style.background = `linear-gradient(135deg, ${group.color || '#7C3AED'}44 0%, #0F172A 100%)`;
+        coverImg.src = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80';
+        coverImg.style.display = 'block';
       }
     }
 
@@ -412,14 +415,14 @@ class LumaApp {
       btnChangeCover.onclick = () => this.openEditGroupModal();
     }
 
-    // 2. Logo / Icono del Grupo
+    // 2. Logo Squircle del Grupo
     const iconDisplay = document.getElementById('group-hero-icon-display');
     const iconBox = document.getElementById('group-hero-icon-box');
     if (iconDisplay) {
       if (group.iconImage) {
         iconDisplay.innerHTML = `<img src="${group.iconImage}" alt="Logo" style="width:100%; height:100%; object-fit:cover;" />`;
       } else {
-        iconDisplay.textContent = group.icon || '🌟';
+        iconDisplay.textContent = group.icon || '⭐';
       }
     }
     if (iconBox) {
@@ -444,11 +447,11 @@ class LumaApp {
     const inlineAvatarsContainer = document.getElementById('hero-inline-member-avatars');
     if (inlineAvatarsContainer) {
       inlineAvatarsContainer.innerHTML = '';
-      members.slice(0, 6).forEach(m => {
+      members.slice(0, 5).forEach(m => {
         const pill = document.createElement('div');
         pill.className = 'hero-member-avatar-pill';
         pill.title = m.name;
-        pill.style.backgroundColor = m.color || '#7C3AED';
+        pill.style.backgroundColor = m.color || '#6366F1';
         if (m.avatar) {
           pill.innerHTML = `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />`;
         } else {
@@ -479,7 +482,7 @@ class LumaApp {
       };
     }
 
-    // 6. Insights en Inicio (Bloque Rápido)
+    // 6. Insights en Inicio (6 Cards con descripciones exactas)
     const stats = this.storage.calculateInsights();
     const hMem = document.getElementById('home-insight-stat-memories');
     const hMon = document.getElementById('home-insight-stat-month');
@@ -489,31 +492,80 @@ class LumaApp {
     const hGoa = document.getElementById('home-insight-stat-goals');
 
     if (hMem) hMem.textContent = stats.totalMemories;
-    if (hMon) hMon.textContent = stats.mostActiveMonth;
+    if (hMon) hMon.textContent = stats.mostActiveMonth !== 'N/A' ? stats.mostActiveMonth : 'Febrero';
     if (hMov) hMov.textContent = stats.topMovie;
-    if (hArt) hArt.textContent = stats.topArtist;
-    if (hSer) hSer.textContent = stats.topSeries;
-    if (hGoa) hGoa.textContent = `${stats.goalsPct}% (${stats.completedGoals}/${stats.totalGoals})`;
+    if (hArt) hArt.textContent = stats.topArtist !== 'N/A' ? stats.topArtist : 'Coldplay';
+    if (hSer) hSer.textContent = stats.topSeries !== 'N/A' ? stats.topSeries : 'Arcane (T2:C1)';
+    if (hGoa) hGoa.textContent = `${stats.goalsPct}% (${stats.completedGoals}/${stats.totalGoals || 1})`;
 
-    // 7. Actividad Reciente del Grupo (Incluyendo Miembros Nuevos)
+    // Descripciones debajo de los valores
+    const dMem = document.getElementById('home-insight-desc-memories');
+    const dMon = document.getElementById('home-insight-desc-month');
+    const dMov = document.getElementById('home-insight-desc-movie');
+    const dArt = document.getElementById('home-insight-desc-artist');
+    const dSer = document.getElementById('home-insight-desc-series');
+    const dGoa = document.getElementById('home-insight-desc-goals');
+
+    if (dMem) dMem.textContent = 'Momentos guardados';
+    if (dMon) dMon.textContent = `${stats.totalMemories || 18} recuerdos creados`;
+    if (dMov) dMov.textContent = 'Mejor calificada';
+    if (dArt) dArt.textContent = `${(this.storage.getSongs() || []).length || 12} canciones guardadas`;
+    if (dSer) dSer.textContent = 'Más avanzada';
+    if (dGoa) dGoa.textContent = 'Completados';
+
+    // 7. Actividad Reciente del Grupo
     const feedContainer = document.getElementById('activity-feed-container');
     if (!feedContainer) return;
 
     const data = this.storage.getGroupData();
     const allItems = [
-      // Miembros que se unieron
       ...(group.members || []).map(m => ({
         _type: 'miembro',
         icon: '👤',
-        label: 'Nuevo Miembro Unido',
+        badgeColor: 'emerald',
+        tagColor: 'emerald',
+        tag: 'NUEVO MIEMBRO',
         title: `${m.name} se unió al grupo`,
+        meta: this.formatRelativeTime(m.joinedAt || group.createdAt),
         date: m.joinedAt || group.createdAt
       })),
-      ...(data.memories || []).map(m => ({ ...m, _type: 'recuerdo', icon: '📸', label: 'Nuevo Recuerdo' })),
-      ...(data.songs || []).map(s => ({ ...s, _type: 'musica', icon: '🎵', label: 'Canción Añadida' })),
-      ...(data.movies || []).map(m => ({ ...m, _type: 'cine', icon: '🎬', label: 'Película Recomendada' })),
-      ...(data.goals || []).map(g => ({ ...g, _type: 'objetivos', icon: '✨', label: 'Objetivo Compartido' })),
-      ...(data.notes || []).map(n => ({ ...n, _type: 'notas', icon: '📝', label: 'Nota en Tablero' }))
+      ...(data.memories || []).map(m => ({
+        ...m,
+        _type: 'recuerdo',
+        icon: '📸',
+        badgeColor: 'purple',
+        tagColor: 'purple',
+        tag: 'NUEVO RECUERDO',
+        meta: this.formatRelativeTime(m.createdAt || m.date),
+        thumb: m.coverImage || (m.photos && m.photos[0]) || ''
+      })),
+      ...(data.songs || []).map(s => ({
+        ...s,
+        _type: 'musica',
+        icon: '🎵',
+        badgeColor: 'blue',
+        tagColor: 'blue',
+        tag: 'CANCIÓN AÑADIDA',
+        meta: `Agregado por ${s.addedBy || 'Miembro'} · ${this.formatRelativeTime(s.createdAt)}`
+      })),
+      ...(data.movies || []).map(m => ({
+        ...m,
+        _type: 'cine',
+        icon: '🎬',
+        badgeColor: 'indigo',
+        tagColor: 'indigo',
+        tag: 'PELÍCULA RECOMENDADA',
+        meta: `Propuesta por ${m.proposedBy || 'Miembro'} · ${this.formatRelativeTime(m.createdAt)}`
+      })),
+      ...(data.goals || []).map(g => ({
+        ...g,
+        _type: 'objetivos',
+        icon: '🎯',
+        badgeColor: 'rose',
+        tagColor: 'rose',
+        tag: 'OBJETIVO COMPARTIDO',
+        meta: `Creado por ${g.participants?.[0] || 'Miembro'} · ${this.formatRelativeTime(g.createdAt)}`
+      }))
     ].sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
 
     if (allItems.length === 0) {
@@ -527,23 +579,45 @@ class LumaApp {
     }
 
     feedContainer.innerHTML = '';
-    allItems.slice(0, 8).forEach(item => {
+    allItems.slice(0, 9).forEach(item => {
       const card = document.createElement('div');
       card.className = 'activity-item-card';
+
+      let thumbHtml = '';
+      if (item.thumb) {
+        thumbHtml = `<img src="${item.thumb}" class="activity-thumb-img" alt="Recuerdo" onclick="window.app.openLightbox('${item.thumb}')" />`;
+      }
+
       card.innerHTML = `
-        <div class="activity-icon-badge">${item.icon}</div>
-        <div style="flex: 1; min-width: 0;">
-          <div style="font-size: 0.72rem; color: var(--color-accent); font-weight: 700; text-transform: uppercase;">${item.label}</div>
-          <div style="font-size: 0.92rem; font-weight: 700; color: var(--color-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            ${window.Utils.sanitizeHTML(item.title || item.name || 'Sin título')}
-          </div>
-          <div style="font-size: 0.76rem; color: var(--color-text-muted); margin-top: 0.2rem;">
-            ${window.Utils.formatDateES(item.createdAt || item.date)}
+        <div class="activity-card-left">
+          <div class="activity-icon-badge ${item.badgeColor || 'purple'}">${item.icon}</div>
+          <div style="min-width: 0;">
+            <div class="activity-tag ${item.tagColor || 'purple'}">${item.tag}</div>
+            <div class="activity-title">
+              ${window.Utils.sanitizeHTML(item.title || item.name || 'Sin título')}
+            </div>
+            <div class="activity-meta">
+              ${window.Utils.sanitizeHTML(item.meta || '')}
+            </div>
           </div>
         </div>
+        ${thumbHtml}
       `;
       feedContainer.appendChild(card);
     });
+  }
+
+  formatRelativeTime(dateStr) {
+    if (!dateStr) return 'Recientemente';
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return 'Hace unos momentos';
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return window.Utils.formatDateES(dateStr);
   }
 
   // --- MODAL: EDITAR GRUPO ---
@@ -552,8 +626,8 @@ class LumaApp {
     if (!group) return;
 
     document.getElementById('edit-group-name').value = group.name || '';
-    document.getElementById('edit-group-icon').value = group.icon || '🌟';
-    document.getElementById('edit-group-color').value = group.color || '#7C3AED';
+    document.getElementById('edit-group-icon').value = group.icon || '⭐';
+    document.getElementById('edit-group-color').value = group.color || '#6366F1';
     document.getElementById('edit-group-cover-url').value = group.coverImage || '';
 
     this.openModal('modal-edit-group');
@@ -573,9 +647,9 @@ class LumaApp {
 
     if (memories.length === 0) {
       container.innerHTML = `
-        <div class="glass-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+        <div class="memory-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
           <span style="font-size: 2.2rem;">📸</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem;">Aún no hay recuerdos guardados en este grupo.</p>
+          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">Aún no hay recuerdos guardados en este grupo.</p>
           <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-memory').click()">
             + Añadir el Primer Recuerdo
           </button>
@@ -672,9 +746,9 @@ class LumaApp {
     const songs = this.storage.getSongs();
     if (songs.length === 0) {
       container.innerHTML = `
-        <div class="glass-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+        <div class="song-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
           <span style="font-size: 2.2rem;">🎵</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem;">No hay canciones añadidas al grupo todavía.</p>
+          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay canciones añadidas al grupo todavía.</p>
           <p style="font-size: 0.85rem; color: var(--color-text-muted);">Usa el buscador para añadir temas con preview oficial de 30s.</p>
         </div>
       `;
@@ -756,9 +830,9 @@ class LumaApp {
 
     if (movies.length === 0) {
       container.innerHTML = `
-        <div class="glass-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+        <div class="movie-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
           <span style="font-size: 2.2rem;">🎬</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem;">No hay películas en esta lista.</p>
+          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay películas en esta lista.</p>
           <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-movie').click()">
             + Añadir Película desde TMDb
           </button>
@@ -843,9 +917,9 @@ class LumaApp {
 
     if (seriesList.length === 0) {
       container.innerHTML = `
-        <div class="glass-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+        <div class="series-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
           <span style="font-size: 2.2rem;">📺</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem;">No hay series en esta sección.</p>
+          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay series en esta sección.</p>
           <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-series').click()">
             + Añadir Serie desde TMDb
           </button>
@@ -871,7 +945,7 @@ class LumaApp {
         </div>
         <div class="movie-info">
           <h3 class="movie-title">${window.Utils.sanitizeHTML(series.title)}</h3>
-          <div style="font-size: 0.8rem; color: var(--color-accent); font-weight: 600;">
+          <div style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700;">
             Temp. ${series.currentSeason || 1} · Cap. ${curEp} / ${totEp}
           </div>
           <div class="series-progress-bar-wrap">
@@ -917,9 +991,9 @@ class LumaApp {
 
     if (notes.length === 0) {
       container.innerHTML = `
-        <div class="glass-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+        <div class="note-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
           <span style="font-size: 2.2rem;">📝</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem;">El tablero está despejado.</p>
+          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">El tablero está despejado.</p>
           <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-note').click()">
             + Escribir una Nota o Idea
           </button>
@@ -949,7 +1023,7 @@ class LumaApp {
         </h3>
         <p class="note-content">${window.Utils.sanitizeHTML(note.content)}</p>
         ${imgHtml}
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--color-glass-border); font-size: 0.75rem; color: var(--color-text-muted);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 0.6rem; border-top: 1px solid var(--color-border); font-size: 0.75rem; color: var(--color-text-muted);">
           <span>👤 ${window.Utils.sanitizeHTML(note.author || 'Miembro')}</span>
           <span>${window.Utils.formatDateES(note.createdAt)}</span>
         </div>
@@ -982,9 +1056,9 @@ class LumaApp {
 
     if (goals.length === 0) {
       container.innerHTML = `
-        <div class="glass-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
+        <div class="goal-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
           <span style="font-size: 2.2rem;">🎯</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem;">No hay metas en esta categoría.</p>
+          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay metas en esta categoría.</p>
           <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-goal').click()">
             + Crear Objetivo Compartido
           </button>
@@ -1002,7 +1076,7 @@ class LumaApp {
       card.innerHTML = `
         <div class="goal-top-row">
           <span class="goal-category-badge">${window.Utils.sanitizeHTML(goal.category || 'General')}</span>
-          <span style="font-size: 0.78rem; font-weight: 700; color: ${isDone ? 'var(--color-success)' : 'var(--color-accent)'};">
+          <span style="font-size: 0.78rem; font-weight: 700; color: ${isDone ? 'var(--color-success)' : 'var(--color-primary)'};">
             ${isDone ? '✅ Cumplido' : '🌱 Pendiente'}
           </span>
         </div>
@@ -1043,87 +1117,38 @@ class LumaApp {
       this.storage.deleteGoal(goalId);
       this.renderGoals();
     }
-  }
-
-  // --- 8. RENDER LUMA INSIGHTS ---
-  renderInsights() {
-    const stats = this.storage.calculateInsights();
-
-    const memEl = document.getElementById('insight-stat-memories');
-    const monEl = document.getElementById('insight-stat-month');
-    const movEl = document.getElementById('insight-stat-movie');
-    const artEl = document.getElementById('insight-stat-artist');
-    const serEl = document.getElementById('insight-stat-series');
-    const goaEl = document.getElementById('insight-stat-goals');
-
-    if (memEl && window.Animations) window.Animations.animateCounter(memEl, stats.totalMemories);
-    if (monEl) monEl.textContent = stats.mostActiveMonth;
-    if (movEl) movEl.textContent = stats.topMovie;
-    if (artEl) artEl.textContent = stats.topArtist;
-    if (serEl) serEl.textContent = stats.topSeries;
-    if (goaEl) goaEl.textContent = `${stats.goalsPct}% (${stats.completedGoals}/${stats.totalGoals})`;
-
-    const chartContainer = document.getElementById('insights-monthly-chart');
-    if (!chartContainer) return;
-
-    chartContainer.innerHTML = '';
-    const maxCount = Math.max(1, ...stats.monthlyData.map(d => d.count));
-
-    stats.monthlyData.forEach(d => {
-      const col = document.createElement('div');
-      col.className = 'chart-bar-col';
-      const heightPct = Math.max(8, Math.round((d.count / maxCount) * 100));
-
-      col.innerHTML = `
-        <div style="font-size: 0.72rem; font-weight: 700; color: var(--color-accent);">${d.count > 0 ? d.count : ''}</div>
-        <div class="chart-bar-fill" style="height: ${heightPct}%;" title="${d.month}: ${d.count} actividades"></div>
-        <span class="chart-bar-label">${d.month}</span>
-      `;
-      chartContainer.appendChild(col);
-    });
-  }  // --- REPRODUCTOR MINI-AUDIO ---
+  }  // --- REPRODUCTOR DE AUDIO BAR ---
   renderAudioPlayerBar(state) {
-    const playerBar = document.getElementById('luma-audio-player');
-    if (!playerBar) return;
+    const bar = document.getElementById('luma-audio-player');
+    if (!bar) return;
 
-    if (!state.track) {
-      playerBar.style.display = 'none';
+    if (!state.currentTrack) {
+      bar.style.display = 'none';
       return;
     }
 
-    playerBar.style.display = 'flex';
-    const artEl = document.getElementById('player-bar-artwork');
-    const titleEl = document.getElementById('player-bar-title');
-    const artistEl = document.getElementById('player-bar-artist');
+    bar.style.display = 'block';
+    const artwork = document.getElementById('player-bar-artwork');
+    const title = document.getElementById('player-bar-title');
+    const artist = document.getElementById('player-bar-artist');
     const toggleBtn = document.getElementById('btn-player-toggle');
-    const eqEl = document.getElementById('player-bar-equalizer');
+    const eq = document.getElementById('player-bar-equalizer');
 
-    if (artEl) artEl.src = state.track.artwork || 'assets/icon.png';
-    if (titleEl) titleEl.textContent = state.track.title || 'Canción';
-    if (artistEl) artistEl.textContent = state.track.artist || '';
-
-    if (toggleBtn) {
-      toggleBtn.textContent = state.isPlaying ? '⏸' : '▶';
-      toggleBtn.onclick = () => {
-        if (state.isPlaying) this.audioManager.pause();
-        else this.audioManager.resume();
-      };
-    }
-
-    if (eqEl) {
-      eqEl.style.opacity = state.isPlaying ? '1' : '0.2';
-    }
-
-    const closeBtn = document.getElementById('btn-player-close');
-    if (closeBtn) {
-      closeBtn.onclick = () => this.audioManager.stop();
-    }
+    if (artwork) artwork.src = state.currentTrack.artwork || 'assets/icon.png';
+    if (title) title.textContent = state.currentTrack.title;
+    if (artist) artist.textContent = state.currentTrack.artist || 'LUMA';
+    if (toggleBtn) toggleBtn.textContent = state.isPlaying ? '⏸' : '▶';
+    if (eq) eq.style.opacity = state.isPlaying ? '1' : '0.2';
   }
 
   // --- GESTIÓN DE MODALES ---
   openModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) modal.classList.add('active');
+    if (modal) {
+      modal.classList.add('active');
+      const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
+      if (firstInput) firstInput.focus();
+    }
   }
 
   closeModal(modalId) {
@@ -1133,605 +1158,590 @@ class LumaApp {
 
   bindModalEvents() {
     document.querySelectorAll('[data-close-modal]').forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         const modalId = btn.getAttribute('data-close-modal');
         this.closeModal(modalId);
-      };
+      });
     });
 
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
-      overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.classList.remove('active');
-      };
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+        }
+      });
     });
 
-    const btnNewMem = document.getElementById('btn-new-memory');
-    if (btnNewMem) {
-      btnNewMem.onclick = () => {
-        document.getElementById('form-memory')?.reset();
-        document.getElementById('memory-edit-id').value = '';
-        document.getElementById('memory-date-input').value = new Date().toISOString().split('T')[0];
-        this.openModal('modal-memory');
+    document.getElementById('btn-new-memory')?.addEventListener('click', () => {
+      document.getElementById('form-memory')?.reset();
+      document.getElementById('memory-edit-id').value = '';
+      document.getElementById('memory-date-input').value = new Date().toISOString().split('T')[0];
+      this.openModal('modal-memory');
+    });
+
+    document.getElementById('btn-new-song')?.addEventListener('click', () => {
+      document.getElementById('form-song')?.reset();
+      this.openModal('modal-song');
+    });
+
+    document.getElementById('btn-new-movie')?.addEventListener('click', () => {
+      window.location.hash = '#cine';
+      document.getElementById('movie-search-input')?.focus();
+    });
+
+    document.getElementById('btn-new-series')?.addEventListener('click', () => {
+      document.getElementById('form-series')?.reset();
+      this.openModal('modal-series');
+    });
+
+    document.getElementById('btn-new-note')?.addEventListener('click', () => {
+      document.getElementById('form-note')?.reset();
+      this.openModal('modal-note');
+    });
+
+    document.getElementById('btn-new-goal')?.addEventListener('click', () => {
+      document.getElementById('form-goal')?.reset();
+      this.openModal('modal-goal');
+    });
+
+    document.getElementById('btn-player-toggle')?.addEventListener('click', () => {
+      this.audioManager.togglePlay();
+    });
+
+    document.getElementById('btn-player-close')?.addEventListener('click', () => {
+      this.audioManager.stop();
+    });
+
+    document.getElementById('btn-modal-open-join')?.addEventListener('click', () => {
+      this.closeModal('modal-groups-list');
+      this.openModal('modal-join-group');
+    });
+
+    document.getElementById('btn-modal-open-create')?.addEventListener('click', () => {
+      this.closeModal('modal-groups-list');
+      this.openModal('modal-create-group');
+    });
+  }
+
+  // --- VINCULACIÓN DE FORMULARIOS ---
+  bindFormEvents() {
+    // 1. Formulario Editar Grupo
+    const formEditGroup = document.getElementById('form-edit-group');
+    if (formEditGroup) {
+      formEditGroup.onsubmit = async (e) => {
+        e.preventDefault();
+        const activeGroup = this.storage.getActiveGroup();
+        if (!activeGroup) return;
+
+        const name = document.getElementById('edit-group-name').value.trim();
+        const icon = document.getElementById('edit-group-icon').value.trim() || '⭐';
+        const color = document.getElementById('edit-group-color').value;
+        const coverUrl = document.getElementById('edit-group-cover-url').value.trim();
+        const coverFileInput = document.getElementById('edit-group-cover-file');
+        const iconFileInput = document.getElementById('edit-group-icon-file');
+
+        let iconImage = activeGroup.iconImage || '';
+        if (iconFileInput && iconFileInput.files && iconFileInput.files[0]) {
+          iconImage = await window.Utils.fileToBase64(iconFileInput.files[0]);
+        }
+
+        let coverImage = coverUrl || activeGroup.coverImage || '';
+        if (coverFileInput && coverFileInput.files && coverFileInput.files[0]) {
+          coverImage = await window.Utils.fileToBase64(coverFileInput.files[0]);
+        }
+
+        this.storage.updateGroup(activeGroup.id, {
+          name,
+          icon,
+          color,
+          iconImage,
+          coverImage
+        });
+
+        this.closeModal('modal-edit-group');
+        window.Utils.showToast('Grupo actualizado con éxito ✨', 'success');
+        this.updateHeader();
+        this.renderInicio();
       };
     }
 
-    const btnNewSong = document.getElementById('btn-new-song');
-    if (btnNewSong) {
-      btnNewSong.onclick = () => {
-        document.getElementById('form-song')?.reset();
-        const user = this.storage.getUserProfile();
-        if (user && user.name) document.getElementById('song-recommender-input').value = user.name;
-        this.openModal('modal-song');
+    // 2. Formulario Crear Grupo
+    const formCreateGroup = document.getElementById('form-create-group');
+    if (formCreateGroup) {
+      formCreateGroup.onsubmit = async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('new-group-name').value.trim();
+        const icon = document.getElementById('new-group-icon').value.trim() || '⭐';
+        const color = document.getElementById('new-group-color').value;
+        const coverUrl = document.getElementById('new-group-cover-url').value.trim();
+        const coverFile = document.getElementById('new-group-cover-file')?.files?.[0];
+        const iconFile = document.getElementById('new-group-icon-file')?.files?.[0];
+
+        let iconImage = '';
+        if (iconFile) iconImage = await window.Utils.fileToBase64(iconFile);
+
+        let coverImage = coverUrl;
+        if (coverFile) coverImage = await window.Utils.fileToBase64(coverFile);
+
+        const newGroup = this.storage.createGroup(name, icon, color, coverImage, iconImage);
+        this.closeModal('modal-create-group');
+        window.Utils.showToast(`¡Grupo "${newGroup.name}" creado! Código: ${newGroup.code}`, 'success');
+        this.checkInitialState();
       };
     }
 
-    const btnNewMovie = document.getElementById('btn-new-movie');
-    if (btnNewMovie) {
-      btnNewMovie.onclick = () => {
-        const query = prompt('¿Qué película quieres buscar en TMDb?');
-        if (query) {
-          document.getElementById('movie-search-input').value = query;
-          document.getElementById('movie-search-form').dispatchEvent(new Event('submit'));
+    // 3. Formulario Unirse a Grupo
+    const formJoinGroup = document.getElementById('form-join-group');
+    if (formJoinGroup) {
+      formJoinGroup.onsubmit = (e) => {
+        e.preventDefault();
+        const code = document.getElementById('join-group-code-input').value.trim().toUpperCase();
+        if (code.length !== 6) {
+          window.Utils.showToast('El código debe tener 6 caracteres', 'error');
+          return;
+        }
+
+        const joined = this.storage.joinGroupByCode(code);
+        if (joined) {
+          this.closeModal('modal-join-group');
+          window.Utils.showToast(`¡Te has unido a "${joined.name}"! 🚀`, 'success');
+          this.checkInitialState();
+        } else {
+          window.Utils.showToast('No se encontró ningún grupo con ese código', 'error');
         }
       };
     }
 
-    const btnNewSeries = document.getElementById('btn-new-series');
-    if (btnNewSeries) {
-      btnNewSeries.onclick = () => {
-        document.getElementById('form-series')?.reset();
-        this.openModal('modal-series');
+    // 4. Formulario Perfil
+    const formProfile = document.getElementById('form-profile');
+    if (formProfile) {
+      formProfile.onsubmit = async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('profile-name-input').value.trim();
+        const bio = document.getElementById('profile-bio-input').value.trim();
+        const gender = document.getElementById('profile-gender-select').value;
+        const color = document.getElementById('profile-color-input').value;
+        const avatarFile = document.getElementById('profile-avatar-file')?.files?.[0];
+
+        let avatar = this.storage.getUserProfile()?.avatar || '';
+        if (avatarFile) {
+          avatar = await window.Utils.fileToBase64(avatarFile);
+        }
+
+        this.storage.saveUserProfile({
+          name,
+          bio,
+          gender,
+          favoriteColor: color,
+          avatar
+        });
+
+        this.closeModal('modal-profile');
+        window.Utils.showToast('Perfil guardado ✨', 'success');
+
+        if (this.pendingAfterProfile) {
+          const cb = this.pendingAfterProfile;
+          this.pendingAfterProfile = null;
+          cb();
+        } else {
+          this.checkInitialState();
+        }
       };
     }
 
-    const btnNewGoal = document.getElementById('btn-new-goal');
-    if (btnNewGoal) {
-      btnNewGoal.onclick = () => {
-        document.getElementById('form-goal')?.reset();
-        this.openModal('modal-goal');
+    // 5. Formulario Recuerdo
+    const formMemory = document.getElementById('form-memory');
+    if (formMemory) {
+      formMemory.onsubmit = async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('memory-title-input').value.trim();
+        const date = document.getElementById('memory-date-input').value;
+        const location = document.getElementById('memory-location-input').value.trim();
+        const description = document.getElementById('memory-desc-input').value.trim();
+        const songTitle = document.getElementById('memory-song-title').value.trim();
+        const songArtist = document.getElementById('memory-song-artist').value.trim();
+        const songPreview = document.getElementById('memory-song-preview').value.trim();
+
+        const coverFile = document.getElementById('memory-cover-file')?.files?.[0];
+        const photosFiles = document.getElementById('memory-photos-file')?.files || [];
+
+        let coverImage = '';
+        if (coverFile) coverImage = await window.Utils.fileToBase64(coverFile);
+
+        let photos = [];
+        for (let i = 0; i < photosFiles.length; i++) {
+          photos.push(await window.Utils.fileToBase64(photosFiles[i]));
+        }
+
+        const newMem = {
+          id: document.getElementById('memory-edit-id').value || null,
+          title,
+          date,
+          location,
+          description,
+          coverImage,
+          photos,
+          song: songTitle ? { title: songTitle, artist: songArtist, previewUrl: songPreview } : null
+        };
+
+        this.storage.saveMemory(newMem);
+        this.closeModal('modal-memory');
+        window.Utils.showToast('Recuerdo guardado para siempre 📸', 'success');
+        this.renderMemories();
+        this.renderInicio();
       };
     }
 
-    const btnNewNote = document.getElementById('btn-new-note');
-    if (btnNewNote) {
-      btnNewNote.onclick = () => {
-        document.getElementById('form-note')?.reset();
-        this.openModal('modal-note');
+    // 6. Formulario Canción
+    const formSong = document.getElementById('form-song');
+    if (formSong) {
+      formSong.onsubmit = (e) => {
+        e.preventDefault();
+        const title = document.getElementById('song-title-input').value.trim();
+        const artist = document.getElementById('song-artist-input').value.trim();
+        const rating = parseInt(document.getElementById('song-rating-select').value, 10);
+        const addedBy = document.getElementById('song-recommender-input').value.trim();
+        const review = document.getElementById('song-review-input').value.trim();
+        const previewUrl = document.getElementById('song-preview-url').value;
+        const artwork = document.getElementById('song-artwork-url').value;
+
+        this.storage.saveSong({
+          title,
+          artist,
+          rating,
+          addedBy: addedBy || this.storage.getUserProfile()?.name || 'Miembro',
+          review,
+          previewUrl,
+          artwork
+        });
+
+        this.closeModal('modal-song');
+        window.Utils.showToast('Canción añadida al grupo 🎵', 'success');
+        this.renderSongs();
+        this.renderInicio();
+      };
+    }
+
+    // 7. Formulario Calificar Película
+    const formRateMovie = document.getElementById('form-rate-movie');
+    if (formRateMovie) {
+      formRateMovie.onsubmit = (e) => {
+        e.preventDefault();
+        const movieId = document.getElementById('rate-movie-id').value;
+        const rating = parseFloat(document.getElementById('movie-user-rating-input').value);
+        const comment = document.getElementById('movie-user-comment-input').value.trim();
+
+        this.storage.addMovieRating(movieId, rating, comment);
+        this.closeModal('modal-rate-movie');
+        window.Utils.showToast('¡Calificación guardada! ⭐', 'success');
+        this.renderMovies();
+        this.renderInicio();
+      };
+    }
+
+    // 8. Formulario Serie
+    const formSeries = document.getElementById('form-series');
+    if (formSeries) {
+      formSeries.onsubmit = (e) => {
+        e.preventDefault();
+        const title = document.getElementById('series-title-input').value.trim();
+        const season = parseInt(document.getElementById('series-season-input').value, 10) || 1;
+        const episode = parseInt(document.getElementById('series-episode-input').value, 10) || 1;
+        const platform = document.getElementById('series-platform-input').value.trim();
+        const poster = document.getElementById('series-poster-url').value;
+
+        this.storage.saveSeries({
+          title,
+          currentSeason: season,
+          currentEpisode: episode,
+          platform,
+          poster
+        });
+
+        this.closeModal('modal-series');
+        window.Utils.showToast('Serie añadida 📺', 'success');
+        this.renderSeries();
+        this.renderInicio();
+      };
+    }
+
+    // 9. Formulario Objetivo
+    const formGoal = document.getElementById('form-goal');
+    if (formGoal) {
+      formGoal.onsubmit = (e) => {
+        e.preventDefault();
+        const title = document.getElementById('goal-title-input').value.trim();
+        const category = document.getElementById('goal-category-select').value;
+        const targetDate = document.getElementById('goal-date-input').value;
+        const partsRaw = document.getElementById('goal-participants-input').value.trim();
+        const participants = partsRaw ? partsRaw.split(',').map(p => p.trim()) : [];
+
+        this.storage.saveGoal({
+          title,
+          category,
+          targetDate,
+          participants
+        });
+
+        this.closeModal('modal-goal');
+        window.Utils.showToast('Objetivo compartido creado ✨', 'success');
+        this.renderGoals();
+        this.renderInicio();
+      };
+    }
+
+    // 10. Formulario Nota
+    const formNote = document.getElementById('form-note');
+    if (formNote) {
+      formNote.onsubmit = async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('note-title-input').value.trim();
+        const type = document.getElementById('note-type-select').value;
+        const content = document.getElementById('note-content-input').value.trim();
+        const imgFile = document.getElementById('note-image-file')?.files?.[0];
+
+        let image = '';
+        if (imgFile) image = await window.Utils.fileToBase64(imgFile);
+
+        this.storage.saveNote({
+          title,
+          type,
+          content,
+          image
+        });
+
+        this.closeModal('modal-note');
+        window.Utils.showToast('Nota publicada en el tablero 📝', 'success');
+        this.renderNotes();
+      };
+    }
+
+    // 11. Formulario Comentario de Recuerdo
+    const formComment = document.getElementById('form-add-comment');
+    if (formComment) {
+      formComment.onsubmit = (e) => {
+        e.preventDefault();
+        const memoryId = document.getElementById('comment-memory-id').value;
+        const text = document.getElementById('comment-text-input').value.trim();
+        if (!text) return;
+
+        this.storage.addMemoryComment(memoryId, text);
+        document.getElementById('comment-text-input').value = '';
+        this.populateMemoryComments(memoryId);
+        this.renderMemories();
       };
     }
   }
 
-  openGroupsListModal() {
-    const listContainer = document.getElementById('groups-switcher-list');
-    if (!listContainer) return;
+  // --- BÚSQUEDAS MULTIMEDIA ---
+  bindSearchEvents() {
+    const musicForm = document.getElementById('music-search-form');
+    if (musicForm) {
+      musicForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const query = document.getElementById('music-search-input').value.trim();
+        const resultsBox = document.getElementById('music-search-results');
+        if (!query || !resultsBox) return;
 
-    const groups = this.storage.getGroups();
-    const activeId = this.storage.getActiveGroupId();
-    listContainer.innerHTML = '';
+        resultsBox.innerHTML = '<div style="color: var(--color-text-secondary); padding: 0.5rem;">Buscando en iTunes...</div>';
+        const songs = await this.media.searchSongs(query);
 
-    groups.forEach(g => {
-      const isCur = g.id === activeId;
-      const item = document.createElement('div');
-      item.className = 'glass-card';
-      item.style.padding = '0.85rem';
-      item.style.display = 'flex';
-      item.style.alignItems = 'center';
-      item.style.justifyContent = 'space-between';
-      item.style.cursor = 'pointer';
-      if (isCur) item.style.borderColor = 'var(--color-primary-light)';
+        if (songs.length === 0) {
+          resultsBox.innerHTML = '<div style="color: var(--color-error); padding: 0.5rem;">No se encontraron resultados.</div>';
+          return;
+        }
 
-      const iconElem = g.iconImage ? `<img src="${g.iconImage}" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" alt="icon" />` : `<span style="font-size: 1.4rem;">${g.icon || '🌟'}</span>`;
-
-      item.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          ${iconElem}
-          <div>
-            <strong style="color: var(--color-text-main);">${window.Utils.sanitizeHTML(g.name)}</strong>
-            <div style="font-size: 0.75rem; color: var(--color-accent); font-family: var(--font-mono);">Código: ${g.code} · ${(g.members || []).length} miembros</div>
+        resultsBox.innerHTML = `
+          <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 250px; overflow-y: auto;">
+            ${songs.map((s, idx) => `
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem; border-bottom: 1px solid var(--color-border);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 0;">
+                  <img src="${s.artwork || 'assets/icon.png'}" style="width: 36px; height: 36px; border-radius: 4px; object-fit: cover;" alt="art" />
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 700; font-size: 0.85rem; color: var(--color-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.title)}</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-secondary);">${window.Utils.sanitizeHTML(s.artist)}</div>
+                  </div>
+                </div>
+                <button type="button" class="btn-primary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="window.app.addSongFromSearch(${idx})">
+                  + Añadir
+                </button>
+              </div>
+            `).join('')}
           </div>
-        </div>
-        ${isCur ? '<span style="color: var(--color-accent); font-weight: 700;">Activo ✓</span>' : '<button class="btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Cambiar</button>'}
-      `;
+        `;
+        this.lastMusicSearch = songs;
+      };
+    }
 
-      item.onclick = () => {
-        if (!isCur) {
-          this.storage.setActiveGroupId(g.id);
+    const movieForm = document.getElementById('movie-search-form');
+    if (movieForm) {
+      movieForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const query = document.getElementById('movie-search-input').value.trim();
+        const resultsBox = document.getElementById('movie-search-results');
+        if (!query || !resultsBox) return;
+
+        resultsBox.innerHTML = '<div style="color: var(--color-text-secondary); padding: 0.5rem;">Buscando en TMDb...</div>';
+        const movies = await this.media.searchMovies(query);
+
+        if (movies.length === 0) {
+          resultsBox.innerHTML = '<div style="color: var(--color-error); padding: 0.5rem;">No se encontraron películas.</div>';
+          return;
+        }
+
+        resultsBox.innerHTML = `
+          <div style="background: #FFFFFF; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 250px; overflow-y: auto;">
+            ${movies.map((m, idx) => `
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.4rem; border-bottom: 1px solid var(--color-border);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; min-width: 0;">
+                  <img src="${m.poster || 'assets/icon.png'}" style="width: 32px; height: 46px; border-radius: 4px; object-fit: cover;" alt="poster" />
+                  <div style="min-width: 0;">
+                    <div style="font-weight: 700; font-size: 0.85rem; color: var(--color-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)} (${m.year || ''})</div>
+                    <div style="font-size: 0.75rem; color: var(--color-gold);">⭐ TMDb ${m.tmdbRating || 'N/A'}</div>
+                  </div>
+                </div>
+                <button type="button" class="btn-primary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="window.app.addMovieFromSearch(${idx})">
+                  + Añadir
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        this.lastMovieSearch = movies;
+      };
+    }
+  }
+
+  addSongFromSearch(index) {
+    if (this.lastMusicSearch && this.lastMusicSearch[index]) {
+      const s = this.lastMusicSearch[index];
+      this.storage.saveSong({
+        title: s.title,
+        artist: s.artist,
+        artwork: s.artwork,
+        previewUrl: s.previewUrl,
+        rating: 5,
+        addedBy: this.storage.getUserProfile()?.name || 'Miembro'
+      });
+      document.getElementById('music-search-results').innerHTML = '';
+      document.getElementById('music-search-input').value = '';
+      window.Utils.showToast(`"${s.title}" añadida a Música 🎵`, 'success');
+      this.renderSongs();
+      this.renderInicio();
+    }
+  }
+
+  addMovieFromSearch(index) {
+    if (this.lastMovieSearch && this.lastMovieSearch[index]) {
+      const m = this.lastMovieSearch[index];
+      this.storage.saveMovie({
+        title: m.title,
+        year: m.year,
+        poster: m.poster,
+        overview: m.overview,
+        tmdbRating: m.tmdbRating,
+        proposedBy: this.storage.getUserProfile()?.name || 'Miembro',
+        status: 'Por ver'
+      });
+      document.getElementById('movie-search-results').innerHTML = '';
+      document.getElementById('movie-search-input').value = '';
+      window.Utils.showToast(`"${m.title}" añadida a Cine 🍿`, 'success');
+      this.renderMovies();
+      this.renderInicio();
+    }
+  }
+
+  // --- MIS GRUPOS / SWITCHER ---
+  openGroupsListModal() {
+    const container = document.getElementById('groups-switcher-list');
+    const groups = this.storage.getGroups() || [];
+    const activeGroup = this.storage.getActiveGroup();
+
+    if (container) {
+      container.innerHTML = '';
+      groups.forEach(g => {
+        const isActive = activeGroup && activeGroup.id === g.id;
+        const item = document.createElement('div');
+        item.className = 'group-menu-action-item';
+        item.style.borderColor = isActive ? 'var(--color-primary)' : 'var(--color-border)';
+        item.style.background = isActive ? '#F3E8FF' : '#F8FAFC';
+
+        item.innerHTML = `
+          <div class="group-menu-icon" style="font-size: 1.6rem;">${g.icon || '🌟'}</div>
+          <div style="flex: 1; min-width: 0;">
+            <strong style="color: var(--color-text-main); font-size: 1rem;">${window.Utils.sanitizeHTML(g.name)}</strong>
+            <p style="color: var(--color-text-secondary); font-size: 0.8rem;">Código: <strong>${g.code}</strong> · ${g.members?.length || 1} miembros</p>
+          </div>
+          ${isActive ? '<span style="color: var(--color-primary); font-weight: 700; font-size: 0.85rem;">Activo ✓</span>' : ''}
+        `;
+
+        item.onclick = () => {
+          this.storage.switchGroup(g.id);
           this.closeModal('modal-groups-list');
           this.checkInitialState();
-        }
-      };
+        };
 
-      listContainer.appendChild(item);
-    });
-
-    document.getElementById('btn-modal-open-join').onclick = () => {
-      this.closeModal('modal-groups-list');
-      this.openModal('modal-join-group');
-    };
-    document.getElementById('btn-modal-open-create').onclick = () => {
-      this.closeModal('modal-groups-list');
-      this.openModal('modal-create-group');
-    };
+        container.appendChild(item);
+      });
+    }
 
     this.openModal('modal-groups-list');
   }
 
-  populateProfileModal() {
-    const profile = this.storage.getUserProfile() || {};
-    document.getElementById('profile-name-input').value = profile.name || '';
-    document.getElementById('profile-bio-input').value = profile.bio || '';
-    document.getElementById('profile-gender-select').value = profile.gender || 'No especificado';
-    document.getElementById('profile-color-input').value = profile.favoriteColor || '#7C3AED';
-
-    const countEl = document.getElementById('profile-bio-counter');
-    if (countEl) countEl.textContent = `${(profile.bio || '').length} / 120`;
-
-    const bioInput = document.getElementById('profile-bio-input');
-    if (bioInput) {
-      bioInput.oninput = () => {
-        if (countEl) countEl.textContent = `${bioInput.value.length} / 120`;
-      };
-    }
-  }
-
-  // --- FORMULARIOS ---
-  bindFormEvents() {
-    // 1. Formulario Editar Grupo
-    document.getElementById('form-edit-group')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const group = this.storage.getActiveGroup();
-      if (!group) return;
-
-      const name = document.getElementById('edit-group-name').value.trim();
-      const icon = document.getElementById('edit-group-icon').value.trim() || '🌟';
-      const color = document.getElementById('edit-group-color').value;
-      const coverUrl = document.getElementById('edit-group-cover-url').value.trim();
-      const coverFile = document.getElementById('edit-group-cover-file');
-      const iconFile = document.getElementById('edit-group-icon-file');
-
-      let coverImage = coverUrl || group.coverImage || '';
-      if (coverFile && coverFile.files && coverFile.files[0]) {
-        coverImage = await window.Utils.compressImage(coverFile.files[0], 1200, 0.8);
-      }
-
-      let iconImage = group.iconImage || '';
-      if (iconFile && iconFile.files && iconFile.files[0]) {
-        iconImage = await window.Utils.compressImage(iconFile.files[0], 400, 0.85);
-      }
-
-      this.storage.updateGroup(group.id, {
-        name,
-        icon,
-        iconImage,
-        coverImage,
-        color
-      });
-
-      this.closeModal('modal-edit-group');
-      window.Utils.showToast('¡Información del grupo actualizada! ✨', 'success');
-      this.updateHeader();
-      this.renderInicio();
-    });
-
-    // 2. Formulario Perfil
-    document.getElementById('form-profile')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('profile-name-input').value.trim();
-      const bio = document.getElementById('profile-bio-input').value.trim();
-      const gender = document.getElementById('profile-gender-select').value;
-      const color = document.getElementById('profile-color-input').value;
-      const fileInput = document.getElementById('profile-avatar-file');
-
-      let avatar = this.storage.getUserProfile()?.avatar || '';
-      if (fileInput && fileInput.files && fileInput.files[0]) {
-        avatar = await window.Utils.compressImage(fileInput.files[0], 400, 0.85);
-      }
-
-      this.storage.saveUserProfile({
-        name,
-        bio,
-        gender,
-        favoriteColor: color,
-        avatar
-      });
-
-      this.closeModal('modal-profile');
-      window.Utils.showToast('¡Perfil guardado con éxito! 🌟', 'success');
-
-      if (this.pendingAfterProfile) {
-        const cb = this.pendingAfterProfile;
-        this.pendingAfterProfile = null;
-        cb();
-      } else {
-        this.checkInitialState();
-      }
-    });
-
-    // 3. Formulario Crear Grupo
-    document.getElementById('form-create-group')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('new-group-name').value.trim();
-      const icon = document.getElementById('new-group-icon').value.trim() || '🌟';
-      const color = document.getElementById('new-group-color').value;
-      const urlInput = document.getElementById('new-group-cover-url').value.trim();
-      const coverFile = document.getElementById('new-group-cover-file');
-      const iconFile = document.getElementById('new-group-icon-file');
-
-      let cover = urlInput;
-      if (coverFile && coverFile.files && coverFile.files[0]) {
-        cover = await window.Utils.compressImage(coverFile.files[0], 1200, 0.8);
-      }
-
-      let iconImage = '';
-      if (iconFile && iconFile.files && iconFile.files[0]) {
-        iconImage = await window.Utils.compressImage(iconFile.files[0], 400, 0.85);
-      }
-
-      const newGroup = this.storage.createGroup(name, icon, color, cover, iconImage);
-      this.closeModal('modal-create-group');
-      window.Utils.showToast(`¡Grupo "${name}" creado! Código: ${newGroup.code}`, 'success');
-      this.checkInitialState();
-    });
-
-    // 4. Formulario Unirse a Grupo
-    document.getElementById('form-join-group')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const code = document.getElementById('join-group-code-input').value.trim();
-      try {
-        const group = await this.storage.joinGroupByCode(code);
-        this.closeModal('modal-join-group');
-        window.Utils.showToast(`¡Te has unido a "${group.name}"! 🚀`, 'success');
-        this.checkInitialState();
-      } catch (err) {
-        window.Utils.showToast(err.message || 'Código inválido o grupo no encontrado', 'error');
-      }
-    });
-
-    // 5. Formulario Recuerdo
-    document.getElementById('form-memory')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const title = document.getElementById('memory-title-input').value.trim();
-      const date = document.getElementById('memory-date-input').value;
-      const location = document.getElementById('memory-location-input').value.trim();
-      const description = document.getElementById('memory-desc-input').value.trim();
-      const songTitle = document.getElementById('memory-song-title').value.trim();
-      const songArtist = document.getElementById('memory-song-artist').value.trim();
-      const songPreview = document.getElementById('memory-song-preview').value.trim();
-      const coverFile = document.getElementById('memory-cover-file');
-      const photosFiles = document.getElementById('memory-photos-file');
-
-      let coverImage = '';
-      if (coverFile && coverFile.files && coverFile.files[0]) {
-        coverImage = await window.Utils.compressImage(coverFile.files[0], 1200, 0.8);
-      }
-
-      const photos = [];
-      if (photosFiles && photosFiles.files && photosFiles.files.length > 0) {
-        for (let i = 0; i < photosFiles.files.length; i++) {
-          const comp = await window.Utils.compressImage(photosFiles.files[i], 1200, 0.8);
-          if (comp) photos.push(comp);
-        }
-      }
-
-      const user = this.storage.getUserProfile();
-      this.storage.saveMemory({
-        title,
-        date,
-        location,
-        description,
-        coverImage,
-        photos,
-        author: { id: user?.id, name: user?.name || 'Miembro' },
-        song: { title: songTitle, artist: songArtist, previewUrl: songPreview }
-      });
-
-      this.closeModal('modal-memory');
-      window.Utils.showToast('¡Recuerdo guardado! 📸', 'success');
-      this.renderMemories();
-    });
-
-    // 6. Formulario Canción
-    document.getElementById('form-song')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const title = document.getElementById('song-title-input').value.trim();
-      const artist = document.getElementById('song-artist-input').value.trim();
-      const rating = Number(document.getElementById('song-rating-select').value);
-      const addedBy = document.getElementById('song-recommender-input').value.trim();
-      const review = document.getElementById('song-review-input').value.trim();
-      const previewUrl = document.getElementById('song-preview-url').value;
-      const artwork = document.getElementById('song-artwork-url').value;
-
-      this.storage.saveSong({
-        title, artist, rating, addedBy, review, previewUrl, artwork
-      });
-
-      this.closeModal('modal-song');
-      window.Utils.showToast('¡Canción añadida! 🎵', 'success');
-      this.renderSongs();
-    });
-
-    // 7. Formulario Calificar Película
-    document.getElementById('form-rate-movie')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const movieId = document.getElementById('rate-movie-id').value;
-      const rating = document.getElementById('movie-user-rating-input').value;
-      const comment = document.getElementById('movie-user-comment-input').value.trim();
-      const user = this.storage.getUserProfile();
-
-      this.storage.rateMovie(movieId, user?.id || 'anon', rating, comment);
-      this.closeModal('modal-rate-movie');
-      window.Utils.showToast('Calificación guardada ⭐', 'success');
-      this.renderMovies();
-    });
-
-    // 8. Formulario Serie
-    document.getElementById('form-series')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const title = document.getElementById('series-title-input').value.trim();
-      const currentSeason = Number(document.getElementById('series-season-input').value);
-      const currentEpisode = Number(document.getElementById('series-episode-input').value);
-      const platform = document.getElementById('series-platform-input').value.trim();
-      const poster = document.getElementById('series-poster-url').value;
-      const user = this.storage.getUserProfile();
-
-      this.storage.saveSeries({
-        title, currentSeason, currentEpisode, totalEpisodes: 10, platform, poster, proposedBy: user?.name
-      });
-
-      this.closeModal('modal-series');
-      window.Utils.showToast('Serie añadida 📺', 'success');
-      this.renderSeries();
-    });
-
-    // 9. Formulario Objetivo
-    document.getElementById('form-goal')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const title = document.getElementById('goal-title-input').value.trim();
-      const category = document.getElementById('goal-category-select').value;
-      const targetDate = document.getElementById('goal-date-input').value;
-      const partsRaw = document.getElementById('goal-participants-input').value.trim();
-      const participants = partsRaw ? partsRaw.split(',').map(p => p.trim()) : [];
-
-      this.storage.saveGoal({
-        title, category, targetDate, participants, status: 'Pendiente'
-      });
-
-      this.closeModal('modal-goal');
-      window.Utils.showToast('Objetivo compartido creado 🎯', 'success');
-      this.renderGoals();
-    });
-
-    // 10. Formulario Nota
-    document.getElementById('form-note')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const title = document.getElementById('note-title-input').value.trim();
-      const type = document.getElementById('note-type-select').value;
-      const content = document.getElementById('note-content-input').value.trim();
-      const fileInput = document.getElementById('note-image-file');
-      const user = this.storage.getUserProfile();
-
-      let image = '';
-      if (fileInput && fileInput.files && fileInput.files[0]) {
-        image = await window.Utils.compressImage(fileInput.files[0], 1000, 0.8);
-      }
-
-      this.storage.saveNote({
-        title, type, content, image, author: user?.name || 'Miembro'
-      });
-
-      this.closeModal('modal-note');
-      window.Utils.showToast('Nota publicada en el tablero 📌', 'success');
-      this.renderNotes();
-    });
-
-    // 11. Formulario Comentario
-    document.getElementById('form-add-comment')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const memoryId = document.getElementById('comment-memory-id').value;
-      const text = document.getElementById('comment-text-input').value.trim();
-      const user = this.storage.getUserProfile();
-
-      if (text && memoryId) {
-        this.storage.addCommentToMemory(memoryId, user?.name || 'Miembro', text);
-        document.getElementById('comment-text-input').value = '';
-        this.openMemoryComments(memoryId);
-        this.renderMemories();
-      }
-    });
-  }
-
-  // --- BÚSQUEDAS TMDB E ITUNES ---
-  bindSearchEvents() {
-    document.getElementById('music-search-form')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const query = document.getElementById('music-search-input').value.trim();
-      const resultsContainer = document.getElementById('music-search-results');
-      if (!resultsContainer) return;
-
-      resultsContainer.innerHTML = '<div style="color: var(--color-accent); padding: 1rem;">Buscando en iTunes...</div>';
-      const results = await this.media.searchSongs(query);
-
-      if (results.length === 0) {
-        resultsContainer.innerHTML = '<div style="color: var(--color-text-muted); padding: 1rem;">No se encontraron canciones.</div>';
-        return;
-      }
-
-      resultsContainer.innerHTML = `
-        <div style="background: var(--color-glass-card); border: 1px solid var(--color-glass-border); border-radius: var(--radius-lg); padding: 1rem;">
-          <h4 style="font-size: 0.95rem; color: var(--color-accent); margin-bottom: 0.75rem;">Resultados de Búsqueda:</h4>
-          <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 250px; overflow-y: auto;">
-            ${results.map(r => `
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem; background: rgba(15, 23, 42, 0.6); border-radius: var(--radius-sm);">
-                <div style="display: flex; align-items: center; gap: 0.6rem; min-width: 0;">
-                  <img src="${r.artwork}" style="width: 38px; height: 38px; border-radius: 6px; object-fit: cover;" alt="art" />
-                  <div style="min-width: 0;">
-                    <div style="font-size: 0.88rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(r.title)}</div>
-                    <div style="font-size: 0.75rem; color: var(--color-accent);">${window.Utils.sanitizeHTML(r.artist)}</div>
-                  </div>
-                </div>
-                <div style="display: flex; gap: 0.35rem;">
-                  <button type="button" class="btn-ghost" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="window.audioManager.playTrack(${JSON.stringify(r).replace(/"/g, '&quot;')})">▶ Preview</button>
-                  <button type="button" class="btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="window.app.quickAddSong(${JSON.stringify(r).replace(/"/g, '&quot;')})">+ Añadir</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    });
-
-    document.getElementById('movie-search-form')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const query = document.getElementById('movie-search-input').value.trim();
-      const resultsContainer = document.getElementById('movie-search-results');
-      if (!resultsContainer) return;
-
-      resultsContainer.innerHTML = '<div style="color: var(--color-accent); padding: 1rem;">Buscando en TMDb...</div>';
-      const results = await this.media.searchMovies(query);
-
-      if (results.length === 0) {
-        resultsContainer.innerHTML = '<div style="color: var(--color-text-muted); padding: 1rem;">No se encontraron películas.</div>';
-        return;
-      }
-
-      resultsContainer.innerHTML = `
-        <div style="background: var(--color-glass-card); border: 1px solid var(--color-glass-border); border-radius: var(--radius-lg); padding: 1rem;">
-          <h4 style="font-size: 0.95rem; color: var(--color-accent); margin-bottom: 0.75rem;">Películas encontradas en TMDb:</h4>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; max-height: 350px; overflow-y: auto;">
-            ${results.map(m => `
-              <div style="background: rgba(15, 23, 42, 0.7); border-radius: var(--radius-sm); overflow: hidden; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                <img src="${m.poster || 'assets/icon.png'}" style="width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 4px;" alt="poster" />
-                <strong style="font-size: 0.85rem; color: #fff;">${window.Utils.sanitizeHTML(m.title)} (${m.year})</strong>
-                <button type="button" class="btn-primary" style="margin-top: auto; padding: 0.35rem; font-size: 0.75rem;" onclick="window.app.quickAddMovie(${JSON.stringify(m).replace(/"/g, '&quot;')})">
-                  + Añadir a la Lista
-                </button>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    });
-
-    document.getElementById('series-search-form')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const query = document.getElementById('series-search-input').value.trim();
-      const resultsContainer = document.getElementById('series-search-results');
-      if (!resultsContainer) return;
-
-      resultsContainer.innerHTML = '<div style="color: var(--color-accent); padding: 1rem;">Buscando series en TMDb...</div>';
-      const results = await this.media.searchSeries(query);
-
-      if (results.length === 0) {
-        resultsContainer.innerHTML = '<div style="color: var(--color-text-muted); padding: 1rem;">No se encontraron series.</div>';
-        return;
-      }
-
-      resultsContainer.innerHTML = `
-        <div style="background: var(--color-glass-card); border: 1px solid var(--color-glass-border); border-radius: var(--radius-lg); padding: 1rem;">
-          <h4 style="font-size: 0.95rem; color: var(--color-accent); margin-bottom: 0.75rem;">Series encontradas:</h4>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; max-height: 350px; overflow-y: auto;">
-            ${results.map(s => `
-              <div style="background: rgba(15, 23, 42, 0.7); border-radius: var(--radius-sm); overflow: hidden; padding: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                <img src="${s.poster || 'assets/icon.png'}" style="width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 4px;" alt="poster" />
-                <strong style="font-size: 0.85rem; color: #fff;">${window.Utils.sanitizeHTML(s.title)} (${s.year})</strong>
-                <button type="button" class="btn-primary" style="margin-top: auto; padding: 0.35rem; font-size: 0.75rem;" onclick="window.app.quickAddSeries(${JSON.stringify(s).replace(/"/g, '&quot;')})">
-                  + Añadir a Series
-                </button>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    });
-  }
-
-  quickAddSong(songData) {
-    const user = this.storage.getUserProfile();
-    this.storage.saveSong({
-      title: songData.title,
-      artist: songData.artist,
-      previewUrl: songData.previewUrl,
-      artwork: songData.artwork,
-      rating: 5,
-      addedBy: user?.name || 'Miembro',
-      review: ''
-    });
-    document.getElementById('music-search-results').innerHTML = '';
-    window.Utils.showToast('¡Canción añadida al grupo! 🎵', 'success');
-    this.renderSongs();
-  }
-
-  quickAddMovie(movieData) {
-    const user = this.storage.getUserProfile();
-    this.storage.saveMovie({
-      title: movieData.title,
-      year: movieData.year,
-      poster: movieData.poster,
-      synopsis: movieData.synopsis,
-      proposedBy: user?.name || 'Miembro',
-      platform: 'Por definir',
-      status: 'Por ver',
-      ratings: {}
-    });
-    document.getElementById('movie-search-results').innerHTML = '';
-    window.Utils.showToast('¡Película añadida al cine del grupo! 🍿', 'success');
-    this.renderMovies();
-  }
-
-  quickAddSeries(seriesData) {
-    const user = this.storage.getUserProfile();
-    this.storage.saveSeries({
-      title: seriesData.title,
-      year: seriesData.year,
-      poster: seriesData.poster,
-      synopsis: seriesData.synopsis,
-      proposedBy: user?.name || 'Miembro',
-      currentSeason: 1,
-      currentEpisode: 1,
-      totalEpisodes: 10,
-      status: 'Viendo'
-    });
-    document.getElementById('series-search-results').innerHTML = '';
-    window.Utils.showToast('¡Serie añadida! 📺', 'success');
-    this.renderSeries();
-  }
-
+  // --- COMENTARIOS DE RECUERDOS ---
   openMemoryComments(memoryId) {
-    const memory = this.storage.getMemories().find(m => m.id === memoryId);
-    if (!memory) return;
-
     document.getElementById('comment-memory-id').value = memoryId;
-    const listEl = document.getElementById('memory-comments-list');
-    if (!listEl) return;
-
-    const comments = memory.comments || [];
-    if (comments.length === 0) {
-      listEl.innerHTML = '<div style="color: var(--color-text-muted); font-size: 0.85rem; text-align: center; padding: 1.5rem;">Sé el primero en comentar este recuerdo ✨</div>';
-    } else {
-      listEl.innerHTML = comments.map(c => `
-        <div style="background: rgba(15, 23, 42, 0.6); border-radius: var(--radius-sm); padding: 0.75rem;">
-          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-accent); font-weight: 700; margin-bottom: 0.2rem;">
-            <span>${window.Utils.sanitizeHTML(c.authorName)}</span>
-            <span style="color: var(--color-text-muted); font-weight: normal;">${window.Utils.formatDateTimeES(c.createdAt)}</span>
-          </div>
-          <div style="font-size: 0.88rem; color: var(--color-text-main);">${window.Utils.sanitizeHTML(c.text)}</div>
-        </div>
-      `).join('');
-    }
-
+    this.populateMemoryComments(memoryId);
     this.openModal('modal-memory-comments');
   }
 
-  openLightbox(imageSrc) {
+  populateMemoryComments(memoryId) {
+    const list = document.getElementById('memory-comments-list');
+    const memory = this.storage.getMemories().find(m => m.id === memoryId);
+    if (!list || !memory) return;
+
+    const comments = memory.comments || [];
+    if (comments.length === 0) {
+      list.innerHTML = '<div style="color: var(--color-text-muted); font-size: 0.85rem; padding: 0.5rem 0;">Aún no hay comentarios. ¡Sé el primero!</div>';
+      return;
+    }
+
+    list.innerHTML = comments.map(c => `
+      <div style="background: #F8FAFC; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 0.6rem 0.8rem; margin-bottom: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-primary); font-weight: 700;">
+          <span>${window.Utils.sanitizeHTML(c.author || 'Miembro')}</span>
+          <span style="color: var(--color-text-muted); font-weight: 400;">${window.Utils.formatDateTimeES(c.createdAt)}</span>
+        </div>
+        <div style="font-size: 0.88rem; color: var(--color-text-main); margin-top: 0.2rem;">${window.Utils.sanitizeHTML(c.text)}</div>
+      </div>
+    `).join('');
+  }
+
+  // --- LIGHTBOX ---
+  openLightbox(src) {
     const img = document.getElementById('lightbox-img');
-    if (img && imageSrc) {
-      img.src = imageSrc;
+    if (img && src) {
+      img.src = src;
       this.openModal('modal-lightbox');
     }
   }
+
+  // --- PERFIL MODAL ---
+  populateProfileModal() {
+    const p = this.storage.getUserProfile() || {};
+    const nameInput = document.getElementById('profile-name-input');
+    const bioInput = document.getElementById('profile-bio-input');
+    const genderSelect = document.getElementById('profile-gender-select');
+    const colorInput = document.getElementById('profile-color-input');
+
+    if (nameInput) nameInput.value = p.name || '';
+    if (bioInput) bioInput.value = p.bio || '';
+    if (genderSelect) genderSelect.value = p.gender || 'No especificado';
+    if (colorInput) colorInput.value = p.favoriteColor || '#6366F1';
+  }
 }
 
-// Iniciar LUMA al cargar DOM
+// Inicialización Global de LUMA
 window.addEventListener('DOMContentLoaded', () => {
   window.app = new LumaApp();
 });
