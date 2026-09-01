@@ -1,65 +1,79 @@
-﻿/* LUMA 🌟 - Design System & Modern Luxury Dark Theme */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+﻿/* LUMA 🌟 - Design System: Clean Luxury Dual Theme (Matching User Reference) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
 
 :root {
-  /* Paleta Base - Deep Obsidian & Cosmic Luxury */
-  --color-bg-base: #070913;
-  --color-bg-surface: rgba(15, 23, 42, 0.65);
-  --color-bg-surface-elevated: rgba(22, 32, 58, 0.75);
-  --color-bg-card: rgba(17, 24, 46, 0.55);
-  --color-bg-card-hover: rgba(26, 36, 68, 0.7);
+  /* Fondo Principal & Superficies (Clean Light/Dark Hybrid) */
+  --color-bg-base: #F8FAFC;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-surface-elevated: #FFFFFF;
+  --color-bg-card: #FFFFFF;
+  --color-bg-card-hover: #F8FAFC;
 
-  /* Acentos Luminosos */
+  /* Header Dark Obsidian */
+  --color-header-bg: #0B1021;
+  --color-header-border: rgba(255, 255, 255, 0.08);
+
+  /* Acentos y Paleta */
   --color-primary: #6366F1;
+  --color-primary-dark: #4F46E5;
   --color-primary-light: #818CF8;
-  --color-primary-glow: rgba(99, 102, 241, 0.35);
   --color-secondary: #3B82F6;
-  --color-accent: #38BDF8;
-  --color-accent-glow: rgba(56, 189, 248, 0.3);
-  --color-gold: #FBBF24;
+  --color-accent: #0284C7;
+  --color-gold: #F59E0B;
   --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-error: #F43F5E;
+  --color-warning: #F97316;
+  --color-error: #EF4444;
 
-  /* Gradientes de Marca */
-  --gradient-luma: linear-gradient(135deg, #A855F7 0%, #6366F1 35%, #38BDF8 70%, #FBBF24 100%);
-  --gradient-primary: linear-gradient(135deg, #7C3AED 0%, #4F46E5 50%, #06B6D4 100%);
-  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
-  --gradient-card-glow: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+  /* Fondos Pasteles para Iconos de Métricas */
+  --color-badge-purple-bg: #F3E8FF;
+  --color-badge-purple-text: #9333EA;
+  --color-badge-orange-bg: #FFEDD5;
+  --color-badge-orange-text: #EA580C;
+  --color-badge-indigo-bg: #E0E7FF;
+  --color-badge-indigo-text: #4F46E5;
+  --color-badge-blue-bg: #DBEAFE;
+  --color-badge-blue-text: #2563EB;
+  --color-badge-teal-bg: #CCFBF1;
+  --color-badge-teal-text: #0D9488;
+  --color-badge-rose-bg: #FFE4E6;
+  --color-badge-rose-text: #E11D48;
+  --color-badge-emerald-bg: #D1FAE5;
+  --color-badge-emerald-text: #059669;
 
-  /* Textos & Tipografía */
+  /* Gradientes */
+  --gradient-luma: linear-gradient(135deg, #A855F7 0%, #6366F1 40%, #38BDF8 80%, #FBBF24 100%);
+  --gradient-primary: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+  --gradient-hero-overlay: linear-gradient(to bottom, rgba(11, 16, 33, 0.2) 0%, rgba(11, 16, 33, 0.92) 100%);
+
+  /* Textos */
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --color-text-main: #F8FAFC;
-  --color-text-secondary: #94A3B8;
-  --color-text-muted: #64748B;
+  --color-text-main: #0F172A;
+  --color-text-secondary: #64748B;
+  --color-text-muted: #94A3B8;
+  --color-text-dark-theme: #F8FAFC;
 
-  /* Glassmorphism & Bordes */
-  --glass-blur: blur(24px);
-  --glass-blur-heavy: blur(36px);
-  --color-glass-border: rgba(255, 255, 255, 0.09);
-  --color-glass-border-hover: rgba(255, 255, 255, 0.22);
-  --color-glass-border-active: rgba(129, 140, 248, 0.5);
-
-  /* Sombras & Elevación */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --shadow-card: 0 16px 36px -8px rgba(0, 0, 0, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
-  --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.3);
-  --shadow-glow-cyan: 0 0 25px rgba(56, 189, 248, 0.25);
+  /* Bordes & Sombras */
+  --color-border: #E2E8F0;
+  --color-border-subtle: #EDF2F7;
+  --color-glass-border: rgba(226, 232, 240, 0.8);
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-card-hover: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+  --shadow-elevated: 0 20px 40px -8px rgba(15, 23, 42, 0.15);
 
   /* Radios */
   --radius-xs: 6px;
   --radius-sm: 10px;
   --radius-md: 14px;
   --radius-lg: 18px;
-  --radius-xl: 26px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Dimensiones */
-  --max-width-content: 1120px;
+  --max-width-content: 1160px;
   --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-normal: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-bounce: 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-normal: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
