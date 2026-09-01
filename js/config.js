@@ -1,34 +1,27 @@
-/**
- * ATRIA ✨ - Configuración Centralizada
- * La puerta de entrada a nuestro mundo compartido: Kevin & Wendy
+﻿/**
+ * LUMA 🌟 - Configuración Centralizada
+ * "Comparte · Guarda · Revive"
+ * Plataforma social de grupos privados.
  */
 window.CONFIG = {
-  appName: 'ATRIA ✨',
-  version: '1.0.0',
-  
-  // Claves de LocalStorage
+  appName: 'LUMA',
+  slogan: 'Comparte · Guarda · Revive',
+  version: '2.0.0',
+
+  // Claves de LocalStorage (Namespace LUMA)
   storageKeys: {
-    unlocked: 'patico_unlocked_v2',
-    currentUser: 'patico_current_user_v1',
-    memories: 'patico_memories_v1',
-    movies: 'patico_movies_v1',
-    series: 'patico_series_v1',
-    notes: 'patico_notes_v1',
-    dreams: 'patico_dreams_v1',
-    songs: 'patico_songs_v1',
-    dailyPrompts: 'patico_daily_prompts_v1',
-    timeCapsules: 'patico_time_capsules_v1',
-    credentials: 'patico_credentials_v1',
-    profiles: 'patico_profiles_v1',
-    localPresence: 'patico_presence_local_v1',
-    remoteConfig: 'patico_presence_remote_config_v1',
-    googleDrive: 'patico_gdrive_config_v1'
+    userProfile: 'luma_user_profile_v1',
+    activeGroupId: 'luma_active_group_id_v1',
+    groups: 'luma_groups_v1',
+    cachedGroupData: 'luma_cached_group_data_v1',
+    localPresence: 'luma_presence_local_v1',
+    gdriveConfig: 'luma_gdrive_config_v1',
+    audioSettings: 'luma_audio_settings_v1'
   },
 
-  // Configuración de Presencia Compartida y Sincronización en Tiempo Real
+  // Firebase Realtime Database
   presence: {
     provider: 'firebase',
-    roomId: 'kevin-wendy-wrapped-room',
     heartbeatIntervalMs: 15000,
     presenceTimeoutMs: 60000,
     firebaseConfig: {
@@ -42,64 +35,49 @@ window.CONFIG = {
     }
   },
 
-  // Configuración de Google Drive para Recuerdos
+  // Google Drive para almacenamiento de fotos y videos
   googleDrive: {
     enabled: true,
     parentFolderId: '1qXPifAHV5fTVX7HdI1ab6UzAjDTpiwjm',
-    folderPrefix: 'Patico Recuerdos',
+    folderPrefix: 'LUMA Archivos',
     mainFolderUrl: 'https://drive.google.com/drive/folders/1qXPifAHV5fTVX7HdI1ab6UzAjDTpiwjm?usp=sharing',
-    scriptUrl: 'https://script.google.com/macros/s/AKfycbwlvCsQoPOFWsE1JEirVv16Fy2IFwzsOAUxwJtFn-QRg9u4HWpv8JowqniTGZ72OY4o/exec',
-    get folderUrl() {
-      return localStorage.getItem('patico_gdrive_main_url') || this.mainFolderUrl;
-    }
+    scriptUrl: 'https://script.google.com/macros/s/AKfycbwlvCsQoPOFWsE1JEirVv16Fy2IFwzsOAUxwJtFn-QRg9u4HWpv8JowqniTGZ72OY4o/exec'
   },
 
-  // Configuración de sincronización en la nube (GitHub & Remote Sync)
-  cloudSync: {
-    enabled: true,
-    repoOwner: 'KEVINGOMEZ-04',
-    repoName: 'wendy',
-    filePath: 'data/journal.json',
-    branch: 'main',
-    get token() {
-      return localStorage.getItem('patico_github_token') || '';
-    },
-    syncIntervalMs: 25000
-  },
-
-  // Usuarios del diario compartido
-  users: ['Kevin', 'Wendy'],
-  defaultUser: 'Kevin',
-
-  // Conexión con The Movie Database (TMDB) para pósters en HD y sinopsis oficiales
+  // The Movie Database (TMDB)
   media: {
     tmdbApiKey: '3fd2be6f0c70a2a598f084ddfb75487c',
-    omdbApiKey: '',
     tmdbImageBaseUrl: 'https://image.tmdb.org/t/p/w500'
   },
 
-  // Paleta oficial
-  theme: {
-    bg: '#120E1C',
-    purple: '#6D4A99',
-    lilac: '#B98EE6',
-    sunflowerGold: '#F4C542',
-    lightYellow: '#F8D96B',
-    textMain: '#F1E9FB',
-    textSecondary: '#B7A7CC',
-    kevinColor: '#00E5FF',
-    wendyColor: '#E040FB',
-    dualBlendColor: '#7092FD'
+  // Paleta Oficial LUMA
+  palette: {
+    primary: '#7C3AED',
+    secondary: '#3B82F6',
+    accent: '#22D3EE',
+    highlight: '#FACC15',
+    background: '#F8FAFC',
+    dark: '#0F172A',
+    surface: '#FFFFFF',
+    success: '#10B981',
+    error: '#EF4444'
   },
 
-  // Secciones
+  // Categorías de Objetivos Compartidos
+  goalCategories: ['Viajes', 'Hogar', 'Eventos', 'Compras', 'General'],
+
+  // Tipos de Notas Colaborativas
+  noteTypes: ['Nota', 'Idea', 'Recordatorio', 'Carta'],
+
+  // Módulos / Secciones de la aplicación
   sections: [
-    { id: 'inicio', number: 1, label: 'Inicio', icon: '🏡' },
-    { id: 'recuerdos', number: 2, label: 'Recuerdos', icon: '🌻' },
-    { id: 'musica', number: 3, label: 'Música', icon: '🎵' },
-    { id: 'cine', number: 4, label: 'Películas', icon: '🎬' },
-    { id: 'series', number: 5, label: 'Series', icon: '📺' },
-    { id: 'muro', number: 6, label: 'Notas', icon: '💌' },
-    { id: 'suenos', number: 7, label: 'Sueños', icon: '🌟' }
+    { id: 'inicio', label: 'Inicio', icon: '🏡' },
+    { id: 'recuerdos', label: 'Recuerdos', icon: '📸' },
+    { id: 'musica', label: 'Música', icon: '🎵' },
+    { id: 'cine', label: 'Películas', icon: '🎬' },
+    { id: 'series', label: 'Series', icon: '📺' },
+    { id: 'notas', label: 'Notas', icon: '📝' },
+    { id: 'objetivos', label: 'Objetivos', icon: '✨' },
+    { id: 'insights', label: 'Insights', icon: '📊' }
   ]
 };
