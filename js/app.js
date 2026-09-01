@@ -3673,13 +3673,8 @@
           previewBox.innerHTML = "<div style='color: var(--color-sunflower-gold); font-size: 0.85rem; padding: 0.5rem;'>Optimizando imagen... ⏳</div>";
         }
         try {
-          // 1. Guardar original para Google Drive
-          const rawReader = new FileReader();
-          rawReader.onload = (ev) => { this.driveCoverPayload = ev.target.result; };
-          rawReader.readAsDataURL(file);
-
-          // 2. Comprimir copia optimizada para visualización local rápida
-          const dataUrl = await window.Utils.compressImage(file, 1400, 0.82);
+          const dataUrl = await window.Utils.compressImage(file, 1280, 0.8);
+          this.driveCoverPayload = dataUrl;
           document.getElementById("mem-cover-url").value = dataUrl;
           this.updateCoverPreview(dataUrl);
         } catch (err) {
@@ -3704,23 +3699,24 @@
         if (!this.modalGalleryItems) this.modalGalleryItems = [];
         if (!this.driveGalleryPayloads) this.driveGalleryPayloads = [];
 
-        window.Utils.showToast(`Procesando ${files.length} archivo(s)... ⏳`, "info", 2000);
+        window.Utils.showToast(`Cargando ${files.length} foto(s)... ⏳`, "info", 1500);
 
-        for (const file of files) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
           try {
-            // Guardar original para Drive
-            const rawReader = new FileReader();
-            rawReader.onload = (ev) => { this.driveGalleryPayloads.push(ev.target.result); };
-            rawReader.readAsDataURL(file);
-
-            // Guardar optimizado para teléfono
-            const dataUrl = await window.Utils.compressImage(file, 1200, 0.78);
-            this.modalGalleryItems.push(dataUrl);
+            // Comprimir de forma ultra-rápida y ligera con ObjectURL
+            const dataUrl = await window.Utils.compressImage(file, 1280, 0.8);
+            if (dataUrl) {
+              this.driveGalleryPayloads.push(dataUrl);
+              this.modalGalleryItems.push(dataUrl);
+              this.renderModalGallery();
+            }
           } catch (err) {
             console.error("Error procesando foto de galería:", err);
           }
+          // Pausa no bloqueante para mantener la UI fluida a 60fps
+          await new Promise(r => setTimeout(r, 20));
         }
-        this.renderModalGallery();
       });
 
       document.getElementById("form-memory")?.addEventListener("submit", async (e) => {
