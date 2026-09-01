@@ -13,7 +13,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/layout.css">
@@ -25,7 +25,7 @@
   <canvas id="effects-canvas" aria-hidden="true"></canvas>
 
   <!-- =========================================
-       PANTALLA INICIAL DE ONBOARDING (3 OPCIONES)
+       PANTALLA INICIAL DE ONBOARDING / MENÚ PRINCIPAL
        ========================================= -->
   <div id="onboarding-screen" style="display: none;">
     <div class="onboarding-container">
@@ -34,7 +34,7 @@
       </div>
       <h1 class="onboarding-title">LUMA</h1>
       <p class="onboarding-slogan">Comparte · Guarda · Revive</p>
-      <p class="onboarding-desc">La luz de los recuerdos compartidos en grupos privados.</p>
+      <p class="onboarding-desc">La luz de los recuerdos compartidos en grupos privados independientes.</p>
 
       <div class="onboarding-options-grid">
         <!-- 1. Crear Host -->
@@ -57,7 +57,17 @@
           <div class="onboarding-option-arrow">➔</div>
         </div>
 
-        <!-- 3. Personalizar Perfil -->
+        <!-- 3. Mis Grupos -->
+        <div class="onboarding-option-card my-groups" id="btn-onboarding-groups" role="button" tabindex="0">
+          <div class="onboarding-option-icon">👥</div>
+          <div class="onboarding-option-content">
+            <h3 class="onboarding-option-title">Mis Grupos</h3>
+            <p class="onboarding-option-desc">Accede o cambia entre los grupos privados a los que perteneces.</p>
+          </div>
+          <div class="onboarding-option-arrow">➔</div>
+        </div>
+
+        <!-- 4. Personalizar Perfil -->
         <div class="onboarding-option-card profile" id="btn-onboarding-profile" role="button" tabindex="0">
           <div class="onboarding-option-icon">👤</div>
           <div class="onboarding-option-content">
@@ -82,23 +92,23 @@
           <span class="header-app-title">LUMA</span>
         </a>
 
-        <!-- Selector de Grupo Activo -->
-        <div class="header-group-chip" id="header-group-chip" title="Cambiar de grupo">
+        <!-- Botón / Chip de Grupo Activo -->
+        <div class="header-group-chip" id="header-group-chip" title="Opciones de Grupo">
           <span class="header-group-color-dot" id="header-group-dot"></span>
           <span class="header-group-name" id="header-group-name">Cargando...</span>
           <span class="header-group-code-badge" id="header-group-code" title="Toca para copiar código">------</span>
+          <span style="font-size: 0.7rem; color: var(--color-text-muted); margin-left: 2px;">▼</span>
         </div>
       </div>
 
-      <!-- Presencia de Miembros del Grupo -->
-      <div class="header-presence-wrap">
-        <div class="header-members-avatars" id="header-members-avatars" title="Miembros en el grupo"></div>
-      </div>
-
-      <!-- Acciones de Cabecera -->
-      <div class="header-actions">
-        <button type="button" class="btn-header-icon" id="btn-header-groups" title="Mis Grupos">👥</button>
-        <button type="button" class="btn-header-icon" id="btn-header-profile" title="Mi Perfil">👤</button>
+      <!-- Lado Derecho: Única Casilla con el Perfil Activo -->
+      <div class="header-right-col">
+        <div class="header-user-profile-btn" id="header-profile-avatar-btn" title="Miembros y Presencia">
+          <div class="header-avatar-circle" id="header-user-avatar-img-wrap">
+            <span id="header-user-avatar-text">U</span>
+          </div>
+          <span class="header-user-presence-dot" id="header-user-presence-dot"></span>
+        </div>
       </div>
     </header>
 
@@ -107,24 +117,43 @@
       <div class="nav-wrapper">
         <div class="nav-pills" id="nav-pills-container" role="tablist"></div>
       </div>
-    </nav>
-    <!-- ÁREA DE CONTENIDO -->
+    </nav>    <!-- ÁREA DE CONTENIDO -->
     <main class="main-content">
       
       <!-- 1. SECCIÓN INICIO -->
       <section id="section-inicio" class="luma-section" role="tabpanel">
+        
+        <!-- HERO CARD DEL GRUPO -->
         <div class="group-hero-card" id="group-hero-card">
+          <!-- Portada con botón para cambiar imagen -->
           <div class="group-cover-wrapper" id="group-cover-wrapper">
             <img src="" alt="Portada del grupo" id="group-cover-img" class="group-cover-img" style="display: none;">
             <div class="group-cover-overlay"></div>
+            <button type="button" class="btn-change-cover" id="btn-edit-cover-quick" title="Cambiar portada del grupo">
+              📷 Cambiar Portada
+            </button>
           </div>
+
           <div class="group-hero-content">
             <div class="group-hero-main">
-              <div class="group-hero-icon-box" id="group-hero-icon">🌟</div>
+              <!-- Logo / Icono del Grupo con botón de edición -->
+              <div class="group-hero-icon-box" id="group-hero-icon-box" title="Cambiar logo o icono">
+                <div id="group-hero-icon-display">🌟</div>
+                <div class="group-icon-edit-overlay">✏️</div>
+              </div>
+
               <div class="group-hero-title-wrap">
-                <h2 class="group-hero-title" id="group-hero-title">Grupo LUMA</h2>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <h2 class="group-hero-title" id="group-hero-title">Grupo LUMA</h2>
+                  <button type="button" class="btn-ghost-edit" id="btn-edit-group-title" title="Editar nombre del grupo">✏️</button>
+                </div>
+                
+                <!-- Fila de Miembros: Contador + Iconos de Miembros + Código -->
                 <div class="group-hero-meta">
-                  <span id="group-hero-members-count">👥 0 miembros</span>
+                  <div class="group-members-row-inline" id="hero-members-interactive" title="Ver perfiles y estados de conexión">
+                    <span id="group-hero-members-count" style="font-weight: 700;">👥 0 miembros</span>
+                    <div class="hero-inline-member-avatars" id="hero-inline-member-avatars"></div>
+                  </div>
                   <span>•</span>
                   <button type="button" class="group-code-pill-btn" id="btn-copy-group-code" title="Copiar código para invitar">
                     <span>🔑</span>
@@ -134,9 +163,14 @@
                 </div>
               </div>
             </div>
-            <div>
-              <button type="button" class="btn-secondary" id="btn-invite-members" style="padding: 0.45rem 1rem; font-size: 0.85rem;">
-                <span>+ Invitar Miembros</span>
+
+            <!-- Acciones del Hero -->
+            <div class="group-hero-actions-row">
+              <button type="button" class="btn-secondary" id="btn-edit-group-hero" style="padding: 0.5rem 0.95rem; font-size: 0.85rem;">
+                <span>✏️ Editar Grupo</span>
+              </button>
+              <button type="button" class="btn-primary" id="btn-invite-members" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                <span>+ Invitar</span> 🚀
               </button>
             </div>
           </div>
@@ -153,9 +187,66 @@
           <a href="#insights" class="quick-action-pill"><span class="quick-action-icon">📊</span><span>Insights</span></a>
         </div>
 
-        <!-- Actividad Reciente del Grupo -->
-        <div class="feed-header">
-          <h3 class="feed-title">Actividad Reciente en el Grupo</h3>
+        <!-- INSIGHTS EN INICIO (ANTES DE ACTIVIDAD RECIENTE) -->
+        <div class="home-insights-block">
+          <div class="feed-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
+            <h3 class="feed-title" style="display: flex; align-items: center; gap: 0.4rem;">
+              <span>📊</span> Insights del Grupo
+            </h3>
+            <a href="#insights" style="font-size: 0.82rem; color: var(--color-accent); text-decoration: none; font-weight: 600;">Ver Todo ➔</a>
+          </div>
+
+          <div class="insights-dashboard-grid" id="home-insights-metrics">
+            <div class="insight-metric-card">
+              <div class="insight-icon-box">📸</div>
+              <div>
+                <div class="insight-metric-title">Recuerdos</div>
+                <div class="insight-metric-value" id="home-insight-stat-memories">0</div>
+              </div>
+            </div>
+            <div class="insight-metric-card">
+              <div class="insight-icon-box">🔥</div>
+              <div>
+                <div class="insight-metric-title">Mes Activo</div>
+                <div class="insight-metric-value" id="home-insight-stat-month" style="font-size: 1.15rem;">N/A</div>
+              </div>
+            </div>
+            <div class="insight-metric-card">
+              <div class="insight-icon-box">🎬</div>
+              <div>
+                <div class="insight-metric-title">Película Top</div>
+                <div class="insight-metric-value" id="home-insight-stat-movie" style="font-size: 0.95rem;">Sin calificar</div>
+              </div>
+            </div>
+            <div class="insight-metric-card">
+              <div class="insight-icon-box">🎵</div>
+              <div>
+                <div class="insight-metric-title">Artista Top</div>
+                <div class="insight-metric-value" id="home-insight-stat-artist" style="font-size: 0.95rem;">N/A</div>
+              </div>
+            </div>
+            <div class="insight-metric-card">
+              <div class="insight-icon-box">📺</div>
+              <div>
+                <div class="insight-metric-title">Serie Top</div>
+                <div class="insight-metric-value" id="home-insight-stat-series" style="font-size: 0.95rem;">N/A</div>
+              </div>
+            </div>
+            <div class="insight-metric-card">
+              <div class="insight-icon-box">🎯</div>
+              <div>
+                <div class="insight-metric-title">Objetivos</div>
+                <div class="insight-metric-value" id="home-insight-stat-goals">0%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVIDAD RECIENTE DEL GRUPO (INCLUYE NUEVOS MIEMBROS) -->
+        <div class="feed-header" style="margin-top: 2rem;">
+          <h3 class="feed-title" style="display: flex; align-items: center; gap: 0.4rem;">
+            <span>⚡</span> Actividad Reciente en el Grupo
+          </h3>
         </div>
         <div class="activity-feed-grid" id="activity-feed-container"></div>
       </section>
@@ -189,7 +280,7 @@
 
         <div class="trail-controls">
           <form id="music-search-form" class="media-search">
-            <input id="music-search-input" class="form-control" placeholder="Buscar canción o artista (ej. Viva La Vida Coldplay)..." required>
+            <input id="music-search-input" class="form-control" placeholder="Buscar canción o artista en iTunes..." required>
             <button type="submit" class="btn-primary">Buscar</button>
           </form>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -306,14 +397,13 @@
         <div class="goals-grid" id="goals-grid-list"></div>
       </section>
 
-      <!-- 8. SECCIÓN LUMA INSIGHTS -->
+      <!-- 8. SECCIÓN LUMA INSIGHTS COMPLETO -->
       <section id="section-insights" class="luma-section" role="tabpanel">
         <div class="section-header">
-          <h2 class="section-title"><span>📊</span> LUMA Insights</h2>
+          <h2 class="section-title"><span>📊</span> LUMA Insights Dashboard</h2>
           <p class="section-subtitle">Estadísticas reales e interactivas calculadas a partir de la actividad de tu grupo.</p>
         </div>
 
-        <!-- Tarjetas de Métricas Clave -->
         <div class="insights-dashboard-grid" id="insights-metrics-container">
           <div class="insight-metric-card">
             <div class="insight-icon-box">📸</div>
@@ -370,8 +460,7 @@
       </section>
 
     </main>
-  </div>
-  <!-- =========================================
+  </div>  <!-- =========================================
        REPRODUCTOR DE AUDIO FLOTANTE (MINI-BAR)
        ========================================= -->
   <div id="luma-audio-player" class="audio-player-bar" style="display: none;" role="region" aria-label="Reproductor de audio">
@@ -398,6 +487,118 @@
        MODALES DEL SISTEMA LUMA
        ========================================= -->
 
+  <!-- MODAL: MENÚ DE OPCIONES DE GRUPO -->
+  <div id="modal-group-menu" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><span id="menu-group-icon-display">🌟</span> <span id="menu-group-name-display">Grupo</span></h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-group-menu">✕</button>
+      </div>
+      <div class="group-menu-actions-list">
+        <div class="group-menu-action-item" id="btn-menu-action-edit">
+          <div class="group-menu-icon">✏️</div>
+          <div>
+            <strong>Editar Grupo</strong>
+            <p>Cambiar nombre, logo, portada o color del grupo.</p>
+          </div>
+        </div>
+        <div class="group-menu-action-item" id="btn-menu-action-switch">
+          <div class="group-menu-icon">👥</div>
+          <div>
+            <strong>Mis Grupos / Cambiar</strong>
+            <p>Ver la lista de tus grupos privados o crear uno nuevo.</p>
+          </div>
+        </div>
+        <div class="group-menu-action-item" id="btn-menu-action-home">
+          <div class="group-menu-icon">🏠</div>
+          <div>
+            <strong>Volver al Menú Principal</strong>
+            <p>Ir a la pantalla inicial de LUMA.</p>
+          </div>
+        </div>
+        <div class="group-menu-action-item danger" id="btn-menu-action-leave">
+          <div class="group-menu-icon">🚪</div>
+          <div>
+            <strong style="color: var(--color-error);">Salir de este Grupo</strong>
+            <p>Abandonar el grupo y volver al menú principal.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PERFILES Y PRESENCIA DE MIEMBROS -->
+  <div id="modal-members-presence" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title"><span>👥</span> Miembros y Presencia</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-members-presence">✕</button>
+      </div>
+      
+      <!-- Mi Perfil Activo -->
+      <div class="active-user-profile-badge">
+        <div class="active-user-avatar-box" id="presence-modal-my-avatar">U</div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <strong id="presence-modal-my-name" style="font-size: 1.05rem; color: var(--color-text-main);">Mi Nombre</strong>
+            <span class="user-role-badge self">Tú</span>
+          </div>
+          <p id="presence-modal-my-bio" style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.15rem;"></p>
+        </div>
+        <button type="button" class="btn-secondary" id="btn-presence-modal-edit-profile" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+          ✏️ Editar Perfil
+        </button>
+      </div>
+
+      <!-- Lista de Miembros -->
+      <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--color-accent); text-transform: uppercase; margin: 1.25rem 0 0.75rem;">
+        Integrantes del Grupo (<span id="presence-modal-members-count">0</span>)
+      </h4>
+      <div class="members-presence-list" id="presence-modal-members-list"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR GRUPO (NOMBRE, LOGO, PORTADA, COLOR) -->
+  <div id="modal-edit-group" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title"><span>✏️</span> Editar Grupo</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-edit-group">✕</button>
+      </div>
+      <form id="form-edit-group" class="modal-form">
+        <div class="form-group">
+          <label class="form-label" for="edit-group-name">Nombre del Grupo *</label>
+          <input type="text" id="edit-group-name" class="form-control" required maxlength="40">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Logo / Icono del Grupo</label>
+          <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <input type="text" id="edit-group-icon" class="form-control" style="width: 80px; text-align: center; font-size: 1.3rem;" maxlength="4" placeholder="🌟">
+            <input type="file" id="edit-group-icon-file" class="form-control" accept="image/*" title="O sube una imagen personalizada como logo">
+          </div>
+          <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">Puedes usar un emoji o subir una imagen de logo personalizada.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Foto de Portada del Grupo</label>
+          <input type="file" id="edit-group-cover-file" class="form-control" accept="image/*">
+          <input type="url" id="edit-group-cover-url" class="form-control" placeholder="O pega un enlace directo a la imagen..." style="margin-top: 0.4rem;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="edit-group-color">Color Identificador del Grupo</label>
+          <input type="color" id="edit-group-color" class="form-control" style="height: 44px; padding: 0.2rem;">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" data-close-modal="modal-edit-group">Cancelar</button>
+          <button type="submit" class="btn-primary"><span>Guardar Cambios</span> 💾</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- 1. MODAL CREAR GRUPO -->
   <div id="modal-create-group" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-create-group">
     <div class="modal-content">
@@ -421,9 +622,13 @@
           </div>
         </div>
         <div class="form-group">
+          <label class="form-label">Logo Personalizado (Opcional)</label>
+          <input type="file" id="new-group-icon-file" class="form-control" accept="image/*">
+        </div>
+        <div class="form-group">
           <label class="form-label">Foto de Portada del Grupo (Opcional)</label>
           <input type="file" id="new-group-cover-file" class="form-control" accept="image/*">
-          <input type="url" id="new-group-cover-url" class="form-control" placeholder="O pega un enlace directo a la imagen..." style="margin-top: 0.5rem;">
+          <input type="url" id="new-group-cover-url" class="form-control" placeholder="O pega un enlace directo a la imagen..." style="margin-top: 0.4rem;">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-secondary" data-close-modal="modal-create-group">Cancelar</button>
@@ -504,7 +709,7 @@
   <div id="modal-groups-list" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-groups-list">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="modal-title-groups-list" class="modal-title"><span>👥</span> Mis Grupos</h3>
+        <h3 id="modal-title-groups-list" class="modal-title"><span>👥</span> Mis Grupos Privados</h3>
         <button type="button" class="btn-modal-close" data-close-modal="modal-groups-list">✕</button>
       </div>
       <div class="groups-switcher-body">
@@ -706,7 +911,7 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="goal-participants-input">Participantes (Separados por coma)</label>
-          <input type="text" id="goal-participants-input" class="form-control" placeholder="Ej: Ana, Carlos, Todos...">
+          <input type="text" id="goal-participants-input" class="form-control" placeholder="Ej: Alex, Sam, Dani, Todos...">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-secondary" data-close-modal="modal-goal">Cancelar</button>
@@ -788,15 +993,11 @@
   <div id="modal-lightbox" class="modal-overlay lightbox-overlay" role="dialog" aria-modal="true">
     <button type="button" class="btn-lightbox-close" data-close-modal="modal-lightbox">✕</button>
     <img src="" id="lightbox-img" class="lightbox-img-element" alt="Vista ampliada">
-  </div>
-  <!-- =========================================
-       SCRIPTS DE LA APLICACIÓN
-       ========================================= -->
-  <!-- Firebase SDK -->
+  </div>  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Módulos LUMA -->
+  <!-- LUMA Core Modules -->
   <script src="js/config.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/media.js"></script>
