@@ -1,73 +1,61 @@
-/* LUMA 🌟 - Variables y Sistema de Diseño Oficial */
+﻿/* LUMA 🌟 - Variables y Sistema de Diseño */
 :root {
-  /* Paleta cromática oficial LUMA */
+  /* Paleta Oficial LUMA */
   --color-primary: #7C3AED;
-  --color-primary-light: #9061F9;
+  --color-primary-light: #9333EA;
   --color-primary-dark: #6D28D9;
-  --color-primary-soft: rgba(124, 58, 237, 0.12);
-
+  
   --color-secondary: #3B82F6;
   --color-secondary-light: #60A5FA;
-  --color-secondary-dark: #2563EB;
-  --color-secondary-soft: rgba(59, 130, 246, 0.12);
-
+  
   --color-accent: #22D3EE;
   --color-accent-light: #67E8F9;
-  --color-accent-dark: #0891B2;
-  --color-accent-soft: rgba(34, 211, 238, 0.12);
-
+  
   --color-highlight: #FACC15;
-  --color-highlight-soft: rgba(250, 204, 21, 0.15);
-
-  --color-bg: #0F172A;
-  --color-bg-light: #F8FAFC;
-  --color-surface: #1E293B;
-  --color-surface-hover: #334155;
-  --color-surface-white: #FFFFFF;
-  --color-glass: rgba(15, 23, 42, 0.78);
-  --color-glass-card: rgba(30, 41, 59, 0.72);
-  --color-glass-border: rgba(255, 255, 255, 0.08);
-
-  --color-dark: #0F172A;
+  
   --color-success: #10B981;
-  --color-success-soft: rgba(16, 185, 129, 0.15);
   --color-error: #EF4444;
-  --color-error-soft: rgba(239, 68, 68, 0.15);
+  --color-warning: #F59E0B;
 
+  /* Fondos y Superficies */
+  --color-bg-dark: #0F172A;
+  --color-surface-dark: #1E293B;
+  --color-surface-card: rgba(30, 41, 59, 0.75);
+  --color-surface-card-hover: rgba(51, 65, 85, 0.85);
+  --color-glass-card: rgba(30, 41, 59, 0.65);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  /* Texto */
   --color-text-main: #F8FAFC;
   --color-text-secondary: #94A3B8;
   --color-text-muted: #64748B;
-  --color-border: rgba(148, 163, 184, 0.18);
-  --color-border-active: rgba(124, 58, 237, 0.45);
 
-  /* Gradiente principal LUMA (Violeta -> Azul -> Turquesa) */
-  --gradient-primary: linear-gradient(135deg, #7C3AED 0%, #5B5FF6 35%, #3B82F6 70%, #22D3EE 100%);
-  --gradient-primary-subtle: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(34, 211, 238, 0.15) 100%);
-  --gradient-card: linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
-  --gradient-glow: radial-gradient(circle at top right, rgba(124, 58, 237, 0.25), transparent 60%);
+  /* Gradiente Maestro LUMA */
+  --gradient-luma: linear-gradient(135deg, #7C3AED 0%, #5B5FF6 35%, #3B82F6 70%, #22D3EE 100%);
+  --gradient-glow: linear-gradient(135deg, rgba(124, 58, 237, 0.4), rgba(34, 211, 238, 0.4));
+  --gradient-card: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
 
   /* Tipografías */
-  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'Space Grotesk', monospace, sans-serif;
+  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Space Grotesk', monospace;
 
-  /* Sombras y elevaciones (Linear / Notion style) */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
-  --shadow-primary: 0 8px 25px rgba(124, 58, 237, 0.35);
-  --shadow-accent: 0 8px 25px rgba(34, 211, 238, 0.3);
-
-  /* Radios de curvatura (20px - 24px) */
-  --radius-xs: 8px;
-  --radius-sm: 14px;
-  --radius-md: 20px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
+  /* Radios de Curvatura (20 - 24px) */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Microinteracciones a 250ms */
-  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-smooth: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Sombras Suaves */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 25px rgba(124, 58, 237, 0.35);
+
+  /* Transiciones */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
