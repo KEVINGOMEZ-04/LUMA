@@ -1,7 +1,7 @@
 {
-  "name": "atria-app",
+  "name": "luma-app",
   "version": "1.0.0",
-  "description": "ATRIA — La puerta de entrada a nuestro mundo compartido",
+  "description": "LUMA — La luz de los recuerdos compartidos. Plataforma social de grupos privados",
   "scripts": {
     "build": "echo 'Ready'"
   },
