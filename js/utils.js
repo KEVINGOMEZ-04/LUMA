@@ -71,7 +71,7 @@ window.Utils = {
     toast.setAttribute('role', 'alert');
     toast.innerHTML = `
       <span class="toast-icon">${type === 'success' ? '🌻' : type === 'error' ? '⚠️' : '✨'}</span>
-      <span class="toast-msg">${window.Utils.sanitizeHTML(message)}</span>
+      <span class="toast-msg">${message}</span>
     `;
     container.appendChild(toast);
 
@@ -83,46 +83,61 @@ window.Utils = {
     }, duration);
   },
 
-  // Compresor de fotos en el navegador (cliente) para soportar alto volumen sin colapsar memoria
-  compressImage: (file, maxWidth = 1400, quality = 0.82) => {
-    return new Promise((resolve, reject) => {
+  // Compresor ultrarrápido de fotos con bajo consumo de memoria (Object URL + Canvas)
+  compressImage: (file, maxWidth = 1280, quality = 0.8) => {
+    return new Promise((resolve) => {
       if (!file) return resolve('');
       if (!file.type || !file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = reject;
+        reader.onerror = () => resolve('');
         reader.readAsDataURL(file);
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
+      try {
+        const objectUrl = URL.createObjectURL(file);
         const img = new Image();
         img.onload = () => {
-          let w = img.width;
-          let h = img.height;
-          if (w > maxWidth || h > maxWidth) {
-            if (w > h) {
-              h = Math.round((h * maxWidth) / w);
-              w = maxWidth;
-            } else {
-              w = Math.round((w * maxWidth) / h);
-              h = maxWidth;
+          try {
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth || h > maxWidth) {
+              if (w > h) {
+                h = Math.round((h * maxWidth) / w);
+                w = maxWidth;
+              } else {
+                w = Math.round((w * maxWidth) / h);
+                h = maxWidth;
+              }
             }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const compressed = canvas.toDataURL('image/jpeg', quality);
+            URL.revokeObjectURL(objectUrl);
+            resolve(compressed);
+          } catch (canvasErr) {
+            URL.revokeObjectURL(objectUrl);
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
           }
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, w, h);
-          const compressed = canvas.toDataURL('image/jpeg', quality);
-          resolve(compressed);
         };
-        img.onerror = () => resolve(e.target.result);
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        };
+        img.src = objectUrl;
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      }
     });
   }
 };
