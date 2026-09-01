@@ -1,5 +1,5 @@
 ﻿/**
- * LUMA 🌟 - Motor de Animaciones y Partículas Cósmicas
+ * LUMA 🌟 - Motor de Animaciones, Nebulosa Ambiental y Partículas Cósmicas
  */
 
 (function() {
@@ -9,10 +9,9 @@
       if (!this.canvas) return;
       this.ctx = this.canvas.getContext('2d', { alpha: true });
       this.stars = [];
-      this.particles = [];
+      this.orbs = [];
       this.isMobile = window.innerWidth <= 768;
-      this.numStars = this.isMobile ? 35 : 90;
-      this.numParticles = this.isMobile ? 6 : 16;
+      this.numStars = this.isMobile ? 30 : 65;
       this.animationFrameId = null;
       this.isRunning = false;
       this.lastWidth = 0;
@@ -27,14 +26,9 @@
         resizeTimeout = setTimeout(this.resize, 200);
       }, { passive: true });
 
-      window.addEventListener('orientationchange', () => setTimeout(this.resize, 300), { passive: true });
-
       document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          this.stop();
-        } else {
-          this.start();
-        }
+        if (document.hidden) this.stop();
+        else this.start();
       });
 
       this.resize();
@@ -47,15 +41,12 @@
       const currentWidth = window.innerWidth;
       const currentHeight = window.innerHeight;
 
-      if (this.lastWidth === currentWidth && this.lastHeight === currentHeight) {
-        return;
-      }
+      if (this.lastWidth === currentWidth && this.lastHeight === currentHeight) return;
 
       this.lastWidth = currentWidth;
       this.lastHeight = currentHeight;
       this.isMobile = currentWidth <= 768;
-      this.numStars = this.isMobile ? 35 : 90;
-      this.numParticles = this.isMobile ? 6 : 16;
+      this.numStars = this.isMobile ? 30 : 65;
       
       this.canvas.width = currentWidth;
       this.canvas.height = currentHeight;
@@ -68,26 +59,42 @@
         this.stars.push({
           x: Math.random() * this.canvas.width,
           y: Math.random() * this.canvas.height,
-          size: Math.random() * (this.isMobile ? 1.4 : 1.8) + 0.5,
-          alpha: Math.random() * 0.7 + 0.2,
-          twinkleSpeed: Math.random() * 0.015 + 0.005,
-          twinkleDir: Math.random() > 0.5 ? 1 : -1
+          size: Math.random() * 1.5 + 0.5,
+          alpha: Math.random() * 0.5 + 0.1,
+          baseAlpha: Math.random() * 0.5 + 0.1,
+          twinkleSpeed: Math.random() * 0.01 + 0.003,
+          twinkleDir: Math.random() > 0.5 ? 1 : -1,
+          speedY: -Math.random() * 0.15 - 0.03
         });
       }
 
-      this.particles = [];
-      const colors = ['rgba(124, 58, 237, ', 'rgba(59, 130, 246, ', 'rgba(34, 211, 238, ', 'rgba(250, 204, 21, '];
-      for (let i = 0; i < this.numParticles; i++) {
-        this.particles.push({
-          x: Math.random() * this.canvas.width,
-          y: Math.random() * this.canvas.height,
-          size: Math.random() * 2.5 + 1.2,
-          speedX: (Math.random() - 0.5) * 0.35,
-          speedY: -Math.random() * 0.45 - 0.15,
-          alpha: Math.random() * 0.6 + 0.2,
-          color: colors[Math.floor(Math.random() * colors.length)]
-        });
-      }
+      // Nebulosas Ambientales Suaves
+      this.orbs = [
+        {
+          x: this.canvas.width * 0.2,
+          y: this.canvas.height * 0.15,
+          radius: Math.min(this.canvas.width, this.canvas.height) * 0.45,
+          color: 'rgba(99, 102, 241, 0.09)',
+          vx: 0.1,
+          vy: 0.08
+        },
+        {
+          x: this.canvas.width * 0.8,
+          y: this.canvas.height * 0.6,
+          radius: Math.min(this.canvas.width, this.canvas.height) * 0.4,
+          color: 'rgba(6, 182, 212, 0.07)',
+          vx: -0.09,
+          vy: 0.06
+        },
+        {
+          x: this.canvas.width * 0.5,
+          y: this.canvas.height * 0.85,
+          radius: Math.min(this.canvas.width, this.canvas.height) * 0.5,
+          color: 'rgba(168, 85, 247, 0.06)',
+          vx: 0.07,
+          vy: -0.08
+        }
+      ];
     }
 
     start() {
@@ -109,36 +116,44 @@
       if (!this.isRunning || !this.ctx) return;
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+      // 1. Dibujar Nebulosas Ambientales
+      for (let orb of this.orbs) {
+        orb.x += orb.vx;
+        orb.y += orb.vy;
+
+        if (orb.x < 0 || orb.x > this.canvas.width) orb.vx *= -1;
+        if (orb.y < 0 || orb.y > this.canvas.height) orb.vy *= -1;
+
+        const grad = this.ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.radius);
+        grad.addColorStop(0, orb.color);
+        grad.addColorStop(1, 'transparent');
+
+        this.ctx.fillStyle = grad;
+        this.ctx.beginPath();
+        this.ctx.arc(orb.x, orb.y, orb.radius, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
+      // 2. Dibujar Estrellas Suaves
       for (let star of this.stars) {
+        star.y += star.speedY;
+        if (star.y < -5) {
+          star.y = this.canvas.height + 5;
+          star.x = Math.random() * this.canvas.width;
+        }
+
         star.alpha += star.twinkleSpeed * star.twinkleDir;
-        if (star.alpha > 0.95) {
-          star.alpha = 0.95;
+        if (star.alpha > 0.75) {
+          star.alpha = 0.75;
           star.twinkleDir = -1;
-        } else if (star.alpha < 0.15) {
-          star.alpha = 0.15;
+        } else if (star.alpha < 0.1) {
+          star.alpha = 0.1;
           star.twinkleDir = 1;
         }
 
         this.ctx.beginPath();
         this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        this.ctx.fillStyle = `rgba(226, 232, 240, ${star.alpha})`;
-        this.ctx.fill();
-      }
-
-      for (let p of this.particles) {
-        p.x += p.speedX;
-        p.y += p.speedY;
-
-        if (p.y < -10) {
-          p.y = this.canvas.height + 10;
-          p.x = Math.random() * this.canvas.width;
-        }
-        if (p.x < -10) p.x = this.canvas.width + 10;
-        if (p.x > this.canvas.width + 10) p.x = -10;
-
-        this.ctx.beginPath();
-        this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        this.ctx.fillStyle = p.color + p.alpha + ')';
+        this.ctx.fillStyle = `rgba(248, 250, 252, ${star.alpha})`;
         this.ctx.fill();
       }
 
@@ -146,7 +161,7 @@
     }
   }
 
-  const animateCounter = (element, targetValue, duration = 1800, isDecimal = false) => {
+  const animateCounter = (element, targetValue, duration = 1600, isDecimal = false) => {
     if (!element) return;
     const startTime = performance.now();
     const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
@@ -185,16 +200,16 @@
     canvas.height = window.innerHeight;
 
     const particles = [];
-    const numParticles = 50;
-    const colors = ['#7C3AED', '#3B82F6', '#22D3EE', '#FACC15', '#FFFFFF'];
+    const numParticles = 40;
+    const colors = ['#818CF8', '#38BDF8', '#FBBF24', '#C084FC', '#FFFFFF'];
 
     for (let i = 0; i < numParticles; i++) {
       particles.push({
         x: canvas.width / 2,
         y: canvas.height / 2,
-        size: Math.random() * 4 + 2,
+        size: Math.random() * 3.5 + 1.5,
         angle: Math.random() * Math.PI * 2,
-        speed: Math.random() * 6 + 2,
+        speed: Math.random() * 5 + 2,
         color: colors[Math.floor(Math.random() * colors.length)],
         alpha: 1,
         decay: Math.random() * 0.02 + 0.015
@@ -217,7 +232,7 @@
           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
           ctx.fillStyle = p.color;
           ctx.globalAlpha = p.alpha;
-          ctx.shadowBlur = 8;
+          ctx.shadowBlur = 6;
           ctx.shadowColor = p.color;
           ctx.fill();
           ctx.restore();
