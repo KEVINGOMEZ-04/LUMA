@@ -1,189 +1,143 @@
-/* Patico Wrapped 🌻 - Animaciones y Efectos Clave */
+/* LUMA 🌟 - Motor de Animaciones y Microinteracciones */
 
-@keyframes gentlePulse {
+@keyframes lumaGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 12px rgba(124, 58, 237, 0.45)) drop-shadow(0 0 20px rgba(34, 211, 238, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgba(124, 58, 237, 0.75)) drop-shadow(0 0 32px rgba(34, 211, 238, 0.5));
+  }
+}
+
+@keyframes lumaPulse {
   0%, 100% {
     transform: scale(1);
-    filter: drop-shadow(0 0 4px rgba(244, 197, 66, 0.4));
-  }
-  50% {
-    transform: scale(1.08);
-    filter: drop-shadow(0 0 12px rgba(244, 197, 66, 0.8));
-  }
-}
-
-@keyframes moonGlow {
-  0%, 100% {
-    box-shadow: 0 0 35px rgba(248, 217, 107, 0.3), inset 0 0 15px rgba(248, 217, 107, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 60px rgba(248, 217, 107, 0.55), inset 0 0 25px rgba(248, 217, 107, 0.4);
-  }
-}
-
-@keyframes bloomSunflower {
-  0% {
-    transform: scale(0.3) rotate(-20deg);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.08) rotate(5deg);
     opacity: 1;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.92;
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes shimmerEffect {
+  0% {
+    background-position: -200% 0;
   }
   100% {
-    transform: scale(1) rotate(0deg);
+    background-position: 200% 0;
+  }
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@keyframes floatSoftly {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
+@keyframes scaleFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
-  50% {
-    transform: translateY(-8px) rotate(1.5deg);
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-@keyframes orbitSlow {
-  0% {
+@keyframes spinSlow {
+  from {
     transform: rotate(0deg);
   }
-  100% {
+  to {
     transform: rotate(360deg);
   }
 }
 
-@keyframes counterOrbit {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(-360deg);
-  }
-}
-
-@keyframes particleBlueTravel {
-  0% {
-    left: 10%;
-    top: 60%;
-    transform: scale(1);
-    opacity: 0.8;
+@keyframes audioEqualizer {
+  0%, 100% {
+    height: 4px;
   }
   50% {
-    left: 45%;
-    top: 35%;
-    transform: scale(1.4);
-    opacity: 1;
-  }
-  100% {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(1.8);
-    opacity: 1;
+    height: 18px;
   }
 }
 
-@keyframes particleOrangeTravel {
-  0% {
-    right: 10%;
-    top: 40%;
-    transform: scale(1);
-    opacity: 0.8;
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
   }
-  50% {
-    right: 45%;
-    top: 65%;
-    transform: scale(1.4);
+  to {
     opacity: 1;
-  }
-  100% {
-    right: 50%;
-    top: 50%;
-    transform: translate(50%, -50%) scale(1.8);
-    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
-@keyframes sunBurst {
-  0% {
-    transform: translate(-50%, -50%) scale(0);
+@keyframes backdropFadeIn {
+  from {
     opacity: 0;
   }
-  70% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
+  to {
     opacity: 1;
   }
 }
 
-/* Clases Utilitarias de Animación */
-.animate-bloom {
-  animation: bloomSunflower 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+/* Clases Utilitarias */
+.animate-luma-glow {
+  animation: lumaGlow 4s infinite ease-in-out;
+}
+
+.animate-luma-pulse {
+  animation: lumaPulse 3s infinite ease-in-out;
 }
 
 .animate-float {
-  animation: floatSoftly 4s ease-in-out infinite;
+  animation: floatGentle 3.5s ease-in-out infinite;
 }
 
-.animate-moon {
-  animation: moonGlow 5s ease-in-out infinite;
+.animate-slide-up {
+  animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes shimmerGlow {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.animate-scale-in {
+  animation: scaleFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes storySlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(24px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes storyFadeOut {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-}
-
-@keyframes pulseGoldBadge {
-  0%, 100% {
-    box-shadow: 0 0 10px rgba(244, 197, 66, 0.25), inset 0 0 8px rgba(244, 197, 66, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 22px rgba(244, 197, 66, 0.6), inset 0 0 14px rgba(244, 197, 66, 0.25);
-  }
-}
-
-@keyframes barGrowHoriz {
-  from { width: 0; }
-}
-
-@keyframes countUpHighlight {
-  0% { transform: scale(0.9); opacity: 0.5; }
-  60% { transform: scale(1.08); }
-  100% { transform: scale(1); opacity: 1; }
+.animate-spin-slow {
+  animation: spinSlow 12s linear infinite;
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, rgba(244, 197, 66, 0.1) 0%, rgba(244, 197, 66, 0.35) 50%, rgba(244, 197, 66, 0.1) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0) 100%);
   background-size: 200% 100%;
-  animation: shimmerGlow 3s linear infinite;
+  animation: shimmerEffect 2.5s linear infinite;
 }
 
-.animate-badge-pulse {
-  animation: pulseGoldBadge 3s infinite ease-in-out;
+/* Equalizer Visualizer */
+.equalizer-bar {
+  display: inline-block;
+  width: 3px;
+  background: var(--gradient-primary);
+  border-radius: 99px;
+  margin: 0 1px;
 }
+.equalizer-bar:nth-child(1) { animation: audioEqualizer 0.8s infinite ease-in-out; }
+.equalizer-bar:nth-child(2) { animation: audioEqualizer 0.6s infinite 0.2s ease-in-out; }
+.equalizer-bar:nth-child(3) { animation: audioEqualizer 0.9s infinite 0.4s ease-in-out; }
+.equalizer-bar:nth-child(4) { animation: audioEqualizer 0.7s infinite 0.1s ease-in-out; }
