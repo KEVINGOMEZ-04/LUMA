@@ -33,8 +33,9 @@ class LumaApp {
     this.bindModalEvents();
     this.bindFormEvents();
     this.bindSearchEvents();
+    this.bindProfileCustomizerInteractions();
 
-    // 6. Verificar Estado de Onboarding vs Dashboard
+    // 6. Verificar Estado Inicial y Mostrar Dashboard
     this.checkInitialState();
   }
 
@@ -76,11 +77,12 @@ class LumaApp {
     const onboardingScreen = document.getElementById('onboarding-screen');
     const appContainer = document.getElementById('app-container');
 
-    if (!profile || !profile.name || !groups || groups.length === 0 || !activeGroup) {
+    if (!groups || groups.length === 0 || !activeGroup) {
       if (onboardingScreen) onboardingScreen.style.display = 'flex';
       if (appContainer) appContainer.style.display = 'none';
       this.bindOnboardingActions();
     } else {
+      // Si ya hay grupo activo, entra directamente a la aplicación
       if (onboardingScreen) onboardingScreen.style.display = 'none';
       if (appContainer) appContainer.style.display = 'flex';
       
@@ -90,44 +92,55 @@ class LumaApp {
     }
   }
 
+  enterActiveGroupDirectly() {
+    const activeGroup = this.storage.getActiveGroup();
+    const profile = this.storage.getUserProfile();
+    if (!activeGroup) return;
+
+    document.getElementById('onboarding-screen').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
+
+    this.presence.bindGroup(activeGroup.id, profile);
+    this.updateHeader();
+    window.location.hash = '#inicio';
+    this.handleHashChange();
+  }
+
   bindOnboardingActions() {
     const btnHost = document.getElementById('btn-onboarding-host');
     const btnCode = document.getElementById('btn-onboarding-code');
     const btnGroups = document.getElementById('btn-onboarding-groups');
     const btnProfile = document.getElementById('btn-onboarding-profile');
+    const quickEnterBox = document.getElementById('onboarding-quick-enter-banner');
+    const btnQuickEnter = document.getElementById('btn-onboarding-enter-active');
+
+    const activeGroup = this.storage.getActiveGroup();
+    if (activeGroup && quickEnterBox) {
+      quickEnterBox.style.display = 'flex';
+      const nameEl = document.getElementById('quick-enter-group-name');
+      const iconEl = document.getElementById('quick-enter-group-icon');
+      if (nameEl) nameEl.textContent = activeGroup.name;
+      if (iconEl) iconEl.textContent = activeGroup.icon || '🌟';
+    }
+
+    if (btnQuickEnter) {
+      btnQuickEnter.onclick = () => this.enterActiveGroupDirectly();
+    }
 
     if (btnHost) {
-      btnHost.onclick = () => {
-        this.ensureProfileThen(() => this.openModal('modal-create-group'));
-      };
+      btnHost.onclick = () => this.openModal('modal-create-group');
     }
     if (btnCode) {
-      btnCode.onclick = () => {
-        this.ensureProfileThen(() => this.openModal('modal-join-group'));
-      };
+      btnCode.onclick = () => this.openModal('modal-join-group');
     }
     if (btnGroups) {
-      btnGroups.onclick = () => {
-        this.openGroupsListModal();
-      };
+      btnGroups.onclick = () => this.openGroupsListModal();
     }
     if (btnProfile) {
       btnProfile.onclick = () => {
         this.populateProfileModal();
         this.openModal('modal-profile');
       };
-    }
-  }
-
-  ensureProfileThen(callback) {
-    const profile = this.storage.getUserProfile();
-    if (!profile || !profile.name) {
-      window.Utils.showToast('Por favor personaliza tu nombre de perfil primero', 'info');
-      this.populateProfileModal();
-      this.openModal('modal-profile');
-      this.pendingAfterProfile = callback;
-    } else {
-      callback();
     }
   }  // --- NAVEGACIÓN Y TABS ---
   setupNavigation() {
@@ -209,6 +222,8 @@ class LumaApp {
       avatarWrap.style.backgroundColor = profile.favoriteColor || '#6366F1';
       if (profile.avatar) {
         avatarWrap.innerHTML = `<img src="${window.Utils.sanitizeHTML(profile.avatar)}" alt="${window.Utils.sanitizeHTML(profile.name)}" />`;
+      } else if (profile.presetAvatar) {
+        avatarWrap.innerHTML = `<span>${profile.presetAvatar}</span>`;
       } else {
         avatarWrap.innerHTML = `<span>${(profile.name || 'U').charAt(0).toUpperCase()}</span>`;
       }
@@ -317,17 +332,21 @@ class LumaApp {
     const myAvatar = document.getElementById('presence-modal-my-avatar');
     const myName = document.getElementById('presence-modal-my-name');
     const myBio = document.getElementById('presence-modal-my-bio');
+    const myStatus = document.getElementById('presence-modal-my-status');
 
     if (myAvatar) {
       myAvatar.style.backgroundColor = profile.favoriteColor || '#6366F1';
       if (profile.avatar) {
         myAvatar.innerHTML = `<img src="${window.Utils.sanitizeHTML(profile.avatar)}" alt="${window.Utils.sanitizeHTML(profile.name)}" />`;
+      } else if (profile.presetAvatar) {
+        myAvatar.innerHTML = `<span>${profile.presetAvatar}</span>`;
       } else {
         myAvatar.innerHTML = `<span>${(profile.name || 'U').charAt(0).toUpperCase()}</span>`;
       }
     }
     if (myName) myName.textContent = profile.name || 'Mi Perfil';
     if (myBio) myBio.textContent = profile.bio || 'Sin biografía añadida';
+    if (myStatus) myStatus.textContent = profile.statusMsg || '✨ En línea';
 
     const btnEditProfile = document.getElementById('btn-presence-modal-edit-profile');
     if (btnEditProfile) {
@@ -364,7 +383,9 @@ class LumaApp {
       }
 
       let lastSeenText = '';
-      if (pData.lastSeen) {
+      if (m.statusMsg) {
+        lastSeenText = m.statusMsg;
+      } else if (pData.lastSeen) {
         lastSeenText = `Última vez: ${window.Utils.formatDateTimeES(new Date(pData.lastSeen).toISOString())}`;
       } else if (m.joinedAt) {
         lastSeenText = `Miembro desde ${window.Utils.formatDateES(m.joinedAt)}`;
@@ -375,7 +396,7 @@ class LumaApp {
       card.innerHTML = `
         <div class="member-card-left">
           <div class="member-card-avatar" style="background-color: ${m.color || '#6366F1'};">
-            ${m.avatar ? `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />` : (m.name || 'U').charAt(0).toUpperCase()}
+            ${m.avatar ? `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />` : (m.presetAvatar || (m.name || 'U').charAt(0).toUpperCase())}
           </div>
           <div style="min-width: 0;">
             <div style="display: flex; align-items: center; gap: 0.35rem;">
@@ -392,6 +413,146 @@ class LumaApp {
       `;
       listContainer.appendChild(card);
     });
+  }
+
+  // --- PERSONALIZADOR DE PERFIL INTERACTIVO ---
+  bindProfileCustomizerInteractions() {
+    // 1. Pestañas internas
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.profile-tab-pane').forEach(p => p.classList.remove('active'));
+
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-tab');
+        document.getElementById(targetId)?.classList.add('active');
+      });
+    });
+
+    // 2. Presets de Avatar
+    document.querySelectorAll('.avatar-preset-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.avatar-preset-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        this.activePresetAvatar = item.getAttribute('data-preset');
+        this.activeUploadedAvatar = '';
+        this.updateProfileLivePreview();
+      });
+    });
+
+    // 3. Swatches de Color
+    document.querySelectorAll('.color-swatch-circle').forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        document.querySelectorAll('.color-swatch-circle').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        const color = swatch.getAttribute('data-color');
+        document.getElementById('profile-color-input').value = color;
+        this.activeProfileColor = color;
+        this.updateProfileLivePreview();
+      });
+    });
+
+    // 4. Status Quick Pills
+    document.querySelectorAll('.status-quick-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.status-quick-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const status = pill.getAttribute('data-status');
+        document.getElementById('profile-status-input').value = status;
+        this.updateProfileLivePreview();
+      });
+    });
+
+    // 5. Inputs en vivo (Nombre, Handle, Bio, Estado)
+    ['profile-name-input', 'profile-handle-input', 'profile-bio-input', 'profile-status-input'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => {
+        this.updateProfileLivePreview();
+      });
+    });
+
+    // 6. Subida de Avatar en Vivo
+    document.getElementById('profile-avatar-file')?.addEventListener('change', async (e) => {
+      if (e.target.files && e.target.files[0]) {
+        this.activeUploadedAvatar = await window.Utils.fileToBase64(e.target.files[0]);
+        document.querySelectorAll('.avatar-preset-item').forEach(i => i.classList.remove('active'));
+        this.updateProfileLivePreview();
+      }
+    });
+  }
+
+  populateProfileModal() {
+    const p = this.storage.getUserProfile();
+    this.activePresetAvatar = p.presetAvatar || '👨‍🚀';
+    this.activeUploadedAvatar = p.avatar || '';
+    this.activeProfileColor = p.favoriteColor || '#6366F1';
+
+    const nameInput = document.getElementById('profile-name-input');
+    const handleInput = document.getElementById('profile-handle-input');
+    const bioInput = document.getElementById('profile-bio-input');
+    const statusInput = document.getElementById('profile-status-input');
+    const genderSelect = document.getElementById('profile-gender-select');
+    const colorInput = document.getElementById('profile-color-input');
+
+    if (nameInput) nameInput.value = p.name || 'Usuario LUMA';
+    if (handleInput) handleInput.value = p.handle || '@usuario';
+    if (bioInput) bioInput.value = p.bio || '';
+    if (statusInput) statusInput.value = p.statusMsg || '✨ En línea';
+    if (genderSelect) genderSelect.value = p.gender || 'No especificado';
+    if (colorInput) colorInput.value = this.activeProfileColor;
+
+    // Activar preset correspondiente
+    document.querySelectorAll('.avatar-preset-item').forEach(item => {
+      if (item.getAttribute('data-preset') === this.activePresetAvatar && !this.activeUploadedAvatar) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+
+    // Activar swatch correspondiente
+    document.querySelectorAll('.color-swatch-circle').forEach(swatch => {
+      if (swatch.getAttribute('data-color').toLowerCase() === this.activeProfileColor.toLowerCase()) {
+        swatch.classList.add('active');
+      } else {
+        swatch.classList.remove('active');
+      }
+    });
+
+    this.updateProfileLivePreview();
+  }
+
+  updateProfileLivePreview() {
+    const name = document.getElementById('profile-name-input')?.value || 'Usuario LUMA';
+    let handle = document.getElementById('profile-handle-input')?.value || '@usuario';
+    if (handle && !handle.startsWith('@')) handle = '@' + handle;
+    const bio = document.getElementById('profile-bio-input')?.value || '¡Hola! Compartiendo momentos increíbles en LUMA 🌟';
+    const status = document.getElementById('profile-status-input')?.value || '✨ En línea';
+    const color = this.activeProfileColor || document.getElementById('profile-color-input')?.value || '#6366F1';
+
+    const prevName = document.getElementById('profile-preview-name');
+    const prevHandle = document.getElementById('profile-preview-handle');
+    const prevBio = document.getElementById('profile-preview-bio');
+    const prevStatus = document.getElementById('profile-preview-status-msg');
+    const prevAvatarCircle = document.getElementById('profile-preview-avatar-circle');
+    const bioCounter = document.getElementById('profile-bio-counter');
+
+    if (prevName) prevName.textContent = name;
+    if (prevHandle) prevHandle.textContent = handle;
+    if (prevBio) prevBio.textContent = bio;
+    if (prevStatus) prevStatus.textContent = status;
+    if (bioCounter) bioCounter.textContent = `${bio.length} / 120`;
+
+    if (prevAvatarCircle) {
+      prevAvatarCircle.style.backgroundColor = color;
+      prevAvatarCircle.style.boxShadow = `0 0 20px ${color}88`;
+      if (this.activeUploadedAvatar) {
+        prevAvatarCircle.innerHTML = `<img src="${this.activeUploadedAvatar}" alt="${name}" />`;
+      } else if (this.activePresetAvatar) {
+        prevAvatarCircle.innerHTML = `<span>${this.activePresetAvatar}</span>`;
+      } else {
+        prevAvatarCircle.innerHTML = `<span>${(name || 'U').charAt(0).toUpperCase()}</span>`;
+      }
+    }
   }  // --- 1. RENDER INICIO ---
   renderInicio() {
     const group = this.storage.getActiveGroup();
@@ -454,6 +615,8 @@ class LumaApp {
         pill.style.backgroundColor = m.color || '#6366F1';
         if (m.avatar) {
           pill.innerHTML = `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />`;
+        } else if (m.presetAvatar) {
+          pill.innerHTML = `<span>${m.presetAvatar}</span>`;
         } else {
           pill.textContent = (m.name || 'U').charAt(0).toUpperCase();
         }
@@ -620,13 +783,59 @@ class LumaApp {
     return window.Utils.formatDateES(dateStr);
   }
 
+  // --- MIS GRUPOS / SWITCHER ---
+  openGroupsListModal() {
+    const container = document.getElementById('groups-switcher-list');
+    const groups = this.storage.getGroups() || [];
+    const activeGroup = this.storage.getActiveGroup();
+
+    if (container) {
+      container.innerHTML = '';
+      groups.forEach(g => {
+        const isActive = activeGroup && activeGroup.id === g.id;
+        const item = document.createElement('div');
+        item.className = 'group-menu-action-item';
+        item.style.borderColor = isActive ? 'var(--color-primary)' : 'var(--color-border)';
+        item.style.background = isActive ? '#EDE9FE' : '#F8FAFC';
+
+        item.innerHTML = `
+          <div class="group-menu-icon" style="font-size: 1.6rem;">${g.icon || '🌟'}</div>
+          <div style="flex: 1; min-width: 0;">
+            <strong style="color: var(--color-text-main); font-size: 1rem;">${window.Utils.sanitizeHTML(g.name)}</strong>
+            <p style="color: var(--color-text-secondary); font-size: 0.8rem;">Código: <strong>${g.code}</strong> · ${g.members?.length || 1} miembros</p>
+          </div>
+          <button type="button" class="${isActive ? 'btn-primary' : 'btn-secondary'}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+            ${isActive ? 'Activo ✓' : 'Entrar ➔'}
+          </button>
+        `;
+
+        item.onclick = () => {
+          this.storage.switchGroup(g.id);
+          this.closeModal('modal-groups-list');
+          
+          // Entrar directamente a la app
+          document.getElementById('onboarding-screen').style.display = 'none';
+          document.getElementById('app-container').style.display = 'flex';
+          this.updateHeader();
+          window.location.hash = '#inicio';
+          this.handleHashChange();
+          window.Utils.showToast(`Entraste a "${g.name}" 🚀`, 'success');
+        };
+
+        container.appendChild(item);
+      });
+    }
+
+    this.openModal('modal-groups-list');
+  }
+
   // --- MODAL: EDITAR GRUPO ---
   openEditGroupModal() {
     const group = this.storage.getActiveGroup();
     if (!group) return;
 
     document.getElementById('edit-group-name').value = group.name || '';
-    document.getElementById('edit-group-icon').value = group.icon || '⭐';
+    document.getElementById('edit-group-icon').value = group.icon || '🌟';
     document.getElementById('edit-group-color').value = group.color || '#6366F1';
     document.getElementById('edit-group-cover-url').value = group.coverImage || '';
 
@@ -1221,9 +1430,7 @@ class LumaApp {
       this.closeModal('modal-groups-list');
       this.openModal('modal-create-group');
     });
-  }
-
-  // --- VINCULACIÓN DE FORMULARIOS ---
+  }  // --- VINCULACIÓN DE FORMULARIOS ---
   bindFormEvents() {
     // 1. Formulario Editar Grupo
     const formEditGroup = document.getElementById('form-edit-group');
@@ -1271,7 +1478,7 @@ class LumaApp {
       formCreateGroup.onsubmit = async (e) => {
         e.preventDefault();
         const name = document.getElementById('new-group-name').value.trim();
-        const icon = document.getElementById('new-group-icon').value.trim() || '⭐';
+        const icon = document.getElementById('new-group-icon').value.trim() || '🌟';
         const color = document.getElementById('new-group-color').value;
         const coverUrl = document.getElementById('new-group-cover-url').value.trim();
         const coverFile = document.getElementById('new-group-cover-file')?.files?.[0];
@@ -1286,7 +1493,9 @@ class LumaApp {
         const newGroup = this.storage.createGroup(name, icon, color, coverImage, iconImage);
         this.closeModal('modal-create-group');
         window.Utils.showToast(`¡Grupo "${newGroup.name}" creado! Código: ${newGroup.code}`, 'success');
-        this.checkInitialState();
+        
+        // Entrar directamente
+        this.enterActiveGroupDirectly();
       };
     }
 
@@ -1301,51 +1510,52 @@ class LumaApp {
           return;
         }
 
-        const joined = this.storage.joinGroupByCode(code);
-        if (joined) {
-          this.closeModal('modal-join-group');
-          window.Utils.showToast(`¡Te has unido a "${joined.name}"! 🚀`, 'success');
-          this.checkInitialState();
-        } else {
-          window.Utils.showToast('No se encontró ningún grupo con ese código', 'error');
+        try {
+          const joined = this.storage.joinGroupByCode(code);
+          if (joined) {
+            this.closeModal('modal-join-group');
+            window.Utils.showToast(`¡Te has unido a "${joined.name}"! 🚀`, 'success');
+            this.enterActiveGroupDirectly();
+          }
+        } catch (err) {
+          window.Utils.showToast(err.message || 'Error al unirse al grupo', 'error');
         }
       };
     }
 
-    // 4. Formulario Perfil
+    // 4. Formulario Personalizar Perfil Ultra-Rich
     const formProfile = document.getElementById('form-profile');
     if (formProfile) {
       formProfile.onsubmit = async (e) => {
         e.preventDefault();
         const name = document.getElementById('profile-name-input').value.trim();
+        const handle = document.getElementById('profile-handle-input').value.trim();
         const bio = document.getElementById('profile-bio-input').value.trim();
+        const statusMsg = document.getElementById('profile-status-input').value.trim();
         const gender = document.getElementById('profile-gender-select').value;
-        const color = document.getElementById('profile-color-input').value;
+        const color = this.activeProfileColor || document.getElementById('profile-color-input').value;
         const avatarFile = document.getElementById('profile-avatar-file')?.files?.[0];
 
-        let avatar = this.storage.getUserProfile()?.avatar || '';
+        let avatar = this.activeUploadedAvatar || '';
         if (avatarFile) {
           avatar = await window.Utils.fileToBase64(avatarFile);
         }
 
-        this.storage.saveUserProfile({
+        const updated = this.storage.saveUserProfile({
           name,
+          handle,
           bio,
+          statusMsg,
           gender,
           favoriteColor: color,
-          avatar
+          avatar: avatar,
+          presetAvatar: avatar ? '' : (this.activePresetAvatar || '👨‍🚀')
         });
 
         this.closeModal('modal-profile');
-        window.Utils.showToast('Perfil guardado ✨', 'success');
-
-        if (this.pendingAfterProfile) {
-          const cb = this.pendingAfterProfile;
-          this.pendingAfterProfile = null;
-          cb();
-        } else {
-          this.checkInitialState();
-        }
+        window.Utils.showToast('¡Perfil personalizado con éxito! ✨', 'success');
+        this.updateHeader();
+        this.renderInicio();
       };
     }
 
@@ -1651,43 +1861,6 @@ class LumaApp {
     }
   }
 
-  // --- MIS GRUPOS / SWITCHER ---
-  openGroupsListModal() {
-    const container = document.getElementById('groups-switcher-list');
-    const groups = this.storage.getGroups() || [];
-    const activeGroup = this.storage.getActiveGroup();
-
-    if (container) {
-      container.innerHTML = '';
-      groups.forEach(g => {
-        const isActive = activeGroup && activeGroup.id === g.id;
-        const item = document.createElement('div');
-        item.className = 'group-menu-action-item';
-        item.style.borderColor = isActive ? 'var(--color-primary)' : 'var(--color-border)';
-        item.style.background = isActive ? '#F3E8FF' : '#F8FAFC';
-
-        item.innerHTML = `
-          <div class="group-menu-icon" style="font-size: 1.6rem;">${g.icon || '🌟'}</div>
-          <div style="flex: 1; min-width: 0;">
-            <strong style="color: var(--color-text-main); font-size: 1rem;">${window.Utils.sanitizeHTML(g.name)}</strong>
-            <p style="color: var(--color-text-secondary); font-size: 0.8rem;">Código: <strong>${g.code}</strong> · ${g.members?.length || 1} miembros</p>
-          </div>
-          ${isActive ? '<span style="color: var(--color-primary); font-weight: 700; font-size: 0.85rem;">Activo ✓</span>' : ''}
-        `;
-
-        item.onclick = () => {
-          this.storage.switchGroup(g.id);
-          this.closeModal('modal-groups-list');
-          this.checkInitialState();
-        };
-
-        container.appendChild(item);
-      });
-    }
-
-    this.openModal('modal-groups-list');
-  }
-
   // --- COMENTARIOS DE RECUERDOS ---
   openMemoryComments(memoryId) {
     document.getElementById('comment-memory-id').value = memoryId;
@@ -1724,20 +1897,6 @@ class LumaApp {
       img.src = src;
       this.openModal('modal-lightbox');
     }
-  }
-
-  // --- PERFIL MODAL ---
-  populateProfileModal() {
-    const p = this.storage.getUserProfile() || {};
-    const nameInput = document.getElementById('profile-name-input');
-    const bioInput = document.getElementById('profile-bio-input');
-    const genderSelect = document.getElementById('profile-gender-select');
-    const colorInput = document.getElementById('profile-color-input');
-
-    if (nameInput) nameInput.value = p.name || '';
-    if (bioInput) bioInput.value = p.bio || '';
-    if (genderSelect) genderSelect.value = p.gender || 'No especificado';
-    if (colorInput) colorInput.value = p.favoriteColor || '#6366F1';
   }
 }
 
