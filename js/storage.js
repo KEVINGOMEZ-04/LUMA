@@ -9,15 +9,16 @@
     id: DEFAULT_INITIAL_GROUP_ID,
     name: 'Grupo LUMA',
     icon: '🌟',
+    iconImage: '',
     code: 'LUMA01',
     color: '#7C3AED',
-    coverImage: '',
-    createdAt: new Date().toISOString(),
-    host: { id: 'luma_host_1', name: 'Admin LUMA' },
+    coverImage: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80',
+    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+    host: { id: 'luma_host_1', name: 'Alex' },
     members: [
-      { id: 'luma_host_1', name: 'Alex', color: '#7C3AED', avatar: '' },
-      { id: 'luma_member_2', name: 'Sam', color: '#3B82F6', avatar: '' },
-      { id: 'luma_member_3', name: 'Dani', color: '#22D3EE', avatar: '' }
+      { id: 'luma_host_1', name: 'Alex', color: '#7C3AED', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 'luma_member_2', name: 'Sam', color: '#3B82F6', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 3).toISOString() },
+      { id: 'luma_member_3', name: 'Dani', color: '#22D3EE', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 1).toISOString() }
     ]
   };
 
@@ -29,7 +30,7 @@
         date: '2026-02-20',
         location: 'Mirador del Valle',
         description: 'Una velada increíble donde compartimos anécdotas, buena música y planes para este año.',
-        coverImage: '',
+        coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
         photos: [],
         author: { id: 'luma_host_1', name: 'Alex' },
         song: {
@@ -130,7 +131,6 @@
     }
 
     init() {
-      // Si no existen grupos, crear el grupo demo inicial
       const groups = this.getGroups();
       if (!groups || groups.length === 0) {
         this.saveGroups([DEMO_GROUP]);
@@ -167,7 +167,6 @@
       };
       localStorage.setItem(window.CONFIG.storageKeys.userProfile, JSON.stringify(updated));
       
-      // Actualizar en el grupo activo
       this.updateMemberInCurrentGroup(updated);
       this.notify('profile');
       return updated;
@@ -200,18 +199,26 @@
       return groups.find(g => g.id === activeId) || groups[0] || null;
     }
 
-    createGroup(name, icon = '🌟', color = '#7C3AED', coverImage = '') {
-      const user = this.getUserProfile() || { id: 'usr_host', name: 'Host' };
+    createGroup(name, icon = '🌟', color = '#7C3AED', coverImage = '', iconImage = '') {
+      const user = this.getUserProfile() || { id: 'usr_host_' + Date.now().toString(36), name: 'Host' };
+      const now = new Date().toISOString();
       const newGroup = {
         id: 'group_' + Date.now().toString(36),
         name: name,
         icon: icon,
+        iconImage: iconImage,
         code: window.Utils.generateGroupCode(),
         color: color,
         coverImage: coverImage,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
         host: { id: user.id, name: user.name },
-        members: [{ id: user.id, name: user.name, color: user.favoriteColor || color, avatar: user.avatar || '' }]
+        members: [{
+          id: user.id,
+          name: user.name,
+          color: user.favoriteColor || color,
+          avatar: user.avatar || '',
+          joinedAt: now
+        }]
       };
 
       const groups = this.getGroups();
@@ -225,30 +232,61 @@
       return newGroup;
     }
 
+    updateGroup(groupId, updates) {
+      const groups = this.getGroups();
+      const targetId = groupId || this.getActiveGroupId();
+      const idx = groups.findIndex(g => g.id === targetId);
+      if (idx >= 0) {
+        groups[idx] = {
+          ...groups[idx],
+          ...updates,
+          updatedAt: new Date().toISOString()
+        };
+        this.saveGroups(groups);
+        this.notify('activeGroup');
+        return groups[idx];
+      }
+      return null;
+    }
+
+    leaveGroup(groupId) {
+      const targetId = groupId || this.getActiveGroupId();
+      let groups = this.getGroups();
+      groups = groups.filter(g => g.id !== targetId);
+      this.saveGroups(groups);
+
+      if (groups.length > 0) {
+        this.setActiveGroupId(groups[0].id);
+      } else {
+        localStorage.removeItem(window.CONFIG.storageKeys.activeGroup);
+      }
+      this.notify('groups');
+    }
+
     async joinGroupByCode(code) {
       const cleanCode = (code || '').trim().toUpperCase();
       if (!cleanCode || cleanCode.length !== 6) {
         throw new Error('El código debe tener 6 caracteres');
       }
 
-      // 1. Buscar en grupos locales
       const groups = this.getGroups();
       let group = groups.find(g => g.code === cleanCode);
+      const user = this.getUserProfile() || { id: 'usr_' + Date.now().toString(36), name: 'Miembro' };
+      const now = new Date().toISOString();
 
       if (!group) {
-        // Generar y asociar grupo si es válido
-        const user = this.getUserProfile() || { id: 'usr_anon', name: 'Miembro' };
         group = {
           id: 'group_remote_' + cleanCode.toLowerCase(),
           name: `Grupo #${cleanCode}`,
           icon: '✨',
+          iconImage: '',
           code: cleanCode,
           color: '#3B82F6',
           coverImage: '',
-          createdAt: new Date().toISOString(),
+          createdAt: now,
           host: { id: 'remote_host', name: 'Administrador' },
           members: [
-            { id: user.id, name: user.name, color: user.favoriteColor || '#3B82F6', avatar: user.avatar || '' }
+            { id: user.id, name: user.name, color: user.favoriteColor || '#3B82F6', avatar: user.avatar || '', joinedAt: now }
           ]
         };
         groups.push(group);
@@ -256,6 +294,18 @@
         this.saveGroupData(group.id, {
           memories: [], songs: [], movies: [], series: [], goals: [], notes: []
         });
+      } else {
+        if (!group.members) group.members = [];
+        if (!group.members.some(m => m.id === user.id)) {
+          group.members.push({
+            id: user.id,
+            name: user.name,
+            color: user.favoriteColor || group.color,
+            avatar: user.avatar || '',
+            joinedAt: now
+          });
+          this.saveGroups(groups);
+        }
       }
 
       this.setActiveGroupId(group.id);
@@ -274,7 +324,8 @@
         id: userProfile.id,
         name: userProfile.name,
         color: userProfile.favoriteColor,
-        avatar: userProfile.avatar
+        avatar: userProfile.avatar,
+        joinedAt: idx >= 0 && group.members[idx].joinedAt ? group.members[idx].joinedAt : new Date().toISOString()
       };
 
       if (idx >= 0) {
@@ -369,7 +420,6 @@
         movie.ratings[userId] = rating;
         if (comment) movie.comments[userId] = comment;
         
-        // Calcular promedio
         const values = Object.values(movie.ratings).map(Number).filter(n => !isNaN(n));
         const avg = values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : null;
         movie.groupAverage = avg;
@@ -446,10 +496,8 @@
       const series = data.series || [];
       const goals = data.goals || [];
 
-      // 1. Total Recuerdos
       const totalMemories = memories.length;
 
-      // 2. Mes más activo
       const monthCounts = {};
       const monthsName = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
       
@@ -473,7 +521,6 @@
       }
       const mostActiveMonth = maxMonthCount > 0 ? monthsName[maxMonthIdx] : 'N/A';
 
-      // 3. Película Top
       let topMovie = 'Sin calificar';
       let highestScore = -1;
       movies.forEach(m => {
@@ -484,7 +531,6 @@
         }
       });
 
-      // 4. Artista Top
       const artistCounts = {};
       songs.forEach(s => {
         if (s.artist) artistCounts[s.artist] = (artistCounts[s.artist] || 0) + 1;
@@ -498,7 +544,6 @@
         }
       });
 
-      // 5. Serie más avanzada
       let topSeries = 'N/A';
       let maxEp = -1;
       series.forEach(s => {
@@ -509,12 +554,10 @@
         }
       });
 
-      // 6. Objetivos Cumplidos %
       const totalGoals = goals.length;
       const completedGoals = goals.filter(g => g.status === 'Cumplido').length;
       const goalsPct = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
 
-      // 7. Gráfico mensual
       const monthlyData = monthsName.map((name, idx) => ({
         month: name,
         count: monthCounts[idx] || 0
