@@ -757,7 +757,7 @@ window.GoogleDriveService = {
     this.notify();
 
     const scriptUrl = 'https://script.google.com/macros/s/AKfycbwlvCsQoPOFWsE1JEirVv16Fy2IFwzsOAUxwJtFn-QRg9u4HWpv8JowqniTGZ72OY4o/exec';
-    const chunkSize = 2; // Sube de a 2 fotos por lote para evitar exceder el límite de Google Apps Script
+    const chunkSize = 6; // Lote optimizado de 6 fotos comprimidas por petición
 
     try {
       for (let i = 0; i < currentJob.files.length; i += chunkSize) {
@@ -771,7 +771,8 @@ window.GoogleDriveService = {
             action: 'createFolderAndUpload',
             parentFolderId: '1qXPifAHV5fTVX7HdI1ab6UzAjDTpiwjm',
             folderName: currentJob.folderName,
-            files: batch
+            files: batch,
+            reuseExistingFolder: true
           })
         });
 
@@ -780,7 +781,7 @@ window.GoogleDriveService = {
         this.notify();
 
         // Breve pausa para no saturar la red
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 300));
       }
 
       currentJob.status = 'completed';
