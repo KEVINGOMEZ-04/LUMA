@@ -18,7 +18,8 @@
     members: [
       { id: 'luma_host_1', name: 'Alex', color: '#7C3AED', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 5).toISOString() },
       { id: 'luma_member_2', name: 'Sam', color: '#3B82F6', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 3).toISOString() },
-      { id: 'luma_member_3', name: 'Dani', color: '#22D3EE', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 1).toISOString() }
+      { id: 'luma_member_3', name: 'Dani', color: '#22D3EE', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+      { id: 'luma_member_4', name: 'KEVIN', color: '#10B981', avatar: '', joinedAt: new Date(Date.now() - 86400000 * 1).toISOString() }
     ]
   };
 
@@ -410,6 +411,10 @@
       else data.movies.unshift(movie);
       this.saveGroupData(null, data);
       return movie;
+    }
+    addMovieRating(movieId, rating, comment) {
+      const user = this.getUserProfile() || { id: 'usr_anon' };
+      return this.rateMovie(movieId, user.id, rating, comment);
     }
     rateMovie(movieId, userId, rating, comment) {
       const data = this.getGroupData();
