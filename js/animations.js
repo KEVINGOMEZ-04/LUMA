@@ -1,5 +1,5 @@
-/**
- * ATRIA ✨ - Motor de Animaciones y Canvas
+﻿/**
+ * LUMA 🌟 - Motor de Partículas y Canvas de Fondo
  */
 
 (function() {
@@ -8,82 +8,56 @@
       this.canvas = document.getElementById(canvasId);
       if (!this.canvas) return;
       this.ctx = this.canvas.getContext('2d', { alpha: true });
-      this.stars = [];
       this.particles = [];
       this.isMobile = window.innerWidth <= 768;
-      this.numStars = this.isMobile ? 25 : 75;
-      this.numParticles = this.isMobile ? 4 : 12;
+      this.numParticles = this.isMobile ? 35 : 75;
       this.animationFrameId = null;
       this.isRunning = false;
-      this.lastWidth = 0;
-      this.lastHeight = 0;
-      this.lastFrameTime = 0;
 
       this.resize = this.resize.bind(this);
       this.animate = this.animate.bind(this);
 
-      let resizeTimeout = null;
-      window.addEventListener('resize', () => {
-        if (resizeTimeout) clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(this.resize, 200);
-      }, { passive: true });
-      window.addEventListener('orientationchange', () => setTimeout(this.resize, 300), { passive: true });
+      window.addEventListener('resize', this.resize, { passive: true });
       document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          this.stop();
-        } else {
-          this.start();
-        }
+        if (document.hidden) this.stop();
+        else this.start();
       });
 
       this.resize();
-      this.createElements();
+      this.createParticles();
       this.start();
     }
 
     resize() {
       if (!this.canvas) return;
-      const currentWidth = window.innerWidth;
-      const currentHeight = window.innerHeight;
-
-      if (this.lastWidth === currentWidth && this.lastHeight === currentHeight) {
-        return;
-      }
-
-      this.lastWidth = currentWidth;
-      this.lastHeight = currentHeight;
-      this.isMobile = currentWidth <= 768;
-      this.numStars = this.isMobile ? 30 : 80;
-      this.numParticles = this.isMobile ? 6 : 14;
-      
-      this.canvas.width = currentWidth;
-      this.canvas.height = currentHeight;
-      this.createElements();
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
+      this.isMobile = window.innerWidth <= 768;
+      this.numParticles = this.isMobile ? 35 : 75;
+      this.createParticles();
     }
 
-    createElements() {
-      this.stars = [];
-      for (let i = 0; i < this.numStars; i++) {
-        this.stars.push({
-          x: Math.random() * this.canvas.width,
-          y: Math.random() * this.canvas.height,
-          size: Math.random() * (this.isMobile ? 1.2 : 1.6) + 0.4,
-          alpha: Math.random() * 0.7 + 0.2,
-          twinkleSpeed: Math.random() * 0.015 + 0.005,
-          twinkleDir: Math.random() > 0.5 ? 1 : -1
-        });
-      }
-
+    createParticles() {
       this.particles = [];
+      // Paleta de partículas LUMA (Violeta, Azul, Turquesa, Oro luz)
+      const colors = [
+        'rgba(124, 58, 237, ',   // Violeta
+        'rgba(59, 130, 246, ',   // Azul
+        'rgba(34, 211, 238, ',   // Turquesa
+        'rgba(250, 204, 21, '    // Oro luz
+      ];
+
       for (let i = 0; i < this.numParticles; i++) {
         this.particles.push({
           x: Math.random() * this.canvas.width,
           y: Math.random() * this.canvas.height,
-          size: Math.random() * 2 + 1,
-          speedX: (Math.random() - 0.5) * 0.3,
-          speedY: -Math.random() * 0.4 - 0.15,
-          alpha: Math.random() * 0.5 + 0.2,
-          color: Math.random() > 0.4 ? 'rgba(244, 197, 66, ' : 'rgba(185, 142, 230, '
+          size: Math.random() * (this.isMobile ? 1.5 : 2.2) + 0.5,
+          speedX: (Math.random() - 0.5) * 0.25,
+          speedY: -Math.random() * 0.35 - 0.1,
+          alpha: Math.random() * 0.6 + 0.2,
+          colorBase: colors[Math.floor(Math.random() * colors.length)],
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          twinkleDir: Math.random() > 0.5 ? 1 : -1
         });
       }
     }
@@ -107,25 +81,18 @@
       if (!this.isRunning || !this.ctx) return;
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-      for (let star of this.stars) {
-        star.alpha += star.twinkleSpeed * star.twinkleDir;
-        if (star.alpha > 0.9) {
-          star.alpha = 0.9;
-          star.twinkleDir = -1;
-        } else if (star.alpha < 0.15) {
-          star.alpha = 0.15;
-          star.twinkleDir = 1;
-        }
-
-        this.ctx.beginPath();
-        this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        this.ctx.fillStyle = `rgba(241, 233, 251, ${star.alpha})`;
-        this.ctx.fill();
-      }
-
       for (let p of this.particles) {
         p.x += p.speedX;
         p.y += p.speedY;
+
+        p.alpha += p.twinkleSpeed * p.twinkleDir;
+        if (p.alpha > 0.85) {
+          p.alpha = 0.85;
+          p.twinkleDir = -1;
+        } else if (p.alpha < 0.15) {
+          p.alpha = 0.15;
+          p.twinkleDir = 1;
+        }
 
         if (p.y < -10) {
           p.y = this.canvas.height + 10;
@@ -136,7 +103,9 @@
 
         this.ctx.beginPath();
         this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        this.ctx.fillStyle = `${p.color}${p.alpha})`;
+        this.ctx.fillStyle = `${p.colorBase}${p.alpha})`;
+        this.ctx.shadowBlur = p.size * 2;
+        this.ctx.shadowColor = `${p.colorBase}0.8)`;
         this.ctx.fill();
       }
 
@@ -144,10 +113,10 @@
     }
   }
 
-  const animateCounter = (element, targetValue, duration = 1800, isDecimal = false) => {
+  // Animador numérico suave
+  const animateCounter = (element, targetValue, duration = 1200, isDecimal = false) => {
     if (!element) return;
     const startTime = performance.now();
-
     const easeOutQuart = (t) => 1 - Math.pow(1 - t, 4);
 
     const step = (currentTime) => {
@@ -157,7 +126,7 @@
       const currentVal = easeProgress * targetValue;
 
       if (isDecimal) {
-        element.textContent = window.Utils.formatDecimalES(currentVal, 2) + ' %';
+        element.textContent = window.Utils.formatDecimalES(currentVal, 1);
       } else {
         element.textContent = window.Utils.formatNumberES(Math.round(currentVal));
       }
@@ -166,7 +135,7 @@
         requestAnimationFrame(step);
       } else {
         if (isDecimal) {
-          element.textContent = window.Utils.formatDecimalES(targetValue, 2) + ' %';
+          element.textContent = window.Utils.formatDecimalES(targetValue, 1);
         } else {
           element.textContent = window.Utils.formatNumberES(targetValue);
         }
@@ -176,83 +145,8 @@
     requestAnimationFrame(step);
   };
 
-  const triggerPetalRain = () => {
-    const canvas = document.getElementById('effects-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const petals = [];
-    const numPetals = 45;
-    const colors = ['#F4C542', '#F8D96B', '#E5A91E', '#FBE58D'];
-
-    for (let i = 0; i < numPetals; i++) {
-      petals.push({
-        x: Math.random() * canvas.width,
-        y: -20 - Math.random() * 200,
-        sizeX: Math.random() * 12 + 10,
-        sizeY: Math.random() * 6 + 4,
-        rotation: Math.random() * 360,
-        rotSpeed: (Math.random() - 0.5) * 4,
-        speedY: Math.random() * 2 + 2,
-        speedX: (Math.random() - 0.5) * 1.5,
-        oscillationSpeed: Math.random() * 0.05 + 0.02,
-        oscillationAmp: Math.random() * 30 + 10,
-        oscillationOffset: Math.random() * Math.PI * 2,
-        color: colors[Math.floor(Math.random() * colors.length)],
-        alpha: 1
-      });
-    }
-
-    let startTime = performance.now();
-    const duration = 4000;
-
-    const animate = (now) => {
-      const elapsed = now - startTime;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      let anyAlive = false;
-
-      for (let petal of petals) {
-        petal.y += petal.speedY;
-        petal.rotation += petal.rotSpeed;
-        const sway = Math.sin(elapsed * petal.oscillationSpeed * 0.05 + petal.oscillationOffset) * 1.2;
-        petal.x += petal.speedX + sway;
-
-        if (elapsed > duration - 1000) {
-          petal.alpha = Math.max(0, (duration - elapsed) / 1000);
-        }
-
-        if (petal.y < canvas.height + 30 && petal.alpha > 0) {
-          anyAlive = true;
-          ctx.save();
-          ctx.translate(petal.x, petal.y);
-          ctx.rotate((petal.rotation * Math.PI) / 180);
-          ctx.beginPath();
-          ctx.ellipse(0, 0, petal.sizeX, petal.sizeY, 0, 0, Math.PI * 2);
-          ctx.fillStyle = petal.color;
-          ctx.globalAlpha = petal.alpha;
-          ctx.shadowBlur = 4;
-          ctx.shadowColor = '#F4C542';
-          ctx.fill();
-          ctx.restore();
-        }
-      }
-
-      if (elapsed < duration && anyAlive) {
-        requestAnimationFrame(animate);
-      } else {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  };
-
   window.StarfieldBackground = StarfieldBackground;
   window.Animations = {
-    animateCounter,
-    triggerPetalRain
+    animateCounter
   };
 })();
