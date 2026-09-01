@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#0F172A">
+  <meta name="theme-color" content="#0B1021">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LUMA">
@@ -13,7 +13,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/layout.css">
@@ -34,7 +34,7 @@
       </div>
       <h1 class="onboarding-title">LUMA</h1>
       <p class="onboarding-slogan">Comparte · Guarda · Revive</p>
-      <p class="onboarding-desc">La luz de los recuerdos compartidos en grupos privados independientes.</p>
+      <p class="onboarding-desc">La plataforma de grupos privados para compartir recuerdos, cine, música y metas.</p>
 
       <div class="onboarding-options-grid">
         <!-- 1. Crear Host -->
@@ -84,7 +84,7 @@
        CONTENEDOR PRINCIPAL DE LA APLICACIÓN
        ========================================= -->
   <div id="app-container">
-    <!-- HEADER SUPERIOR -->
+    <!-- HEADER SUPERIOR DARK -->
     <header class="app-header">
       <div class="header-left-col">
         <a href="#inicio" class="header-brand" aria-label="LUMA Inicio">
@@ -94,15 +94,22 @@
 
         <!-- Botón / Chip de Grupo Activo -->
         <div class="header-group-chip" id="header-group-chip" title="Opciones de Grupo">
-          <span class="header-group-color-dot" id="header-group-dot"></span>
-          <span class="header-group-name" id="header-group-name">Cargando...</span>
-          <span class="header-group-code-badge" id="header-group-code" title="Toca para copiar código">------</span>
-          <span style="font-size: 0.7rem; color: var(--color-text-muted); margin-left: 2px;">▼</span>
+          <span class="header-group-color-dot" id="header-group-dot">🌟</span>
+          <span class="header-group-name" id="header-group-name">Grupo LUMA</span>
+          <span class="header-group-code-badge" id="header-group-code" title="Toca para copiar código">LUMA01</span>
+          <span style="font-size: 0.65rem; color: #94A3B8; margin-left: 2px;">▼</span>
         </div>
       </div>
 
-      <!-- Lado Derecho: Única Casilla con el Perfil Activo -->
+      <!-- Lado Derecho: Búsqueda, Notificaciones y Perfil -->
       <div class="header-right-col">
+        <button type="button" class="header-icon-btn" id="btn-header-search" title="Buscar en LUMA">
+          <span>🔍</span>
+        </button>
+        <button type="button" class="header-icon-btn" id="btn-header-notifs" title="Notificaciones">
+          <span>🔔</span>
+          <span class="header-badge-count">3</span>
+        </button>
         <div class="header-user-profile-btn" id="header-profile-avatar-btn" title="Miembros y Presencia">
           <div class="header-avatar-circle" id="header-user-avatar-img-wrap">
             <span id="header-user-avatar-text">U</span>
@@ -123,22 +130,22 @@
       <!-- 1. SECCIÓN INICIO -->
       <section id="section-inicio" class="luma-section" role="tabpanel">
         
-        <!-- HERO CARD DEL GRUPO -->
+        <!-- HERO CARD DEL GRUPO (BANNER CÓSMICO) -->
         <div class="group-hero-card" id="group-hero-card">
           <!-- Portada con botón para cambiar imagen -->
           <div class="group-cover-wrapper" id="group-cover-wrapper">
-            <img src="" alt="Portada del grupo" id="group-cover-img" class="group-cover-img" style="display: none;">
+            <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80" alt="Portada del grupo" id="group-cover-img" class="group-cover-img">
             <div class="group-cover-overlay"></div>
             <button type="button" class="btn-change-cover" id="btn-edit-cover-quick" title="Cambiar portada del grupo">
-              📷 Cambiar Portada
+              <span>🖼️</span> Cambiar portada
             </button>
           </div>
 
           <div class="group-hero-content">
             <div class="group-hero-main">
-              <!-- Logo / Icono del Grupo con botón de edición -->
+              <!-- Logo Squircle del Grupo -->
               <div class="group-hero-icon-box" id="group-hero-icon-box" title="Cambiar logo o icono">
-                <div id="group-hero-icon-display">🌟</div>
+                <div id="group-hero-icon-display">⭐</div>
                 <div class="group-icon-edit-overlay">✏️</div>
               </div>
 
@@ -147,18 +154,18 @@
                   <h2 class="group-hero-title" id="group-hero-title">Grupo LUMA</h2>
                   <button type="button" class="btn-ghost-edit" id="btn-edit-group-title" title="Editar nombre del grupo">✏️</button>
                 </div>
+                <div class="group-hero-slogan">Comparte · Guarda · Revive</div>
                 
                 <!-- Fila de Miembros: Contador + Iconos de Miembros + Código -->
                 <div class="group-hero-meta">
                   <div class="group-members-row-inline" id="hero-members-interactive" title="Ver perfiles y estados de conexión">
-                    <span id="group-hero-members-count" style="font-weight: 700;">👥 0 miembros</span>
+                    <span id="group-hero-members-count" style="font-weight: 700;">👥 4 miembros</span>
                     <div class="hero-inline-member-avatars" id="hero-inline-member-avatars"></div>
                   </div>
-                  <span>•</span>
                   <button type="button" class="group-code-pill-btn" id="btn-copy-group-code" title="Copiar código para invitar">
                     <span>🔑</span>
-                    <span id="group-hero-code-text">CÓDIGO</span>
-                    <span style="font-size: 0.7rem;">📋</span>
+                    <span id="group-hero-code-text">LUMA01</span>
+                    <span style="font-size: 0.72rem; opacity: 0.8;">📋</span>
                   </button>
                 </div>
               </div>
@@ -166,85 +173,117 @@
 
             <!-- Acciones del Hero -->
             <div class="group-hero-actions-row">
-              <button type="button" class="btn-secondary" id="btn-edit-group-hero" style="padding: 0.5rem 0.95rem; font-size: 0.85rem;">
+              <button type="button" class="btn-primary" id="btn-edit-group-hero">
                 <span>✏️ Editar Grupo</span>
               </button>
-              <button type="button" class="btn-primary" id="btn-invite-members" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+              <button type="button" class="btn-dark" id="btn-invite-members">
                 <span>+ Invitar</span> 🚀
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Acciones Rápidas -->
+        <!-- ACCIONES RÁPIDAS (CLEAN WHITE CARDS) -->
         <div class="quick-actions-grid">
-          <a href="#recuerdos" class="quick-action-pill"><span class="quick-action-icon">📸</span><span>Recuerdo</span></a>
-          <a href="#musica" class="quick-action-pill"><span class="quick-action-icon">🎵</span><span>Canción</span></a>
-          <a href="#cine" class="quick-action-pill"><span class="quick-action-icon">🎬</span><span>Película</span></a>
-          <a href="#series" class="quick-action-pill"><span class="quick-action-icon">📺</span><span>Serie</span></a>
-          <a href="#notas" class="quick-action-pill"><span class="quick-action-icon">📝</span><span>Nota</span></a>
-          <a href="#objetivos" class="quick-action-pill"><span class="quick-action-icon">✨</span><span>Objetivo</span></a>
-          <a href="#insights" class="quick-action-pill"><span class="quick-action-icon">📊</span><span>Insights</span></a>
+          <a href="#recuerdos" class="quick-action-pill">
+            <div class="quick-action-icon-box purple">📸</div>
+            <span>Recuerdo</span>
+          </a>
+          <a href="#musica" class="quick-action-pill">
+            <div class="quick-action-icon-box blue">🎵</div>
+            <span>Canción</span>
+          </a>
+          <a href="#cine" class="quick-action-pill">
+            <div class="quick-action-icon-box indigo">🎬</div>
+            <span>Película</span>
+          </a>
+          <a href="#series" class="quick-action-pill">
+            <div class="quick-action-icon-box teal">📺</div>
+            <span>Serie</span>
+          </a>
+          <a href="#objetivos" class="quick-action-pill">
+            <div class="quick-action-icon-box orange">🎯</div>
+            <span>Objetivo</span>
+          </a>
         </div>
 
-        <!-- INSIGHTS EN INICIO (ANTES DE ACTIVIDAD RECIENTE) -->
+        <!-- INSIGHTS DEL GRUPO (6 CARDS EN INICIO) -->
         <div class="home-insights-block">
-          <div class="feed-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem;">
-            <h3 class="feed-title" style="display: flex; align-items: center; gap: 0.4rem;">
+          <div class="section-title-row">
+            <h3 class="section-block-title">
               <span>📊</span> Insights del Grupo
             </h3>
-            <a href="#insights" style="font-size: 0.82rem; color: var(--color-accent); text-decoration: none; font-weight: 600;">Ver Todo ➔</a>
+            <a href="#inicio" class="section-block-link" id="btn-refresh-insights">
+              Ver todo ➔
+            </a>
           </div>
 
           <div class="insights-dashboard-grid" id="home-insights-metrics">
+            <!-- 1. Recuerdos -->
             <div class="insight-metric-card">
-              <div class="insight-icon-box">📸</div>
+              <div class="insight-icon-box purple">📸</div>
               <div>
                 <div class="insight-metric-title">Recuerdos</div>
-                <div class="insight-metric-value" id="home-insight-stat-memories">0</div>
+                <div class="insight-metric-value" id="home-insight-stat-memories">24</div>
+                <div class="insight-metric-desc" id="home-insight-desc-memories">Momentos guardados</div>
               </div>
             </div>
+
+            <!-- 2. Mes Más Activo -->
             <div class="insight-metric-card">
-              <div class="insight-icon-box">🔥</div>
+              <div class="insight-icon-box orange">🔥</div>
               <div>
-                <div class="insight-metric-title">Mes Activo</div>
-                <div class="insight-metric-value" id="home-insight-stat-month" style="font-size: 1.15rem;">N/A</div>
+                <div class="insight-metric-title">Mes Más Activo</div>
+                <div class="insight-metric-value" id="home-insight-stat-month">Febrero</div>
+                <div class="insight-metric-desc" id="home-insight-desc-month">18 recuerdos creados</div>
               </div>
             </div>
+
+            <!-- 3. Película Top -->
             <div class="insight-metric-card">
-              <div class="insight-icon-box">🎬</div>
+              <div class="insight-icon-box indigo">🎬</div>
               <div>
                 <div class="insight-metric-title">Película Top</div>
-                <div class="insight-metric-value" id="home-insight-stat-movie" style="font-size: 0.95rem;">Sin calificar</div>
+                <div class="insight-metric-value" id="home-insight-stat-movie">Interstellar ⭐ 9.8</div>
+                <div class="insight-metric-desc" id="home-insight-desc-movie">Mejor calificada</div>
               </div>
             </div>
+
+            <!-- 4. Artista Top -->
             <div class="insight-metric-card">
-              <div class="insight-icon-box">🎵</div>
+              <div class="insight-icon-box blue">🎵</div>
               <div>
                 <div class="insight-metric-title">Artista Top</div>
-                <div class="insight-metric-value" id="home-insight-stat-artist" style="font-size: 0.95rem;">N/A</div>
+                <div class="insight-metric-value" id="home-insight-stat-artist">Coldplay</div>
+                <div class="insight-metric-desc" id="home-insight-desc-artist">12 canciones guardadas</div>
               </div>
             </div>
+
+            <!-- 5. Serie Top -->
             <div class="insight-metric-card">
-              <div class="insight-icon-box">📺</div>
+              <div class="insight-icon-box teal">📺</div>
               <div>
                 <div class="insight-metric-title">Serie Top</div>
-                <div class="insight-metric-value" id="home-insight-stat-series" style="font-size: 0.95rem;">N/A</div>
+                <div class="insight-metric-value" id="home-insight-stat-series">Arcane (T2:C1)</div>
+                <div class="insight-metric-desc" id="home-insight-desc-series">Más avanzada</div>
               </div>
             </div>
+
+            <!-- 6. Objetivos -->
             <div class="insight-metric-card">
-              <div class="insight-icon-box">🎯</div>
+              <div class="insight-icon-box rose">🎯</div>
               <div>
                 <div class="insight-metric-title">Objetivos</div>
-                <div class="insight-metric-value" id="home-insight-stat-goals">0%</div>
+                <div class="insight-metric-value" id="home-insight-stat-goals">0% (0/1)</div>
+                <div class="insight-metric-desc" id="home-insight-desc-goals">Completados</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ACTIVIDAD RECIENTE DEL GRUPO (INCLUYE NUEVOS MIEMBROS) -->
-        <div class="feed-header" style="margin-top: 2rem;">
-          <h3 class="feed-title" style="display: flex; align-items: center; gap: 0.4rem;">
+        <!-- ACTIVIDAD RECIENTE DEL GRUPO -->
+        <div class="section-title-row" style="margin-top: 2rem;">
+          <h3 class="section-block-title">
             <span>⚡</span> Actividad Reciente en el Grupo
           </h3>
         </div>
@@ -397,68 +436,6 @@
         <div class="goals-grid" id="goals-grid-list"></div>
       </section>
 
-      <!-- 8. SECCIÓN LUMA INSIGHTS COMPLETO -->
-      <section id="section-insights" class="luma-section" role="tabpanel">
-        <div class="section-header">
-          <h2 class="section-title"><span>📊</span> LUMA Insights Dashboard</h2>
-          <p class="section-subtitle">Estadísticas reales e interactivas calculadas a partir de la actividad de tu grupo.</p>
-        </div>
-
-        <div class="insights-dashboard-grid" id="insights-metrics-container">
-          <div class="insight-metric-card">
-            <div class="insight-icon-box">📸</div>
-            <div>
-              <div class="insight-metric-title">Total Recuerdos</div>
-              <div class="insight-metric-value" id="insight-stat-memories">0</div>
-            </div>
-          </div>
-          <div class="insight-metric-card">
-            <div class="insight-icon-box">🔥</div>
-            <div>
-              <div class="insight-metric-title">Mes más Activo</div>
-              <div class="insight-metric-value" id="insight-stat-month">N/A</div>
-            </div>
-          </div>
-          <div class="insight-metric-card">
-            <div class="insight-icon-box">🎬</div>
-            <div>
-              <div class="insight-metric-title">Película Top</div>
-              <div class="insight-metric-value" id="insight-stat-movie" style="font-size: 1.05rem;">Sin calificar</div>
-            </div>
-          </div>
-          <div class="insight-metric-card">
-            <div class="insight-icon-box">🎵</div>
-            <div>
-              <div class="insight-metric-title">Artista más Escuchado</div>
-              <div class="insight-metric-value" id="insight-stat-artist" style="font-size: 1.05rem;">N/A</div>
-            </div>
-          </div>
-          <div class="insight-metric-card">
-            <div class="insight-icon-box">📺</div>
-            <div>
-              <div class="insight-metric-title">Serie más Avanzada</div>
-              <div class="insight-metric-value" id="insight-stat-series" style="font-size: 1.05rem;">N/A</div>
-            </div>
-          </div>
-          <div class="insight-metric-card">
-            <div class="insight-icon-box">🎯</div>
-            <div>
-              <div class="insight-metric-title">Objetivos Cumplidos</div>
-              <div class="insight-metric-value" id="insight-stat-goals">0%</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Gráfico de Actividad Mensual -->
-        <div class="insights-chart-card">
-          <h3 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--color-text-main); margin-bottom: 0.25rem;">
-            Actividad Mensual del Grupo
-          </h3>
-          <p style="font-size: 0.82rem; color: var(--color-text-secondary);">Recuerdos, canciones, notas y películas aportadas a lo largo del año:</p>
-          <div class="chart-bars-container" id="insights-monthly-chart"></div>
-        </div>
-      </section>
-
     </main>
   </div>  <!-- =========================================
        REPRODUCTOR DE AUDIO FLOTANTE (MINI-BAR)
@@ -551,14 +528,14 @@
       </div>
 
       <!-- Lista de Miembros -->
-      <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--color-accent); text-transform: uppercase; margin: 1.25rem 0 0.75rem;">
+      <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--color-primary); text-transform: uppercase; margin: 1.25rem 0 0.75rem;">
         Integrantes del Grupo (<span id="presence-modal-members-count">0</span>)
       </h4>
       <div class="members-presence-list" id="presence-modal-members-list"></div>
     </div>
   </div>
 
-  <!-- MODAL: EDITAR GRUPO (NOMBRE, LOGO, PORTADA, COLOR) -->
+  <!-- MODAL: EDITAR GRUPO -->
   <div id="modal-edit-group" class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-content">
       <div class="modal-header">
@@ -574,7 +551,7 @@
         <div class="form-group">
           <label class="form-label">Logo / Icono del Grupo</label>
           <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <input type="text" id="edit-group-icon" class="form-control" style="width: 80px; text-align: center; font-size: 1.3rem;" maxlength="4" placeholder="🌟">
+            <input type="text" id="edit-group-icon" class="form-control" style="width: 80px; text-align: center; font-size: 1.3rem;" maxlength="4" placeholder="⭐">
             <input type="file" id="edit-group-icon-file" class="form-control" accept="image/*" title="O sube una imagen personalizada como logo">
           </div>
           <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">Puedes usar un emoji o subir una imagen de logo personalizada.</p>
@@ -614,11 +591,11 @@
         <div class="form-row-2">
           <div class="form-group">
             <label class="form-label" for="new-group-icon">Icono / Emoji *</label>
-            <input type="text" id="new-group-icon" class="form-control" value="🌟" maxlength="4" required>
+            <input type="text" id="new-group-icon" class="form-control" value="⭐" maxlength="4" required>
           </div>
           <div class="form-group">
             <label class="form-label" for="new-group-color">Color Identificador *</label>
-            <input type="color" id="new-group-color" class="form-control" value="#7C3AED" style="height: 44px; padding: 0.2rem;">
+            <input type="color" id="new-group-color" class="form-control" value="#6366F1" style="height: 44px; padding: 0.2rem;">
           </div>
         </div>
         <div class="form-group">
@@ -694,7 +671,7 @@
           </div>
           <div class="form-group">
             <label class="form-label" for="profile-color-input">Color de Avatar</label>
-            <input type="color" id="profile-color-input" class="form-control" value="#7C3AED" style="height: 44px; padding: 0.2rem;">
+            <input type="color" id="profile-color-input" class="form-control" value="#6366F1" style="height: 44px; padding: 0.2rem;">
           </div>
         </div>
         <div class="modal-footer">
@@ -713,10 +690,10 @@
         <button type="button" class="btn-modal-close" data-close-modal="modal-groups-list">✕</button>
       </div>
       <div class="groups-switcher-body">
-        <div id="groups-switcher-list" class="groups-list-grid"></div>
-        <div class="groups-actions-row">
-          <button type="button" class="btn-secondary" id="btn-modal-open-join">🔑 Unirse con Código</button>
-          <button type="button" class="btn-primary" id="btn-modal-open-create">✨ Crear Nuevo Grupo</button>
+        <div id="groups-switcher-list" class="groups-list-grid" style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
+        <div class="groups-actions-row" style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" class="btn-secondary" id="btn-modal-open-join" style="flex: 1;">🔑 Unirse con Código</button>
+          <button type="button" class="btn-primary" id="btn-modal-open-create" style="flex: 1;">✨ Crear Grupo</button>
         </div>
       </div>
     </div>
@@ -808,7 +785,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="song-review-input">Comentario o por qué la recomiendas</label>
+          <label class="form-label" for="song-review-input">Comentario o reseña</label>
           <input type="text" id="song-review-input" class="form-control" placeholder="«Tiene una melodía increíble...»">
         </div>
         <input type="hidden" id="song-preview-url">
@@ -890,7 +867,7 @@
       </div>
       <form id="form-goal" class="modal-form">
         <div class="form-group">
-          <label class="form-label" for="goal-title-input">¿Cuál es el objetivo o meta? *</label>
+          <label class="form-label" for="goal-title-input">¿Cuál es la meta u objetivo? *</label>
           <input type="text" id="goal-title-input" class="form-control" placeholder="Ej: Viaje a la montaña, Comprar juego..." required>
         </div>
         <div class="form-row-2">
@@ -964,7 +941,7 @@
       <div class="modal-header">
         <div>
           <h3 id="lyrics-title" class="modal-title">Título</h3>
-          <div id="lyrics-artist" style="font-size: 0.85rem; color: var(--color-accent);">Artista</div>
+          <div id="lyrics-artist" style="font-size: 0.85rem; color: var(--color-primary);">Artista</div>
         </div>
         <button type="button" class="btn-modal-close" data-close-modal="modal-lyrics">✕</button>
       </div>
@@ -993,7 +970,9 @@
   <div id="modal-lightbox" class="modal-overlay lightbox-overlay" role="dialog" aria-modal="true">
     <button type="button" class="btn-lightbox-close" data-close-modal="modal-lightbox">✕</button>
     <img src="" id="lightbox-img" class="lightbox-img-element" alt="Vista ampliada">
-  </div>  <!-- Firebase SDKs -->
+  </div>
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
