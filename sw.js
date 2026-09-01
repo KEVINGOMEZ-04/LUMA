@@ -1,9 +1,4 @@
-﻿/**
- * LUMA 🌟 - Service Worker PWA
- * "Comparte · Guarda · Revive"
- */
-
-const CACHE_NAME = 'luma-pwa-v1';
+const CACHE_NAME = 'patico-wrapped-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -14,13 +9,11 @@ const ASSETS_TO_CACHE = [
   './css/sections.css',
   './js/config.js',
   './js/utils.js',
+  './js/storage.js',
   './js/media.js',
   './js/presence.js',
   './js/animations.js',
-  './js/storage.js',
-  './js/app.js',
-  './assets/icon.png',
-  './assets/logo.png'
+  './js/app.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -46,12 +39,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignorar peticiones externas, Firebase RTDB o APIs de streaming
+  // Ignorar peticiones a APIs externas o Firebase RTDB
   if (event.request.url.includes('firebaseio.com') ||
       event.request.url.includes('themoviedb.org') ||
       event.request.url.includes('itunes.apple.com') ||
-      event.request.url.includes('apple.com') ||
-      event.request.url.includes('lrclib.net') ||
+      event.request.url.includes('google.com') ||
       event.request.method !== 'GET') {
     return;
   }
@@ -59,7 +51,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Retornar de caché y refrescar en background (Stale-While-Revalidate)
+        // Retornar caché y actualizar en background
         fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
@@ -72,7 +64,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Manejo de clic en notificaciones locales de grupo (Redirige a la sección exacta)
+// Manejo de clic en notificaciones de la barra del sistema (como WhatsApp / YouTube)
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const targetUrl = (event.notification.data && event.notification.data.url) || './';
