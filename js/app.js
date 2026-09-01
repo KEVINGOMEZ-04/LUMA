@@ -51,13 +51,16 @@ class LumaApp {
   bindSubscriptions() {
     this.storage.subscribe((key) => {
       this.updateHeader();
-      if (!key || key === 'groupData' || key === 'activeGroup') {
+      if (!key || key === 'groupData' || key === 'activeGroup' || key === 'groups') {
         this.renderCurrentTab();
       }
     });
 
     this.presence.subscribe((presenceMap) => {
-      this.renderPresenceAvatars(presenceMap);
+      this.updateHeaderPresence();
+      if (document.getElementById('modal-members-presence')?.classList.contains('active')) {
+        this.populateMembersPresenceModal(presenceMap);
+      }
     });
 
     this.audioManager.subscribe((state) => {
@@ -73,7 +76,6 @@ class LumaApp {
     const onboardingScreen = document.getElementById('onboarding-screen');
     const appContainer = document.getElementById('app-container');
 
-    // Si el usuario no tiene perfil o no tiene grupos, mostrar onboarding
     if (!profile || !profile.name || !groups || groups.length === 0 || !activeGroup) {
       if (onboardingScreen) onboardingScreen.style.display = 'flex';
       if (appContainer) appContainer.style.display = 'none';
@@ -91,6 +93,7 @@ class LumaApp {
   bindOnboardingActions() {
     const btnHost = document.getElementById('btn-onboarding-host');
     const btnCode = document.getElementById('btn-onboarding-code');
+    const btnGroups = document.getElementById('btn-onboarding-groups');
     const btnProfile = document.getElementById('btn-onboarding-profile');
 
     if (btnHost) {
@@ -101,6 +104,11 @@ class LumaApp {
     if (btnCode) {
       btnCode.onclick = () => {
         this.ensureProfileThen(() => this.openModal('modal-join-group'));
+      };
+    }
+    if (btnGroups) {
+      btnGroups.onclick = () => {
+        this.openGroupsListModal();
       };
     }
     if (btnProfile) {
@@ -173,13 +181,15 @@ class LumaApp {
   // --- CABECERA Y GRUPO ACTIVO ---
   updateHeader() {
     const group = this.storage.getActiveGroup();
+    const profile = this.storage.getUserProfile();
     if (!group) return;
 
     const nameEl = document.getElementById('header-group-name');
     const dotEl = document.getElementById('header-group-dot');
     const codeEl = document.getElementById('header-group-code');
 
-    if (nameEl) nameEl.textContent = `${group.icon || '🌟'} ${group.name}`;
+    const iconStr = group.iconImage ? '🖼️' : (group.icon || '🌟');
+    if (nameEl) nameEl.textContent = `${iconStr} ${group.name}`;
     if (dotEl) {
       dotEl.style.backgroundColor = group.color || '#7C3AED';
       dotEl.style.color = group.color || '#7C3AED';
@@ -192,66 +202,270 @@ class LumaApp {
       };
     }
 
+    // Botón / Chip de Grupo abre el menú de opciones de grupo
     const groupChip = document.getElementById('header-group-chip');
     if (groupChip) {
-      groupChip.onclick = () => this.openGroupsListModal();
+      groupChip.onclick = () => this.openGroupMenuModal();
     }
+
+    // Actualizar Única Casilla del Perfil Activo en el Header
+    const avatarWrap = document.getElementById('header-user-avatar-img-wrap');
+    const avatarText = document.getElementById('header-user-avatar-text');
+    if (avatarWrap && profile) {
+      avatarWrap.style.backgroundColor = profile.favoriteColor || '#7C3AED';
+      if (profile.avatar) {
+        avatarWrap.innerHTML = `<img src="${window.Utils.sanitizeHTML(profile.avatar)}" alt="${window.Utils.sanitizeHTML(profile.name)}" />`;
+      } else {
+        avatarWrap.innerHTML = `<span>${(profile.name || 'U').charAt(0).toUpperCase()}</span>`;
+      }
+    }
+
+    const profileBtn = document.getElementById('header-profile-avatar-btn');
+    if (profileBtn) {
+      profileBtn.onclick = () => this.openMembersPresenceModal();
+    }
+
+    this.updateHeaderPresence();
   }
 
-  renderPresenceAvatars(presenceMap) {
-    const container = document.getElementById('header-members-avatars');
-    if (!container) return;
+  updateHeaderPresence() {
+    const dot = document.getElementById('header-user-presence-dot');
+    if (!dot) return;
+    const isOnline = Boolean(this.presence && this.presence.isOnline);
+    dot.className = `header-user-presence-dot ${isOnline ? 'online' : 'offline'}`;
+  }
 
+  // --- MODAL: MENÚ DE OPCIONES DE GRUPO ---
+  openGroupMenuModal() {
     const group = this.storage.getActiveGroup();
-    const members = (group && group.members) || [];
-    container.innerHTML = '';
+    if (!group) return;
 
-    members.slice(0, 5).forEach(m => {
+    const iconEl = document.getElementById('menu-group-icon-display');
+    const nameEl = document.getElementById('menu-group-name-display');
+
+    if (iconEl) {
+      if (group.iconImage) {
+        iconEl.innerHTML = `<img src="${group.iconImage}" style="width: 24px; height: 24px; border-radius: 4px; object-fit: cover;" alt="logo" />`;
+      } else {
+        iconEl.textContent = group.icon || '🌟';
+      }
+    }
+    if (nameEl) nameEl.textContent = group.name;
+
+    // 1. Editar Grupo
+    const btnEdit = document.getElementById('btn-menu-action-edit');
+    if (btnEdit) {
+      btnEdit.onclick = () => {
+        this.closeModal('modal-group-menu');
+        this.openEditGroupModal();
+      };
+    }
+
+    // 2. Mis Grupos / Cambiar
+    const btnSwitch = document.getElementById('btn-menu-action-switch');
+    if (btnSwitch) {
+      btnSwitch.onclick = () => {
+        this.closeModal('modal-group-menu');
+        this.openGroupsListModal();
+      };
+    }
+
+    // 3. Volver al Menú Principal
+    const btnHome = document.getElementById('btn-menu-action-home');
+    if (btnHome) {
+      btnHome.onclick = () => {
+        this.closeModal('modal-group-menu');
+        document.getElementById('app-container').style.display = 'none';
+        const onb = document.getElementById('onboarding-screen');
+        if (onb) onb.style.display = 'flex';
+        this.bindOnboardingActions();
+      };
+    }
+
+    // 4. Salir del Grupo
+    const btnLeave = document.getElementById('btn-menu-action-leave');
+    if (btnLeave) {
+      btnLeave.onclick = () => {
+        if (confirm(`¿Estás seguro de que deseas salir del grupo "${group.name}"?`)) {
+          this.closeModal('modal-group-menu');
+          this.storage.leaveGroup(group.id);
+          window.Utils.showToast(`Has salido del grupo "${group.name}"`, 'info');
+          this.checkInitialState();
+        }
+      };
+    }
+
+    this.openModal('modal-group-menu');
+  }
+
+  // --- MODAL: MIEMBROS Y ESTADO DE CONEXIÓN ---
+  openMembersPresenceModal() {
+    this.populateMembersPresenceModal(this.presence.presenceMap || {});
+    this.openModal('modal-members-presence');
+  }
+
+  populateMembersPresenceModal(presenceMap) {
+    const profile = this.storage.getUserProfile() || {};
+    const group = this.storage.getActiveGroup();
+    if (!group) return;
+
+    // Mi Perfil
+    const myAvatar = document.getElementById('presence-modal-my-avatar');
+    const myName = document.getElementById('presence-modal-my-name');
+    const myBio = document.getElementById('presence-modal-my-bio');
+
+    if (myAvatar) {
+      myAvatar.style.backgroundColor = profile.favoriteColor || '#7C3AED';
+      if (profile.avatar) {
+        myAvatar.innerHTML = `<img src="${window.Utils.sanitizeHTML(profile.avatar)}" alt="${window.Utils.sanitizeHTML(profile.name)}" />`;
+      } else {
+        myAvatar.innerHTML = `<span>${(profile.name || 'U').charAt(0).toUpperCase()}</span>`;
+      }
+    }
+    if (myName) myName.textContent = profile.name || 'Mi Perfil';
+    if (myBio) myBio.textContent = profile.bio || 'Sin biografía añadida';
+
+    const btnEditProfile = document.getElementById('btn-presence-modal-edit-profile');
+    if (btnEditProfile) {
+      btnEditProfile.onclick = () => {
+        this.closeModal('modal-members-presence');
+        this.populateProfileModal();
+        this.openModal('modal-profile');
+      };
+    }
+
+    // Lista de Miembros
+    const listContainer = document.getElementById('presence-modal-members-list');
+    const countEl = document.getElementById('presence-modal-members-count');
+    const members = group.members || [];
+
+    if (countEl) countEl.textContent = members.length;
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '';
+    members.forEach(m => {
+      const isMe = m.id === profile.id;
+      const isHost = group.host && group.host.id === m.id;
       const pData = presenceMap[m.id] || {};
       const isOnline = Boolean(pData.online || pData.state === 'online');
       const isAway = pData.state === 'away';
 
-      const pill = document.createElement('div');
-      pill.className = 'member-avatar-pill';
-      pill.title = `${m.name} (${isOnline ? '🟢 En línea' : isAway ? '🌙 Ausente' : 'Desconectado'})`;
-      pill.style.backgroundColor = m.color || '#7C3AED';
-
-      if (m.avatar) {
-        pill.innerHTML = `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />`;
-      } else {
-        pill.textContent = (m.name || 'U').charAt(0).toUpperCase();
+      let statusLabel = 'Desconectado';
+      let statusClass = 'offline';
+      if (isOnline) {
+        statusLabel = '🟢 En línea';
+        statusClass = 'online';
+      } else if (isAway) {
+        statusLabel = '🌙 Ausente';
+        statusClass = 'away';
       }
 
-      const dot = document.createElement('span');
-      dot.className = `member-presence-dot ${isOnline ? 'online' : isAway ? 'away' : ''}`;
-      pill.appendChild(dot);
+      let lastSeenText = '';
+      if (pData.lastSeen) {
+        lastSeenText = `Última vez: ${window.Utils.formatDateTimeES(new Date(pData.lastSeen).toISOString())}`;
+      } else if (m.joinedAt) {
+        lastSeenText = `Miembro desde ${window.Utils.formatDateES(m.joinedAt)}`;
+      }
 
-      container.appendChild(pill);
+      const card = document.createElement('div');
+      card.className = 'member-presence-card';
+      card.innerHTML = `
+        <div class="member-card-left">
+          <div class="member-card-avatar" style="background-color: ${m.color || '#7C3AED'};">
+            ${m.avatar ? `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />` : (m.name || 'U').charAt(0).toUpperCase()}
+          </div>
+          <div style="min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 0.35rem;">
+              <strong style="font-size: 0.9rem; color: var(--color-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${window.Utils.sanitizeHTML(m.name)}
+              </strong>
+              ${isHost ? '<span class="user-role-badge">Host</span>' : ''}
+              ${isMe ? '<span class="user-role-badge self">Tú</span>' : ''}
+            </div>
+            <div style="font-size: 0.72rem; color: var(--color-text-muted);">${lastSeenText}</div>
+          </div>
+        </div>
+        <div class="member-card-status-pill ${statusClass}">${statusLabel}</div>
+      `;
+      listContainer.appendChild(card);
     });
   }  // --- 1. RENDER INICIO ---
   renderInicio() {
     const group = this.storage.getActiveGroup();
     if (!group) return;
 
-    const titleEl = document.getElementById('group-hero-title');
-    const iconEl = document.getElementById('group-hero-icon');
-    const countEl = document.getElementById('group-hero-members-count');
-    const codeTextEl = document.getElementById('group-hero-code-text');
+    // 1. Portada
     const coverImg = document.getElementById('group-cover-img');
-
-    if (titleEl) titleEl.textContent = group.name;
-    if (iconEl) iconEl.textContent = group.icon || '🌟';
-    if (countEl) countEl.textContent = `👥 ${(group.members || []).length} miembros`;
-    if (codeTextEl) codeTextEl.textContent = group.code;
-
-    if (coverImg) {
+    const coverWrap = document.getElementById('group-cover-wrapper');
+    if (coverImg && coverWrap) {
       if (group.coverImage) {
         coverImg.src = group.coverImage;
         coverImg.style.display = 'block';
       } else {
         coverImg.style.display = 'none';
+        coverWrap.style.background = `linear-gradient(135deg, ${group.color || '#7C3AED'}44 0%, #0F172A 100%)`;
       }
     }
+
+    const btnChangeCover = document.getElementById('btn-edit-cover-quick');
+    if (btnChangeCover) {
+      btnChangeCover.onclick = () => this.openEditGroupModal();
+    }
+
+    // 2. Logo / Icono del Grupo
+    const iconDisplay = document.getElementById('group-hero-icon-display');
+    const iconBox = document.getElementById('group-hero-icon-box');
+    if (iconDisplay) {
+      if (group.iconImage) {
+        iconDisplay.innerHTML = `<img src="${group.iconImage}" alt="Logo" style="width:100%; height:100%; object-fit:cover;" />`;
+      } else {
+        iconDisplay.textContent = group.icon || '🌟';
+      }
+    }
+    if (iconBox) {
+      iconBox.onclick = () => this.openEditGroupModal();
+    }
+
+    // 3. Título del Grupo
+    const titleEl = document.getElementById('group-hero-title');
+    if (titleEl) titleEl.textContent = group.name;
+
+    const btnEditTitle = document.getElementById('btn-edit-group-title');
+    if (btnEditTitle) btnEditTitle.onclick = () => this.openEditGroupModal();
+
+    const btnEditHero = document.getElementById('btn-edit-group-hero');
+    if (btnEditHero) btnEditHero.onclick = () => this.openEditGroupModal();
+
+    // 4. Contador y Avatares de Miembros Inline en Hero
+    const countEl = document.getElementById('group-hero-members-count');
+    const members = group.members || [];
+    if (countEl) countEl.textContent = `👥 ${members.length} miembros`;
+
+    const inlineAvatarsContainer = document.getElementById('hero-inline-member-avatars');
+    if (inlineAvatarsContainer) {
+      inlineAvatarsContainer.innerHTML = '';
+      members.slice(0, 6).forEach(m => {
+        const pill = document.createElement('div');
+        pill.className = 'hero-member-avatar-pill';
+        pill.title = m.name;
+        pill.style.backgroundColor = m.color || '#7C3AED';
+        if (m.avatar) {
+          pill.innerHTML = `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />`;
+        } else {
+          pill.textContent = (m.name || 'U').charAt(0).toUpperCase();
+        }
+        inlineAvatarsContainer.appendChild(pill);
+      });
+    }
+
+    const membersRowInteractive = document.getElementById('hero-members-interactive');
+    if (membersRowInteractive) {
+      membersRowInteractive.onclick = () => this.openMembersPresenceModal();
+    }
+
+    // 5. Código del Grupo
+    const codeTextEl = document.getElementById('group-hero-code-text');
+    if (codeTextEl) codeTextEl.textContent = group.code;
 
     const btnCopy = document.getElementById('btn-copy-group-code');
     if (btnCopy) {
@@ -261,16 +475,40 @@ class LumaApp {
     const btnInvite = document.getElementById('btn-invite-members');
     if (btnInvite) {
       btnInvite.onclick = () => {
-        window.Utils.copyToClipboard(group.code, `Comparte el código "${group.code}" para unirse al grupo 🚀`);
+        window.Utils.copyToClipboard(group.code, `Comparte el código "${group.code}" para unirse a ${group.name} 🚀`);
       };
     }
 
-    // Feed de Actividad Reciente
+    // 6. Insights en Inicio (Bloque Rápido)
+    const stats = this.storage.calculateInsights();
+    const hMem = document.getElementById('home-insight-stat-memories');
+    const hMon = document.getElementById('home-insight-stat-month');
+    const hMov = document.getElementById('home-insight-stat-movie');
+    const hArt = document.getElementById('home-insight-stat-artist');
+    const hSer = document.getElementById('home-insight-stat-series');
+    const hGoa = document.getElementById('home-insight-stat-goals');
+
+    if (hMem) hMem.textContent = stats.totalMemories;
+    if (hMon) hMon.textContent = stats.mostActiveMonth;
+    if (hMov) hMov.textContent = stats.topMovie;
+    if (hArt) hArt.textContent = stats.topArtist;
+    if (hSer) hSer.textContent = stats.topSeries;
+    if (hGoa) hGoa.textContent = `${stats.goalsPct}% (${stats.completedGoals}/${stats.totalGoals})`;
+
+    // 7. Actividad Reciente del Grupo (Incluyendo Miembros Nuevos)
     const feedContainer = document.getElementById('activity-feed-container');
     if (!feedContainer) return;
 
     const data = this.storage.getGroupData();
     const allItems = [
+      // Miembros que se unieron
+      ...(group.members || []).map(m => ({
+        _type: 'miembro',
+        icon: '👤',
+        label: 'Nuevo Miembro Unido',
+        title: `${m.name} se unió al grupo`,
+        date: m.joinedAt || group.createdAt
+      })),
       ...(data.memories || []).map(m => ({ ...m, _type: 'recuerdo', icon: '📸', label: 'Nuevo Recuerdo' })),
       ...(data.songs || []).map(s => ({ ...s, _type: 'musica', icon: '🎵', label: 'Canción Añadida' })),
       ...(data.movies || []).map(m => ({ ...m, _type: 'cine', icon: '🎬', label: 'Película Recomendada' })),
@@ -282,24 +520,24 @@ class LumaApp {
       feedContainer.innerHTML = `
         <div class="glass-card" style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--color-text-secondary);">
           <span style="font-size: 2rem;">🌟</span>
-          <p style="margin-top: 0.5rem;">El grupo está listo. ¡Comiencen a compartir recuerdos, música y metas!</p>
+          <p style="margin-top: 0.5rem;">¡Comiencen a compartir recuerdos, música y metas en ${group.name}!</p>
         </div>
       `;
       return;
     }
 
     feedContainer.innerHTML = '';
-    allItems.slice(0, 6).forEach(item => {
+    allItems.slice(0, 8).forEach(item => {
       const card = document.createElement('div');
       card.className = 'activity-item-card';
       card.innerHTML = `
         <div class="activity-icon-badge">${item.icon}</div>
         <div style="flex: 1; min-width: 0;">
-          <div style="font-size: 0.75rem; color: var(--color-accent); font-weight: 600; text-transform: uppercase;">${item.label}</div>
+          <div style="font-size: 0.72rem; color: var(--color-accent); font-weight: 700; text-transform: uppercase;">${item.label}</div>
           <div style="font-size: 0.92rem; font-weight: 700; color: var(--color-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             ${window.Utils.sanitizeHTML(item.title || item.name || 'Sin título')}
           </div>
-          <div style="font-size: 0.78rem; color: var(--color-text-muted); margin-top: 0.2rem;">
+          <div style="font-size: 0.76rem; color: var(--color-text-muted); margin-top: 0.2rem;">
             ${window.Utils.formatDateES(item.createdAt || item.date)}
           </div>
         </div>
@@ -308,7 +546,18 @@ class LumaApp {
     });
   }
 
-  // --- 2. RENDER RECUERDOS ---
+  // --- MODAL: EDITAR GRUPO ---
+  openEditGroupModal() {
+    const group = this.storage.getActiveGroup();
+    if (!group) return;
+
+    document.getElementById('edit-group-name').value = group.name || '';
+    document.getElementById('edit-group-icon').value = group.icon || '🌟';
+    document.getElementById('edit-group-color').value = group.color || '#7C3AED';
+    document.getElementById('edit-group-cover-url').value = group.coverImage || '';
+
+    this.openModal('modal-edit-group');
+  }  // --- 2. RENDER RECUERDOS ---
   renderMemories() {
     const container = document.getElementById('memories-grid-list');
     if (!container) return;
@@ -362,7 +611,7 @@ class LumaApp {
               <span>${window.Utils.sanitizeHTML(mem.song.title)} - ${window.Utils.sanitizeHTML(mem.song.artist || '')}</span>
             </div>
             <span class="memory-revive-btn">
-              <span>Revivir momento</span> ▶
+              <span>Revivir</span> ▶
             </span>
           </div>
         `;
@@ -489,9 +738,11 @@ class LumaApp {
 
     const lyrics = await this.media.fetchLyrics(artist, title);
     if (bodyEl) {
-      bodyEl.textContent = lyrics || 'No se encontró la letra para esta canción. Puedes verla directamente en Spotify o Genius con los enlaces abajo.';
+      bodyEl.textContent = lyrics || 'No se encontró la letra para esta canción. Puedes verla directamente en Spotify o Genius con los enlaces.';
     }
-  }  // --- 4. RENDER CINE (PELÍCULAS) ---
+  }
+
+  // --- 4. RENDER CINE (PELÍCULAS) ---
   renderMovies() {
     const container = document.getElementById('movies-grid-list');
     if (!container) return;
@@ -652,7 +903,7 @@ class LumaApp {
     }
   }
 
-  // --- 6. RENDER NOTAS COLABORATIVAS ---
+  // --- 6. RENDER NOTAS ---
   renderNotes() {
     const container = document.getElementById('notes-grid-list');
     if (!container) return;
@@ -717,7 +968,7 @@ class LumaApp {
     }
   }
 
-  // --- 7. RENDER OBJETIVOS COMPARTIDOS ---
+  // --- 7. RENDER OBJETIVOS ---
   renderGoals() {
     const container = document.getElementById('goals-grid-list');
     if (!container) return;
@@ -794,7 +1045,7 @@ class LumaApp {
     }
   }
 
-  // --- 8. RENDER LUMA INSIGHTS (DASHBOARD REAL) ---
+  // --- 8. RENDER LUMA INSIGHTS ---
   renderInsights() {
     const stats = this.storage.calculateInsights();
 
@@ -894,19 +1145,6 @@ class LumaApp {
       };
     });
 
-    const btnProfile = document.getElementById('btn-header-profile');
-    if (btnProfile) {
-      btnProfile.onclick = () => {
-        this.populateProfileModal();
-        this.openModal('modal-profile');
-      };
-    }
-
-    const btnGroups = document.getElementById('btn-header-groups');
-    if (btnGroups) {
-      btnGroups.onclick = () => this.openGroupsListModal();
-    }
-
     const btnNewMem = document.getElementById('btn-new-memory');
     if (btnNewMem) {
       btnNewMem.onclick = () => {
@@ -982,12 +1220,14 @@ class LumaApp {
       item.style.cursor = 'pointer';
       if (isCur) item.style.borderColor = 'var(--color-primary-light)';
 
+      const iconElem = g.iconImage ? `<img src="${g.iconImage}" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" alt="icon" />` : `<span style="font-size: 1.4rem;">${g.icon || '🌟'}</span>`;
+
       item.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <span style="font-size: 1.4rem;">${g.icon || '🌟'}</span>
+          ${iconElem}
           <div>
             <strong style="color: var(--color-text-main);">${window.Utils.sanitizeHTML(g.name)}</strong>
-            <div style="font-size: 0.75rem; color: var(--color-accent); font-family: var(--font-mono);">Código: ${g.code}</div>
+            <div style="font-size: 0.75rem; color: var(--color-accent); font-family: var(--font-mono);">Código: ${g.code} · ${(g.members || []).length} miembros</div>
           </div>
         </div>
         ${isCur ? '<span style="color: var(--color-accent); font-weight: 700;">Activo ✓</span>' : '<button class="btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Cambiar</button>'}
@@ -1036,6 +1276,44 @@ class LumaApp {
 
   // --- FORMULARIOS ---
   bindFormEvents() {
+    // 1. Formulario Editar Grupo
+    document.getElementById('form-edit-group')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const group = this.storage.getActiveGroup();
+      if (!group) return;
+
+      const name = document.getElementById('edit-group-name').value.trim();
+      const icon = document.getElementById('edit-group-icon').value.trim() || '🌟';
+      const color = document.getElementById('edit-group-color').value;
+      const coverUrl = document.getElementById('edit-group-cover-url').value.trim();
+      const coverFile = document.getElementById('edit-group-cover-file');
+      const iconFile = document.getElementById('edit-group-icon-file');
+
+      let coverImage = coverUrl || group.coverImage || '';
+      if (coverFile && coverFile.files && coverFile.files[0]) {
+        coverImage = await window.Utils.compressImage(coverFile.files[0], 1200, 0.8);
+      }
+
+      let iconImage = group.iconImage || '';
+      if (iconFile && iconFile.files && iconFile.files[0]) {
+        iconImage = await window.Utils.compressImage(iconFile.files[0], 400, 0.85);
+      }
+
+      this.storage.updateGroup(group.id, {
+        name,
+        icon,
+        iconImage,
+        coverImage,
+        color
+      });
+
+      this.closeModal('modal-edit-group');
+      window.Utils.showToast('¡Información del grupo actualizada! ✨', 'success');
+      this.updateHeader();
+      this.renderInicio();
+    });
+
+    // 2. Formulario Perfil
     document.getElementById('form-profile')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('profile-name-input').value.trim();
@@ -1069,25 +1347,33 @@ class LumaApp {
       }
     });
 
+    // 3. Formulario Crear Grupo
     document.getElementById('form-create-group')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('new-group-name').value.trim();
       const icon = document.getElementById('new-group-icon').value.trim() || '🌟';
       const color = document.getElementById('new-group-color').value;
       const urlInput = document.getElementById('new-group-cover-url').value.trim();
-      const fileInput = document.getElementById('new-group-cover-file');
+      const coverFile = document.getElementById('new-group-cover-file');
+      const iconFile = document.getElementById('new-group-icon-file');
 
       let cover = urlInput;
-      if (fileInput && fileInput.files && fileInput.files[0]) {
-        cover = await window.Utils.compressImage(fileInput.files[0], 1200, 0.8);
+      if (coverFile && coverFile.files && coverFile.files[0]) {
+        cover = await window.Utils.compressImage(coverFile.files[0], 1200, 0.8);
       }
 
-      const newGroup = this.storage.createGroup(name, icon, color, cover);
+      let iconImage = '';
+      if (iconFile && iconFile.files && iconFile.files[0]) {
+        iconImage = await window.Utils.compressImage(iconFile.files[0], 400, 0.85);
+      }
+
+      const newGroup = this.storage.createGroup(name, icon, color, cover, iconImage);
       this.closeModal('modal-create-group');
       window.Utils.showToast(`¡Grupo "${name}" creado! Código: ${newGroup.code}`, 'success');
       this.checkInitialState();
     });
 
+    // 4. Formulario Unirse a Grupo
     document.getElementById('form-join-group')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const code = document.getElementById('join-group-code-input').value.trim();
@@ -1101,6 +1387,7 @@ class LumaApp {
       }
     });
 
+    // 5. Formulario Recuerdo
     document.getElementById('form-memory')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('memory-title-input').value.trim();
@@ -1143,6 +1430,7 @@ class LumaApp {
       this.renderMemories();
     });
 
+    // 6. Formulario Canción
     document.getElementById('form-song')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const title = document.getElementById('song-title-input').value.trim();
@@ -1158,10 +1446,11 @@ class LumaApp {
       });
 
       this.closeModal('modal-song');
-      window.Utils.showToast('¡Canción recomendada guardada! 🎵', 'success');
+      window.Utils.showToast('¡Canción añadida! 🎵', 'success');
       this.renderSongs();
     });
 
+    // 7. Formulario Calificar Película
     document.getElementById('form-rate-movie')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const movieId = document.getElementById('rate-movie-id').value;
@@ -1175,6 +1464,7 @@ class LumaApp {
       this.renderMovies();
     });
 
+    // 8. Formulario Serie
     document.getElementById('form-series')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const title = document.getElementById('series-title-input').value.trim();
@@ -1193,6 +1483,7 @@ class LumaApp {
       this.renderSeries();
     });
 
+    // 9. Formulario Objetivo
     document.getElementById('form-goal')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const title = document.getElementById('goal-title-input').value.trim();
@@ -1210,6 +1501,7 @@ class LumaApp {
       this.renderGoals();
     });
 
+    // 10. Formulario Nota
     document.getElementById('form-note')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('note-title-input').value.trim();
@@ -1232,6 +1524,7 @@ class LumaApp {
       this.renderNotes();
     });
 
+    // 11. Formulario Comentario
     document.getElementById('form-add-comment')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const memoryId = document.getElementById('comment-memory-id').value;
@@ -1264,7 +1557,7 @@ class LumaApp {
       }
 
       resultsContainer.innerHTML = `
-        <div style="background: var(--color-glass-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1rem;">
+        <div style="background: var(--color-glass-card); border: 1px solid var(--color-glass-border); border-radius: var(--radius-lg); padding: 1rem;">
           <h4 style="font-size: 0.95rem; color: var(--color-accent); margin-bottom: 0.75rem;">Resultados de Búsqueda:</h4>
           <div style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 250px; overflow-y: auto;">
             ${results.map(r => `
@@ -1302,7 +1595,7 @@ class LumaApp {
       }
 
       resultsContainer.innerHTML = `
-        <div style="background: var(--color-glass-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1rem;">
+        <div style="background: var(--color-glass-card); border: 1px solid var(--color-glass-border); border-radius: var(--radius-lg); padding: 1rem;">
           <h4 style="font-size: 0.95rem; color: var(--color-accent); margin-bottom: 0.75rem;">Películas encontradas en TMDb:</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; max-height: 350px; overflow-y: auto;">
             ${results.map(m => `
@@ -1334,7 +1627,7 @@ class LumaApp {
       }
 
       resultsContainer.innerHTML = `
-        <div style="background: var(--color-glass-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1rem;">
+        <div style="background: var(--color-glass-card); border: 1px solid var(--color-glass-border); border-radius: var(--radius-lg); padding: 1rem;">
           <h4 style="font-size: 0.95rem; color: var(--color-accent); margin-bottom: 0.75rem;">Series encontradas:</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; max-height: 350px; overflow-y: auto;">
             ${results.map(s => `
