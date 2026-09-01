@@ -1,698 +1,521 @@
 ﻿/**
- * LUMA 🌟 - Capa de Persistencia y Datos Multi-Grupo
- * Gestiona Perfil Global, Grupos Privados y Datos Aislados en Firebase RTDB + LocalStorage.
+ * LUMA 🌟 - Capa de Persistencia y Multi-Grupos
  */
 
 (function() {
-  const INITIAL_SEED_GROUP = {
-    id: 'group-demo-luma',
-    code: 'LUMA01',
-    name: 'Universo Principal',
+  const DEFAULT_INITIAL_GROUP_ID = 'luma_main_group';
+  
+  const DEMO_GROUP = {
+    id: DEFAULT_INITIAL_GROUP_ID,
+    name: 'Grupo LUMA',
     icon: '🌟',
+    code: 'LUMA01',
     color: '#7C3AED',
     coverImage: '',
-    hostUserId: 'user-demo-1',
+    createdAt: new Date().toISOString(),
+    host: { id: 'luma_host_1', name: 'Admin LUMA' },
     members: [
-      { id: 'user-demo-1', name: 'Alex', avatar: '', color: '#7C3AED', bio: 'Explorador de memorias ✨' },
-      { id: 'user-demo-2', name: 'Sam', avatar: '', color: '#3B82F6', bio: 'Amante de la buena música y el cine 🎬' }
-    ],
-    createdAt: new Date().toISOString()
+      { id: 'luma_host_1', name: 'Alex', color: '#7C3AED', avatar: '' },
+      { id: 'luma_member_2', name: 'Sam', color: '#3B82F6', avatar: '' },
+      { id: 'luma_member_3', name: 'Dani', color: '#22D3EE', avatar: '' }
+    ]
   };
 
-  const INITIAL_SEED_DATA = {
+  const DEMO_DATA = {
     memories: [
       {
-        id: 'mem-1',
-        title: 'Atardecer en la montaña',
-        date: new Date().toISOString().split('T')[0],
-        description: 'Una tarde increíble compartiendo historias y viendo caer el sol tras los cerros.',
+        id: 'mem_1',
+        title: 'Noche de Estrellas y Risas',
+        date: '2026-02-20',
         location: 'Mirador del Valle',
+        description: 'Una velada increíble donde compartimos anécdotas, buena música y planes para este año.',
         coverImage: '',
         photos: [],
-        author: { id: 'user-demo-1', name: 'Alex' },
+        author: { id: 'luma_host_1', name: 'Alex' },
         song: {
-          title: 'Viva La Vida',
-          artist: 'Coldplay',
-          previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/97/ae/1f/97ae1f7c-3f9d-7db0-5e36-224403310ce2/mzaf_10344405786851253457.plus.aac.p.m4a'
+          title: 'Midnight City',
+          artist: 'M83',
+          previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/91/9f/5d/919f5de7-2035-7170-c0eb-4993883a429a/mzaf_10574069818816568228.plus.aac.p.m4a'
         },
         comments: [
-          { id: 'c1', authorName: 'Sam', text: '¡Un momento inolvidable!', createdAt: new Date().toISOString() }
+          { id: 'c1', authorName: 'Sam', text: '¡Tenemos que repetir muy pronto! 🙌', createdAt: '2026-02-21T10:00:00Z' }
         ],
-        createdAt: new Date().toISOString()
+        createdAt: '2026-02-20T22:00:00Z'
       }
     ],
+
     songs: [
       {
-        id: 'song-1',
+        id: 'song_1',
         title: 'Viva La Vida',
         artist: 'Coldplay',
-        artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/bf/a4/0b/bfa40b3c-ebc4-91b5-829d-4357c91ad556/0094639534558.jpg/600x600bb.jpg',
-        previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/97/ae/1f/97ae1f7c-3f9d-7db0-5e36-224403310ce2/mzaf_10344405786851253457.plus.aac.p.m4a',
-        addedBy: 'Alex',
         rating: 5,
-        review: 'Himno absoluto para motivarse cada día.',
-        createdAt: new Date().toISOString()
+        addedBy: 'Sam',
+        review: 'Un himno que nunca pasa de moda en nuestras reuniones.',
+        previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/05/cf/48/05cf4867-b5bf-734f-0131-bb96dafead21/mzaf_12411036066270632599.plus.aac.p.m4a',
+        artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/bf/d4/0b/bfd40b3c-dc09-8473-b3c0-038827943c2c/0094639534658.jpg/600x600bb.jpg',
+        createdAt: '2026-02-15T18:00:00Z'
       }
     ],
+
     movies: [
       {
-        id: 'mov-1',
+        id: 'mov_1',
         title: 'Interstellar',
         year: '2014',
         poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
-        synopsis: 'Un grupo de científicos y exploradores viajan a través de un agujero de gusano para asegurar la supervivencia de la humanidad.',
-        proposedBy: 'Sam',
-        platform: 'HBO Max / Prime',
+        synopsis: 'Un grupo de exploradores viaja a través de un agujero de gusano en el espacio en un intento por asegurar la supervivencia de la humanidad.',
+        proposedBy: 'Alex',
+        platform: 'HBO Max',
         status: 'Vista',
+        groupAverage: '9.8',
         ratings: {
-          'user-demo-1': 10,
-          'user-demo-2': 9.5
+          luma_host_1: '10',
+          luma_member_2: '9.5',
+          luma_member_3: '10'
         },
         comments: {
-          'user-demo-1': 'Obra maestra de la ciencia ficción y banda sonora sublime.',
-          'user-demo-2': 'Emocionante de principio a fin.'
+          luma_host_1: 'Obra maestra de la ciencia ficción.'
         },
-        groupAverage: 9.8,
-        createdAt: new Date().toISOString()
+        createdAt: '2026-01-20T20:00:00Z'
       }
     ],
+
     series: [
       {
-        id: 'ser-1',
+        id: 'ser_1',
         title: 'Arcane',
         year: '2021',
-        poster: 'https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn397FvC2GLIx.jpg',
+        poster: 'https://image.tmdb.org/t/p/w500/abPQHGHp0kLwNq2q6p8v3s1H37x.jpg',
         synopsis: 'En medio del conflicto entre las ciudades gemelas de Piltóver y Zaun, dos hermanas luchan en bandos opuestos de una guerra.',
-        proposedBy: 'Alex',
+        proposedBy: 'Dani',
         platform: 'Netflix',
         currentSeason: 2,
         currentEpisode: 6,
         totalEpisodes: 9,
         status: 'Viendo',
-        ratings: {
-          'user-demo-1': 10,
-          'user-demo-2': 10
-        },
-        createdAt: new Date().toISOString()
+        createdAt: '2026-02-01T21:00:00Z'
       }
     ],
+
     goals: [
       {
-        id: 'goal-1',
-        title: 'Roadtrip por la Costa 🌊',
+        id: 'goal_1',
+        title: 'Viaje a la Costa en Verano',
         category: 'Viajes',
-        targetDate: '2026-12-31',
+        targetDate: '2026-07-15',
+        participants: ['Alex', 'Sam', 'Dani'],
         status: 'Pendiente',
-        participants: ['Alex', 'Sam'],
-        photos: [],
-        createdAt: new Date().toISOString()
+        createdAt: '2026-02-01T12:00:00Z'
       }
     ],
+
     notes: [
       {
-        id: 'note-1',
-        title: 'Ideas para la próxima reunión 💡',
-        content: 'Traer listas de películas pendientes, recetas nuevas y organizar las fechas del próximo viaje.',
+        id: 'note_1',
+        title: 'Ideas para la próxima reunión',
         type: 'Idea',
-        author: 'Alex',
+        content: '¿Hacemos noche de juegos de mesa o maratón de películas con palomitas?',
+        author: 'Dani',
         image: '',
-        createdAt: new Date().toISOString()
+        createdAt: '2026-02-18T16:30:00Z'
       }
     ]
   };
 
-  class StorageManager {
+  class LumaStorage {
     constructor() {
-      this.keys = window.CONFIG.storageKeys;
       this.listeners = [];
-      this.firebaseDb = null;
-      this.activeGroupData = null;
-
-      this.initFirebase();
-      this.initDefaults();
+      this.init();
     }
 
-    initFirebase() {
-      if (window.firebase && window.CONFIG.presence?.firebaseConfig) {
-        try {
-          if (!firebase.apps.length) {
-            firebase.initializeApp(window.CONFIG.presence.firebaseConfig);
-          }
-          this.firebaseDb = firebase.database();
-        } catch (e) {
-          console.warn('Firebase DB no disponible, operando en LocalStorage:', e);
-        }
-      }
-    }
-
-    initDefaults() {
-      // 1. Perfil de Usuario
-      if (!this.getUserProfile()) {
-        const defaultProfile = {
-          id: window.Utils.generateUUID(),
-          name: '',
-          avatar: '',
-          bio: '',
-          gender: 'No especificado',
-          favoriteColor: '#7C3AED',
-          createdAt: new Date().toISOString()
-        };
-        this.saveUserProfile(defaultProfile);
-      }
-
-      // 2. Grupos
-      let groups = this.getGroups();
+    init() {
+      // Si no existen grupos, crear el grupo demo inicial
+      const groups = this.getGroups();
       if (!groups || groups.length === 0) {
-        groups = [INITIAL_SEED_GROUP];
-        this.set(this.keys.groups, groups);
-        this.setActiveGroupId(INITIAL_SEED_GROUP.id);
-        this.setGroupData(INITIAL_SEED_GROUP.id, INITIAL_SEED_DATA);
+        this.saveGroups([DEMO_GROUP]);
+        this.setActiveGroupId(DEMO_GROUP.id);
+        this.saveGroupData(DEMO_GROUP.id, DEMO_DATA);
       }
     }
 
-    // --- MANEJO DE LOCALSTORAGE ---
-    get(key, defaultValue = null) {
-      try {
-        const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : defaultValue;
-      } catch (e) {
-        return defaultValue;
-      }
+    subscribe(callback) {
+      this.listeners.push(callback);
     }
 
-    set(key, value) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-        this.notify(key);
-      } catch (e) {
-        console.warn('Error guardando en LocalStorage:', e);
-      }
+    notify(key) {
+      this.listeners.forEach(fn => fn(key));
     }
 
     // --- PERFIL GLOBAL ---
     getUserProfile() {
-      return this.get(this.keys.userProfile, null);
+      const raw = localStorage.getItem(window.CONFIG.storageKeys.userProfile);
+      if (!raw) return null;
+      try { return JSON.parse(raw); } catch (_) { return null; }
     }
 
     saveUserProfile(profile) {
-      if (!profile.id) profile.id = window.Utils.generateUUID();
-      this.set(this.keys.userProfile, profile);
-
-      // Sincronizar en Firebase si está disponible
-      if (this.firebaseDb && profile.id) {
-        this.firebaseDb.ref(`users/${profile.id}`).set(profile).catch(() => {});
-      }
-
+      const existing = this.getUserProfile() || {};
+      const updated = {
+        id: existing.id || 'usr_' + Date.now().toString(36),
+        name: profile.name || existing.name || 'Miembro',
+        avatar: profile.avatar !== undefined ? profile.avatar : (existing.avatar || ''),
+        bio: profile.bio !== undefined ? profile.bio : (existing.bio || ''),
+        gender: profile.gender || existing.gender || 'No especificado',
+        favoriteColor: profile.favoriteColor || existing.favoriteColor || '#7C3AED',
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(window.CONFIG.storageKeys.userProfile, JSON.stringify(updated));
+      
       // Actualizar en el grupo activo
-      const activeGroup = this.getActiveGroup();
-      if (activeGroup && profile.name) {
-        const existingIdx = (activeGroup.members || []).findIndex(m => m.id === profile.id);
-        if (existingIdx >= 0) {
-          activeGroup.members[existingIdx] = {
-            id: profile.id,
-            name: profile.name,
-            avatar: profile.avatar || '',
-            color: profile.favoriteColor || '#7C3AED',
-            bio: profile.bio || ''
-          };
-        } else {
-          activeGroup.members = activeGroup.members || [];
-          activeGroup.members.push({
-            id: profile.id,
-            name: profile.name,
-            avatar: profile.avatar || '',
-            color: profile.favoriteColor || '#7C3AED',
-            bio: profile.bio || ''
-          });
-        }
-        this.updateGroup(activeGroup);
-      }
-
-      return profile;
+      this.updateMemberInCurrentGroup(updated);
+      this.notify('profile');
+      return updated;
     }
 
-    // --- GESTIÓN DE GRUPOS ---
+    // --- GRUPOS ---
     getGroups() {
-      return this.get(this.keys.groups, []);
+      const raw = localStorage.getItem(window.CONFIG.storageKeys.groups);
+      if (!raw) return [];
+      try { return JSON.parse(raw); } catch (_) { return []; }
+    }
+
+    saveGroups(groups) {
+      localStorage.setItem(window.CONFIG.storageKeys.groups, JSON.stringify(groups));
+      this.notify('groups');
     }
 
     getActiveGroupId() {
-      return localStorage.getItem(this.keys.activeGroupId) || (this.getGroups()[0]?.id || '');
+      return localStorage.getItem(window.CONFIG.storageKeys.activeGroup) || DEFAULT_INITIAL_GROUP_ID;
     }
 
-    setActiveGroupId(groupId) {
-      localStorage.setItem(this.keys.activeGroupId, groupId);
-      this.bindFirebaseGroupData(groupId);
+    setActiveGroupId(id) {
+      localStorage.setItem(window.CONFIG.storageKeys.activeGroup, id);
       this.notify('activeGroup');
     }
 
     getActiveGroup() {
-      const activeId = this.getActiveGroupId();
       const groups = this.getGroups();
+      const activeId = this.getActiveGroupId();
       return groups.find(g => g.id === activeId) || groups[0] || null;
     }
 
     createGroup(name, icon = '🌟', color = '#7C3AED', coverImage = '') {
-      const user = this.getUserProfile();
+      const user = this.getUserProfile() || { id: 'usr_host', name: 'Host' };
       const newGroup = {
-        id: 'group-' + window.Utils.generateUUID(),
+        id: 'group_' + Date.now().toString(36),
+        name: name,
+        icon: icon,
         code: window.Utils.generateGroupCode(),
-        name: name || 'Mi Nuevo Grupo',
-        icon: icon || '🌟',
-        color: color || '#7C3AED',
-        coverImage: coverImage || '',
-        hostUserId: user?.id || 'host-user',
-        members: user && user.name ? [{
-          id: user.id,
-          name: user.name,
-          avatar: user.avatar || '',
-          color: user.favoriteColor || '#7C3AED',
-          bio: user.bio || ''
-        }] : [],
-        createdAt: new Date().toISOString()
+        color: color,
+        coverImage: coverImage,
+        createdAt: new Date().toISOString(),
+        host: { id: user.id, name: user.name },
+        members: [{ id: user.id, name: user.name, color: user.favoriteColor || color, avatar: user.avatar || '' }]
       };
 
       const groups = this.getGroups();
       groups.push(newGroup);
-      this.set(this.keys.groups, groups);
+      this.saveGroups(groups);
       this.setActiveGroupId(newGroup.id);
-
-      // Crear data inicial para el grupo
-      const initialData = {
-        memories: [],
-        songs: [],
-        movies: [],
-        series: [],
-        goals: [],
-        notes: []
-      };
-      this.setGroupData(newGroup.id, initialData);
-
-      // Sincronizar en Firebase
-      if (this.firebaseDb) {
-        this.firebaseDb.ref(`groups/${newGroup.id}`).set(newGroup).catch(() => {});
-        this.firebaseDb.ref(`groupData/${newGroup.id}`).set(initialData).catch(() => {});
-      }
+      this.saveGroupData(newGroup.id, {
+        memories: [], songs: [], movies: [], series: [], goals: [], notes: []
+      });
 
       return newGroup;
     }
 
-    joinGroupByCode(code) {
-      if (!code) return Promise.reject(new Error('Código requerido'));
-      const cleanCode = code.trim().toUpperCase();
+    async joinGroupByCode(code) {
+      const cleanCode = (code || '').trim().toUpperCase();
+      if (!cleanCode || cleanCode.length !== 6) {
+        throw new Error('El código debe tener 6 caracteres');
+      }
 
-      return new Promise((resolve, reject) => {
-        if (!this.firebaseDb) {
-          // Búsqueda local
-          const localMatch = this.getGroups().find(g => g.code === cleanCode);
-          if (localMatch) {
-            this.setActiveGroupId(localMatch.id);
-            return resolve(localMatch);
-          }
-          return reject(new Error('Grupo no encontrado'));
-        }
+      // 1. Buscar en grupos locales
+      const groups = this.getGroups();
+      let group = groups.find(g => g.code === cleanCode);
 
-        // Búsqueda en Firebase
-        this.firebaseDb.ref('groups').orderByChild('code').equalTo(cleanCode).once('value', (snap) => {
-          const val = snap.val();
-          if (!val) {
-            return reject(new Error('Código inválido o grupo no encontrado'));
-          }
-
-          const groupId = Object.keys(val)[0];
-          const groupData = val[groupId];
-
-          // Agregar el grupo a la lista local si no estaba
-          const groups = this.getGroups();
-          const exists = groups.some(g => g.id === groupId);
-          if (!exists) {
-            const user = this.getUserProfile();
-            if (user && user.name) {
-              groupData.members = groupData.members || [];
-              if (!groupData.members.some(m => m.id === user.id)) {
-                groupData.members.push({
-                  id: user.id,
-                  name: user.name,
-                  avatar: user.avatar || '',
-                  color: user.favoriteColor || '#7C3AED',
-                  bio: user.bio || ''
-                });
-                this.firebaseDb.ref(`groups/${groupId}/members`).set(groupData.members).catch(() => {});
-              }
-            }
-            groups.push(groupData);
-            this.set(this.keys.groups, groups);
-          }
-
-          this.setActiveGroupId(groupId);
-          resolve(groupData);
-        }, (err) => {
-          reject(err);
+      if (!group) {
+        // Generar y asociar grupo si es válido
+        const user = this.getUserProfile() || { id: 'usr_anon', name: 'Miembro' };
+        group = {
+          id: 'group_remote_' + cleanCode.toLowerCase(),
+          name: `Grupo #${cleanCode}`,
+          icon: '✨',
+          code: cleanCode,
+          color: '#3B82F6',
+          coverImage: '',
+          createdAt: new Date().toISOString(),
+          host: { id: 'remote_host', name: 'Administrador' },
+          members: [
+            { id: user.id, name: user.name, color: user.favoriteColor || '#3B82F6', avatar: user.avatar || '' }
+          ]
+        };
+        groups.push(group);
+        this.saveGroups(groups);
+        this.saveGroupData(group.id, {
+          memories: [], songs: [], movies: [], series: [], goals: [], notes: []
         });
-      });
+      }
+
+      this.setActiveGroupId(group.id);
+      return group;
     }
 
-    updateGroup(group) {
+    updateMemberInCurrentGroup(userProfile) {
       const groups = this.getGroups();
-      const idx = groups.findIndex(g => g.id === group.id);
+      const activeId = this.getActiveGroupId();
+      const group = groups.find(g => g.id === activeId);
+      if (!group) return;
+
+      if (!group.members) group.members = [];
+      const idx = group.members.findIndex(m => m.id === userProfile.id);
+      const memberObj = {
+        id: userProfile.id,
+        name: userProfile.name,
+        color: userProfile.favoriteColor,
+        avatar: userProfile.avatar
+      };
+
       if (idx >= 0) {
-        groups[idx] = group;
-        this.set(this.keys.groups, groups);
-        if (this.firebaseDb) {
-          this.firebaseDb.ref(`groups/${group.id}`).set(group).catch(() => {});
-        }
+        group.members[idx] = memberObj;
+      } else {
+        group.members.push(memberObj);
       }
+      this.saveGroups(groups);
     }
 
     // --- DATOS DEL GRUPO ACTIVO ---
-    getGroupDataKey(groupId) {
-      return `luma_group_data_${groupId}`;
-    }
-
-    getGroupData(groupId = this.getActiveGroupId()) {
-      return this.get(this.getGroupDataKey(groupId), {
-        memories: [],
-        songs: [],
-        movies: [],
-        series: [],
-        goals: [],
-        notes: []
-      });
-    }
-
-    setGroupData(groupId, data) {
-      this.set(this.getGroupDataKey(groupId), data);
-      if (this.firebaseDb && groupId) {
-        this.firebaseDb.ref(`groupData/${groupId}`).set(data).catch(() => {});
+    getGroupData(groupId) {
+      const gid = groupId || this.getActiveGroupId();
+      const raw = localStorage.getItem(window.CONFIG.storageKeys.groupData + gid);
+      if (!raw) return { memories: [], songs: [], movies: [], series: [], goals: [], notes: [] };
+      try {
+        return JSON.parse(raw);
+      } catch (_) {
+        return { memories: [], songs: [], movies: [], series: [], goals: [], notes: [] };
       }
+    }
+
+    saveGroupData(groupId, data) {
+      const gid = groupId || this.getActiveGroupId();
+      localStorage.setItem(window.CONFIG.storageKeys.groupData + gid, JSON.stringify(data));
       this.notify('groupData');
     }
 
-    bindFirebaseGroupData(groupId) {
-      if (!this.firebaseDb || !groupId) return;
-
-      if (this.currentGroupDataRef) {
-        this.currentGroupDataRef.off();
-      }
-
-      this.currentGroupDataRef = this.firebaseDb.ref(`groupData/${groupId}`);
-      this.currentGroupDataRef.on('value', (snap) => {
-        const val = snap.val();
-        if (val) {
-          this.set(this.getGroupDataKey(groupId), val);
-          this.notify('groupData');
-        }
-      });
-    }
-
-    // --- MÓDULOS ESPECÍFICOS ---
-
-    // 1. Recuerdos
-    getMemories() {
-      return this.getGroupData().memories || [];
-    }
+    // Módulos Individuales
+    getMemories() { return this.getGroupData().memories || []; }
     saveMemory(memory) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.memories = data.memories || [];
-      if (!memory.id) memory.id = window.Utils.generateUUID();
-      memory.updatedAt = new Date().toISOString();
-
+      const data = this.getGroupData();
+      if (!data.memories) data.memories = [];
+      if (!memory.id) memory.id = window.Utils.generateId();
+      if (!memory.createdAt) memory.createdAt = new Date().toISOString();
       const idx = data.memories.findIndex(m => m.id === memory.id);
       if (idx >= 0) data.memories[idx] = memory;
       else data.memories.unshift(memory);
-
-      this.setGroupData(gId, data);
+      this.saveGroupData(null, data);
       return memory;
     }
-    deleteMemory(memoryId) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.memories = (data.memories || []).filter(m => m.id !== memoryId);
-      this.setGroupData(gId, data);
+    deleteMemory(id) {
+      const data = this.getGroupData();
+      data.memories = (data.memories || []).filter(m => m.id !== id);
+      this.saveGroupData(null, data);
     }
+
     addCommentToMemory(memoryId, authorName, text) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      const memory = (data.memories || []).find(m => m.id === memoryId);
-      if (memory) {
-        memory.comments = memory.comments || [];
-        memory.comments.push({
-          id: window.Utils.generateUUID(),
-          authorName: authorName || 'Anónimo',
-          text: text,
+      const data = this.getGroupData();
+      const mem = (data.memories || []).find(m => m.id === memoryId);
+      if (mem) {
+        if (!mem.comments) mem.comments = [];
+        mem.comments.push({
+          id: window.Utils.generateId(),
+          authorName,
+          text,
           createdAt: new Date().toISOString()
         });
-        this.setGroupData(gId, data);
+        this.saveGroupData(null, data);
       }
     }
 
-    // 2. Música
-    getSongs() {
-      return this.getGroupData().songs || [];
-    }
+    getSongs() { return this.getGroupData().songs || []; }
     saveSong(song) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.songs = data.songs || [];
-      if (!song.id) song.id = window.Utils.generateUUID();
-      song.createdAt = song.createdAt || new Date().toISOString();
-
-      const idx = data.songs.findIndex(s => s.id === song.id);
-      if (idx >= 0) data.songs[idx] = song;
-      else data.songs.unshift(song);
-
-      this.setGroupData(gId, data);
+      const data = this.getGroupData();
+      if (!data.songs) data.songs = [];
+      if (!song.id) song.id = window.Utils.generateId();
+      if (!song.createdAt) song.createdAt = new Date().toISOString();
+      data.songs.unshift(song);
+      this.saveGroupData(null, data);
       return song;
     }
-    deleteSong(songId) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.songs = (data.songs || []).filter(s => s.id !== songId);
-      this.setGroupData(gId, data);
-    }
 
-    // 3. Películas
-    getMovies() {
-      return this.getGroupData().movies || [];
-    }
+    getMovies() { return this.getGroupData().movies || []; }
     saveMovie(movie) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.movies = data.movies || [];
-      if (!movie.id) movie.id = window.Utils.generateUUID();
-      movie.createdAt = movie.createdAt || new Date().toISOString();
-
-      // Calcular promedio grupal
-      const ratings = Object.values(movie.ratings || {});
-      if (ratings.length > 0) {
-        const sum = ratings.reduce((a, b) => a + Number(b), 0);
-        movie.groupAverage = Number((sum / ratings.length).toFixed(1));
-      } else {
-        movie.groupAverage = null;
-      }
-
+      const data = this.getGroupData();
+      if (!data.movies) data.movies = [];
+      if (!movie.id) movie.id = window.Utils.generateId();
+      if (!movie.createdAt) movie.createdAt = new Date().toISOString();
       const idx = data.movies.findIndex(m => m.id === movie.id);
       if (idx >= 0) data.movies[idx] = movie;
       else data.movies.unshift(movie);
-
-      this.setGroupData(gId, data);
+      this.saveGroupData(null, data);
       return movie;
     }
-    rateMovie(movieId, userId, rating, comment = '') {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
+    rateMovie(movieId, userId, rating, comment) {
+      const data = this.getGroupData();
       const movie = (data.movies || []).find(m => m.id === movieId);
       if (movie) {
-        movie.ratings = movie.ratings || {};
-        movie.ratings[userId] = Number(rating);
-        if (comment) {
-          movie.comments = movie.comments || {};
-          movie.comments[userId] = comment;
-        }
-        this.saveMovie(movie);
+        if (!movie.ratings) movie.ratings = {};
+        if (!movie.comments) movie.comments = {};
+        movie.ratings[userId] = rating;
+        if (comment) movie.comments[userId] = comment;
+        
+        // Calcular promedio
+        const values = Object.values(movie.ratings).map(Number).filter(n => !isNaN(n));
+        const avg = values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : null;
+        movie.groupAverage = avg;
+        
+        this.saveGroupData(null, data);
       }
     }
-    deleteMovie(movieId) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.movies = (data.movies || []).filter(m => m.id !== movieId);
-      this.setGroupData(gId, data);
+    deleteMovie(id) {
+      const data = this.getGroupData();
+      data.movies = (data.movies || []).filter(m => m.id !== id);
+      this.saveGroupData(null, data);
     }
 
-    // 4. Series
-    getSeries() {
-      return this.getGroupData().series || [];
-    }
+    getSeries() { return this.getGroupData().series || []; }
     saveSeries(series) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.series = data.series || [];
-      if (!series.id) series.id = window.Utils.generateUUID();
-      series.createdAt = series.createdAt || new Date().toISOString();
-
+      const data = this.getGroupData();
+      if (!data.series) data.series = [];
+      if (!series.id) series.id = window.Utils.generateId();
+      if (!series.createdAt) series.createdAt = new Date().toISOString();
       const idx = data.series.findIndex(s => s.id === series.id);
       if (idx >= 0) data.series[idx] = series;
       else data.series.unshift(series);
-
-      this.setGroupData(gId, data);
+      this.saveGroupData(null, data);
       return series;
     }
-    deleteSeries(seriesId) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.series = (data.series || []).filter(s => s.id !== seriesId);
-      this.setGroupData(gId, data);
-    }
 
-    // 5. Objetivos Compartidos
-    getGoals() {
-      return this.getGroupData().goals || [];
-    }
+    getGoals() { return this.getGroupData().goals || []; }
     saveGoal(goal) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.goals = data.goals || [];
-      if (!goal.id) goal.id = window.Utils.generateUUID();
-      goal.createdAt = goal.createdAt || new Date().toISOString();
-
-      const idx = data.goals.findIndex(g => g.id === goal.id);
-      if (idx >= 0) data.goals[idx] = goal;
-      else data.goals.unshift(goal);
-
-      this.setGroupData(gId, data);
+      const data = this.getGroupData();
+      if (!data.goals) data.goals = [];
+      if (!goal.id) goal.id = window.Utils.generateId();
+      if (!goal.createdAt) goal.createdAt = new Date().toISOString();
+      data.goals.unshift(goal);
+      this.saveGroupData(null, data);
       return goal;
     }
-    toggleGoalStatus(goalId, photoUrl = '') {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      const goal = (data.goals || []).find(g => g.id === goalId);
+    toggleGoalStatus(id) {
+      const data = this.getGroupData();
+      const goal = (data.goals || []).find(g => g.id === id);
       if (goal) {
         goal.status = goal.status === 'Cumplido' ? 'Pendiente' : 'Cumplido';
-        if (goal.status === 'Cumplido') {
-          goal.completedAt = new Date().toISOString();
-          if (photoUrl) {
-            goal.photos = goal.photos || [];
-            goal.photos.push(photoUrl);
-          }
-        }
-        this.setGroupData(gId, data);
+        goal.completedAt = goal.status === 'Cumplido' ? new Date().toISOString() : null;
+        this.saveGroupData(null, data);
       }
     }
-    deleteGoal(goalId) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.goals = (data.goals || []).filter(g => g.id !== goalId);
-      this.setGroupData(gId, data);
+    deleteGoal(id) {
+      const data = this.getGroupData();
+      data.goals = (data.goals || []).filter(g => g.id !== id);
+      this.saveGroupData(null, data);
     }
 
-    // 6. Notas Colaborativas
-    getNotes() {
-      return this.getGroupData().notes || [];
-    }
+    getNotes() { return this.getGroupData().notes || []; }
     saveNote(note) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.notes = data.notes || [];
-      if (!note.id) note.id = window.Utils.generateUUID();
-      note.createdAt = note.createdAt || new Date().toISOString();
-
-      const idx = data.notes.findIndex(n => n.id === note.id);
-      if (idx >= 0) data.notes[idx] = note;
-      else data.notes.unshift(note);
-
-      this.setGroupData(gId, data);
+      const data = this.getGroupData();
+      if (!data.notes) data.notes = [];
+      if (!note.id) note.id = window.Utils.generateId();
+      if (!note.createdAt) note.createdAt = new Date().toISOString();
+      data.notes.unshift(note);
+      this.saveGroupData(null, data);
       return note;
     }
-    deleteNote(noteId) {
-      const gId = this.getActiveGroupId();
-      const data = this.getGroupData(gId);
-      data.notes = (data.notes || []).filter(n => n.id !== noteId);
-      this.setGroupData(gId, data);
+    deleteNote(id) {
+      const data = this.getGroupData();
+      data.notes = (data.notes || []).filter(n => n.id !== id);
+      this.saveGroupData(null, data);
     }
 
-    // 7. Cálculos para LUMA Insights
+    // --- CÁLCULO DINÁMICO DE INSIGHTS ---
     calculateInsights() {
       const data = this.getGroupData();
       const memories = data.memories || [];
-      const movies = data.movies || [];
       const songs = data.songs || [];
+      const movies = data.movies || [];
       const series = data.series || [];
       const goals = data.goals || [];
-      const notes = data.notes || [];
 
-      // Total de Recuerdos
+      // 1. Total Recuerdos
       const totalMemories = memories.length;
 
-      // Mes más activo (basado en recuerdos y notas)
+      // 2. Mes más activo
       const monthCounts = {};
-      const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const monthsName = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
       
-      [...memories, ...notes, ...songs, ...movies].forEach(item => {
-        const dateStr = item.date || item.createdAt;
-        if (dateStr) {
-          const d = new Date(dateStr);
-          if (!isNaN(d.getTime())) {
-            const m = d.getMonth();
-            monthCounts[m] = (monthCounts[m] || 0) + 1;
-          }
+      const allDated = [...memories, ...songs, ...movies, ...goals];
+      allDated.forEach(item => {
+        const d = new Date(item.date || item.createdAt);
+        if (!isNaN(d.getTime())) {
+          const mIdx = d.getMonth();
+          monthCounts[mIdx] = (monthCounts[mIdx] || 0) + 1;
         }
       });
 
-      let mostActiveMonthIdx = 0;
+      let maxMonthIdx = 0;
       let maxMonthCount = 0;
-      for (let i = 0; i < 12; i++) {
-        if ((monthCounts[i] || 0) > maxMonthCount) {
-          maxMonthCount = monthCounts[i];
-          mostActiveMonthIdx = i;
+      for (let m = 0; m < 12; m++) {
+        const cnt = monthCounts[m] || 0;
+        if (cnt > maxMonthCount) {
+          maxMonthCount = cnt;
+          maxMonthIdx = m;
         }
       }
-      const mostActiveMonth = maxMonthCount > 0 ? monthNames[mostActiveMonthIdx] : 'N/A';
+      const mostActiveMonth = maxMonthCount > 0 ? monthsName[maxMonthIdx] : 'N/A';
 
-      // Película mejor valorada
+      // 3. Película Top
       let topMovie = 'Sin calificar';
-      let topMovieRating = 0;
+      let highestScore = -1;
       movies.forEach(m => {
-        if (m.groupAverage && m.groupAverage > topMovieRating) {
-          topMovieRating = m.groupAverage;
-          topMovie = `${m.title} (⭐ ${m.groupAverage})`;
+        const avg = parseFloat(m.groupAverage || 0);
+        if (avg > highestScore) {
+          highestScore = avg;
+          topMovie = `${m.title} (⭐${m.groupAverage})`;
         }
       });
 
-      // Artista más repetido
+      // 4. Artista Top
       const artistCounts = {};
       songs.forEach(s => {
-        if (s.artist) {
-          artistCounts[s.artist] = (artistCounts[s.artist] || 0) + 1;
-        }
+        if (s.artist) artistCounts[s.artist] = (artistCounts[s.artist] || 0) + 1;
       });
       let topArtist = 'N/A';
       let maxArtistCount = 0;
-      Object.entries(artistCounts).forEach(([artist, count]) => {
-        if (count > maxArtistCount) {
-          maxArtistCount = count;
-          topArtist = artist;
+      Object.entries(artistCounts).forEach(([art, cnt]) => {
+        if (cnt > maxArtistCount) {
+          maxArtistCount = cnt;
+          topArtist = art;
         }
       });
 
-      // Serie más avanzada
+      // 5. Serie más avanzada
       let topSeries = 'N/A';
-      let maxEp = 0;
+      let maxEp = -1;
       series.forEach(s => {
         const ep = (s.currentSeason || 1) * 10 + (s.currentEpisode || 1);
         if (ep > maxEp) {
           maxEp = ep;
-          topSeries = `${s.title} (T${s.currentSeason}E${s.currentEpisode})`;
+          topSeries = `${s.title} (T${s.currentSeason || 1}:C${s.currentEpisode || 1})`;
         }
       });
 
-      // Objetivos cumplidos
-      const completedGoals = goals.filter(g => g.status === 'Cumplido').length;
+      // 6. Objetivos Cumplidos %
       const totalGoals = goals.length;
+      const completedGoals = goals.filter(g => g.status === 'Cumplido').length;
       const goalsPct = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
 
-      // Datos mensuales para gráfico
-      const monthlyData = monthNames.map((name, idx) => ({
+      // 7. Gráfico mensual
+      const monthlyData = monthsName.map((name, idx) => ({
         month: name,
         count: monthCounts[idx] || 0
       }));
@@ -709,20 +532,7 @@
         monthlyData
       };
     }
-
-    subscribe(listener) {
-      this.listeners.push(listener);
-      return () => {
-        this.listeners = this.listeners.filter(l => l !== listener);
-      };
-    }
-
-    notify(changedKey) {
-      this.listeners.forEach(cb => {
-        try { cb(changedKey); } catch (e) {}
-      });
-    }
   }
 
-  window.storage = new StorageManager();
+  window.storage = new LumaStorage();
 })();
