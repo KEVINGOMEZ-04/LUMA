@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -304,16 +304,18 @@
         <div class="activity-feed-grid" id="activity-feed-container"></div>
       </section>
 
-      <!-- 2. SECCIÓN RECUERDOS -->
+      <!-- 2. SECCIÓN RECUERDOS (CAMINO / TIMELINE TRAIL) -->
       <section id="section-recuerdos" class="luma-section" role="tabpanel">
-        <div class="section-header">
-          <h2 class="section-title"><span>📸</span> Recuerdos Compartidos</h2>
-          <p class="section-subtitle">Momentos, fotos, canciones y lugares guardados para siempre.</p>
+        <div class="section-header-block">
+          <span class="section-tag-badge">LÍNEA TEMPORAL</span>
+          <h2 class="section-main-title">📸 Campo de Recuerdos</h2>
+          <p class="section-quote-subtitle">«Cada recuerdo florece como una estrella en nuestro camino compartido.»</p>
         </div>
 
         <div class="trail-controls">
-          <button type="button" class="btn-primary" id="btn-new-memory"><span>+ Nuevo Recuerdo</span> 📸</button>
+          <button type="button" class="btn-primary" id="btn-new-memory"><span>+ Nuevo Recuerdo</span> 🌟</button>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <label for="select-sort-memories" style="font-size: 0.85rem; color: var(--color-text-secondary);">Orden:</label>
             <select id="select-sort-memories" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
               <option value="desc">Más recientes primero</option>
               <option value="asc">Cronológico (antiguos primero)</option>
@@ -321,7 +323,10 @@
           </div>
         </div>
 
-        <div class="memories-grid" id="memories-grid-list"></div>
+        <div class="trail-container" id="memories-trail-container">
+          <div class="trail-line"></div>
+          <div id="memories-grid-list"></div>
+        </div>
       </section>
 
       <!-- 3. SECCIÓN MÚSICA -->
@@ -423,13 +428,22 @@
 
       <!-- 7. SECCIÓN OBJETIVOS COMPARTIDOS -->
       <section id="section-objetivos" class="luma-section" role="tabpanel">
-        <div class="section-header">
-          <h2 class="section-title"><span>✨</span> Objetivos Compartidos</h2>
-          <p class="section-subtitle">Metas, viajes, eventos y proyectos comunes organizados por categorías.</p>
+        <div class="section-header-block">
+          <span class="section-tag-badge">METAS DEL GRUPO</span>
+          <h2 class="section-main-title">🎯 Objetivos Compartidos</h2>
+          <p class="section-quote-subtitle">«Metas, viajes, eventos y proyectos comunes que florecerán a su debido tiempo.»</p>
+        </div>
+
+        <!-- 4-Card Stats Banner de ATRIA -->
+        <div class="dreams-stats-banner" id="goals-stats-container">
+          <div class="dream-stat-box"><span class="dream-stat-label">Total de Metas</span><div class="dream-stat-value" id="stat-goals-total">0</div></div>
+          <div class="dream-stat-box"><span class="dream-stat-label">Cumplidos</span><div class="dream-stat-value" style="color: var(--color-success);" id="stat-goals-completed">0</div></div>
+          <div class="dream-stat-box"><span class="dream-stat-label">Pendientes</span><div class="dream-stat-value" style="color: var(--color-primary);" id="stat-goals-pending">0</div></div>
+          <div class="dream-stat-box"><span class="dream-stat-label">% Cumplido</span><div class="dream-stat-value" style="color: var(--color-gold);" id="stat-goals-pct">0 %</div></div>
         </div>
 
         <div class="trail-controls">
-          <button type="button" class="btn-primary" id="btn-new-goal"><span>+ Nuevo Objetivo</span> 🎯</button>
+          <button type="button" class="btn-primary" id="btn-new-goal"><span>+ Nuevo Objetivo</span> 🌟</button>
           <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
             <select id="filter-goals-category" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
               <option value="all">🏷️ Todas las categorías</option>
@@ -442,12 +456,12 @@
             <select id="filter-goals-status" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
               <option value="all">🌱 Todos los estados</option>
               <option value="Pendiente">🌱 Pendientes</option>
-              <option value="Cumplido">🌟 Cumplidos con Foto</option>
+              <option value="Cumplido">🌟 Cumplidos</option>
             </select>
           </div>
         </div>
 
-        <div class="goals-grid" id="goals-grid-list"></div>
+        <div id="goals-grid-list"></div>
       </section>
 
     </main>
@@ -891,26 +905,61 @@
     </div>
   </div>
 
-  <!-- 10. MODAL CALIFICAR PELÍCULA -->
-  <div id="modal-rate-movie" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rate-movie-title">
+  <!-- 10. MODAL PELÍCULA (ATRIA FULL PARITY) -->
+  <div id="modal-movie" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-movie-title">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="rate-movie-title" class="modal-title">⭐ Calificar Película</h3>
-        <button type="button" class="btn-modal-close" data-close-modal="modal-rate-movie">✕</button>
+        <h3 id="modal-movie-title" class="modal-title"><span>🎬</span> Película</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-movie">✕</button>
       </div>
-      <form id="form-rate-movie" class="modal-form">
-        <input type="hidden" id="rate-movie-id">
+      <form id="form-movie" class="modal-form">
+        <input type="hidden" id="movie-id">
         <div class="form-group">
-          <label class="form-label" for="movie-user-rating-input">Tu Nota (1 al 10):</label>
-          <input type="number" id="movie-user-rating-input" class="form-control" min="1" max="10" step="0.5" value="10" required style="font-size: 1.25rem; font-weight: 700; text-align: center;">
+          <label class="form-label" for="movie-title-input">Título de la película *</label>
+          <input type="text" id="movie-title-input" class="form-control" required placeholder="Ej. Interstellar">
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="movie-year-input">Año (4 dígitos) *</label>
+            <input type="number" id="movie-year-input" class="form-control" min="1900" max="2099" required value="2026">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="movie-proposed-select">Propuesta por *</label>
+            <select id="movie-proposed-select" class="form-control" required></select>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="movie-priority-select">Prioridad (1 a 5 ⭐) *</label>
+            <select id="movie-priority-select" class="form-control" required>
+              <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+              <option value="4">⭐⭐⭐⭐ (4/5)</option>
+              <option value="3">⭐⭐⭐ (3/5)</option>
+              <option value="2">⭐⭐ (2/5)</option>
+              <option value="1">⭐ (1/5)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="movie-status-select">Estado *</label>
+            <select id="movie-status-select" class="form-control" required>
+              <option value="Por ver">🌱 Por ver</option>
+              <option value="Vista">🍿 Vista</option>
+              <option value="Favorita">❤️ Favorita</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
-          <label class="form-label" for="movie-user-comment-input">Tu Opinión (Opcional):</label>
-          <input type="text" id="movie-user-comment-input" class="form-control" placeholder="¿Qué te pareció?">
+          <label class="form-label" for="movie-rating-input">Tu Calificación (0 a 10 ⭐):</label>
+          <input type="number" id="movie-rating-input" class="form-control" min="0" max="10" step="0.1" placeholder="Ej. 9.5">
         </div>
+        <div class="form-group">
+          <label class="form-label" for="movie-comment-input">Tu Reseña / Comentario:</label>
+          <input type="text" id="movie-comment-input" class="form-control" placeholder="¿Qué te pareció esta película?">
+        </div>
+        <input type="hidden" id="movie-poster-url">
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" data-close-modal="modal-rate-movie">Cancelar</button>
-          <button type="submit" class="btn-primary">Guardar Valoración</button>
+          <button type="button" class="btn-secondary" data-close-modal="modal-movie">Cancelar</button>
+          <button type="submit" class="btn-primary"><span>Guardar Película</span> 🎬</button>
         </div>
       </form>
     </div>
