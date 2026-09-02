@@ -107,8 +107,11 @@
         </a>
       </div>
 
-      <!-- Lado Derecho: Ajustes de Estilo, Notificaciones y Emoji del Grupo -->
+      <!-- Lado Derecho: Carpeta Drive, Ajustes, Notificaciones y Emoji del Grupo -->
       <div class="header-right-col">
+        <button type="button" class="header-icon-btn" id="btn-header-gdrive" title="Vincular Carpeta de Google Drive">
+          <span>📁</span>
+        </button>
         <button type="button" class="header-icon-btn" id="btn-header-settings" title="Ajustes y Modo Claro / Oscuro">
           <span>⚙️</span>
         </button>
@@ -1002,15 +1005,16 @@
         <input type="hidden" id="memory-audio-data">
         <input type="hidden" id="memory-song-data">
 
-        <!-- 1. Portada 16:9 (Foto o Video) -->
+        <!-- 1. Portada (Foto o Video) -->
         <div class="form-group">
-          <label class="form-label">Portada del Momento (16:9)</label>
-          <div class="memory-cover-picker-box" id="memory-cover-picker-box">
+          <label class="form-label">Portada del Momento (Foto o Video)</label>
+          <div class="memory-cover-picker-box" id="memory-cover-picker-box" role="button" tabindex="0">
             <img src="" id="memory-cover-preview-img" class="memory-cover-preview-img" style="display: none;" alt="Portada">
+            <video id="memory-cover-preview-video" class="memory-cover-preview-img" style="display: none;" controls playsinline></video>
             <div class="memory-cover-picker-placeholder" id="memory-cover-placeholder">
               <span style="font-size: 2rem;">📷</span>
               <span style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-main); margin-top: 0.35rem;">Elegir Foto o Video de Portada</span>
-              <span style="font-size: 0.74rem; color: var(--color-text-muted);">Formato horizontal 16:9 recomendado</span>
+              <span style="font-size: 0.74rem; color: var(--color-text-muted);">Toca aquí para seleccionar desde tu galería</span>
             </div>
             <input type="file" id="memory-cover-file" class="cover-file-hidden" accept="image/*,video/*">
             <button type="button" class="btn-change-cover-pill" id="btn-trigger-cover-file" style="display: none;">📷 Cambiar Portada</button>
@@ -1045,46 +1049,49 @@
         <!-- 4. Historia / Diario Emocional -->
         <div class="form-group">
           <label class="form-label" for="memory-desc-input">Historia & Diario del Día</label>
-          <textarea id="memory-desc-input" class="form-control memory-story-textarea" rows="4" placeholder="Escribe qué ocurrió, cómo se sintieron, qué hizo especial este día..."></textarea>
+          <textarea id="memory-desc-input" class="form-control memory-story-textarea" rows="3" placeholder="Escribe qué ocurrió, cómo se sintieron, qué hizo especial este día..."></textarea>
         </div>
 
-        <!-- 5. Color del Recuerdo (Paleta de Auras) -->
+        <!-- 5. Color del Recuerdo -->
         <div class="form-group">
-          <label class="form-label">Aura Emocional del Momento</label>
+          <label class="form-label">Color del Recuerdo</label>
           <div class="aura-colors-grid" id="aura-colors-selector">
             <button type="button" class="aura-color-pill active" data-aura="#F59E0B" style="--aura-c: #F59E0B;">
               <span class="aura-dot" style="background: #F59E0B;"></span>
-              <span>💛 Ámbar</span>
+              <span>Ámbar</span>
             </button>
             <button type="button" class="aura-color-pill" data-aura="#A855F7" style="--aura-c: #A855F7;">
               <span class="aura-dot" style="background: #A855F7;"></span>
-              <span>💜 Lila</span>
+              <span>Lila</span>
             </button>
             <button type="button" class="aura-color-pill" data-aura="#F43F5E" style="--aura-c: #F43F5E;">
               <span class="aura-dot" style="background: #F43F5E;"></span>
-              <span>🌸 Rosa</span>
+              <span>Rosa</span>
             </button>
             <button type="button" class="aura-color-pill" data-aura="#38BDF8" style="--aura-c: #38BDF8;">
               <span class="aura-dot" style="background: #38BDF8;"></span>
-              <span>🌊 Azul</span>
+              <span>Azul</span>
             </button>
             <button type="button" class="aura-color-pill" data-aura="#10B981" style="--aura-c: #10B981;">
               <span class="aura-dot" style="background: #10B981;"></span>
-              <span>🌿 Verde</span>
+              <span>Verde</span>
             </button>
             <button type="button" class="aura-color-pill" data-aura="#6366F1" style="--aura-c: #6366F1;">
               <span class="aura-dot" style="background: #6366F1;"></span>
-              <span>🌙 Índigo</span>
+              <span>Índigo</span>
             </button>
           </div>
         </div>
 
         <!-- 6. Galería Múltiple (Fotos y Videos) -->
         <div class="form-group">
-          <label class="form-label">Galería de Fotos & Videos</label>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+            <label class="form-label" style="margin: 0;">Galería de Fotos & Videos</label>
+            <span id="gallery-count-badge" style="font-size: 0.72rem; color: var(--color-primary-light); font-weight: 700;">0 seleccionados</span>
+          </div>
           <div class="gallery-upload-container">
             <div class="gallery-thumbnails-strip" id="memory-gallery-previews"></div>
-            <label class="gallery-add-tile" for="memory-photos-file">
+            <label class="gallery-add-tile" for="memory-photos-file" id="btn-trigger-gallery-photos">
               <span style="font-size: 1.4rem;">+</span>
               <span style="font-size: 0.72rem; font-weight: 700;">Añadir</span>
             </label>
@@ -1155,8 +1162,52 @@
         <div class="memory-creator-footer">
           <button type="submit" class="btn-primary btn-bloom-save" id="btn-submit-memory">
             <span class="bloom-icon">✨</span>
-            <span>Guardar Recuerdo</span>
+            <span>Inmortalizar Recuerdo</span>
           </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8.04 MODAL: VINCULAR CARPETA DE GOOGLE DRIVE -->
+  <div id="modal-drive-sync" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-drive">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="modal-title-drive" class="modal-title"><span>📁</span> Carpeta de Google Drive</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-drive-sync" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form id="form-drive-sync" class="modal-form">
+        <div class="drive-notice-box" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: var(--radius-lg); padding: 0.95rem; margin-bottom: 1.15rem;">
+          <div style="display: flex; gap: 0.65rem; align-items: flex-start;">
+            <span style="font-size: 1.4rem; line-height: 1;">ℹ️</span>
+            <p style="font-size: 0.83rem; color: var(--color-text-main); line-height: 1.5; margin: 0;">
+              Poner carpeta de Google Drive en donde se quieren poner las fotografías. La carpeta tiene que estar compartida como pública y permitir modificaciones de que pueda acceder cualquier persona con el enlace y tenga permisos de editor.
+            </p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="drive-folder-url-input">Enlace de la Carpeta de Google Drive *</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">🔗</span>
+            <input type="url" id="drive-folder-url-input" class="form-control" placeholder="https://drive.google.com/drive/folders/..." required>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 0.35rem; display: block;">
+            Los recuerdos se organizarán automáticamente en subcarpetas: <code>[Título] - [Fecha]</code>
+          </span>
+        </div>
+
+        <div id="drive-sync-status-preview" style="display: none; background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 0.75rem; margin-bottom: 1rem;">
+          <div style="font-size: 0.78rem; color: #10B981; font-weight: 700; display: flex; align-items: center; gap: 0.35rem;">
+            <span>✅</span> Carpeta Vinculada al Grupo
+          </div>
+          <div id="drive-current-folder-text" style="font-size: 0.72rem; color: var(--color-text-secondary); word-break: break-all; margin-top: 0.25rem;"></div>
+        </div>
+
+        <div class="modal-footer" style="padding-top: 0.5rem; display: flex; gap: 0.5rem;">
+          <button type="button" class="btn-secondary" data-close-modal="modal-drive-sync" style="flex: 1;">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-save-drive-folder" style="flex: 1.5;">📁 Guardar Carpeta</button>
         </div>
       </form>
     </div>
@@ -1178,14 +1229,24 @@
           <input type="text" id="plan-title-input" class="form-control form-control-lg" placeholder="Ej: Cena romántica, Viaje a la playa, Cine..." required maxlength="60">
         </div>
 
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label" for="plan-date-input">Fecha Programada *</label>
-            <input type="date" id="plan-date-input" class="form-control" required>
+        <div class="form-group">
+          <label class="form-label" for="plan-date-input">Fecha Programada *</label>
+          <input type="date" id="plan-date-input" class="form-control" required>
+        </div>
+
+        <!-- Selector de Hora Enriquecido con Accesos Rápidos -->
+        <div class="form-group">
+          <label class="form-label">Hora del Encuentro</label>
+          <div class="plan-time-presets-strip" id="plan-time-presets">
+            <button type="button" class="time-preset-pill" data-time="10:00">☀️ 10:00 AM</button>
+            <button type="button" class="time-preset-pill" data-time="13:30">🍽️ 01:30 PM</button>
+            <button type="button" class="time-preset-pill" data-time="16:00">🌤️ 04:00 PM</button>
+            <button type="button" class="time-preset-pill" data-time="19:30">🌙 07:30 PM</button>
+            <button type="button" class="time-preset-pill" data-time="21:00">🍷 09:00 PM</button>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="plan-time-input">Hora (Opcional)</label>
-            <input type="time" id="plan-time-input" class="form-control">
+          <div class="input-icon-wrap" style="margin-top: 0.5rem;">
+            <span class="input-icon">⏰</span>
+            <input type="time" id="plan-time-input" class="form-control" placeholder="Hora personalizada">
           </div>
         </div>
 
