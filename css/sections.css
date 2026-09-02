@@ -3507,3 +3507,302 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
+
+/* =========================================
+   ☀️ MODO CLARO PREMIUM (LUMA LUXE LIGHT THEME)
+   ========================================= */
+[data-theme="light"] body {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+/* Header en modo claro */
+[data-theme="light"] .luma-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .header-action-circle-btn,
+[data-theme="light"] .header-btn-circle {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  color: #334155;
+}
+
+/* Hero Música en Modo Claro */
+[data-theme="light"] .music-hero-icon-box {
+  background: linear-gradient(135deg, #EDE9FE 0%, #E0E7FF 100%);
+  border: 1px solid #DDD6FE;
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.15);
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .music-hero-tag {
+  color: #6D5CFF;
+  font-weight: 800;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+[data-theme="light"] .music-hero-title {
+  color: #0F172A;
+  font-weight: 800;
+}
+
+[data-theme="light"] .music-hero-subtitle {
+  color: #64748B;
+}
+
+[data-theme="light"] .music-hero-underline-bar {
+  width: 34px;
+  height: 3px;
+  background: linear-gradient(90deg, #6D5CFF, #A855F7);
+  border-radius: 3px;
+  margin-top: 0.35rem;
+}
+
+/* Stats Card en Modo Claro */
+[data-theme="light"] .music-hero-stats-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .music-stat-top-icon {
+  font-size: 0.85rem;
+  margin-bottom: 0.1rem;
+}
+
+[data-theme="light"] .music-stat-top-icon.purple { color: #6D5CFF; }
+[data-theme="light"] .music-stat-top-icon.blue { color: #3B82F6; }
+[data-theme="light"] .music-stat-top-icon.violet { color: #8B5CF6; }
+
+[data-theme="light"] .music-stat-val {
+  color: #0F172A;
+  font-weight: 800;
+}
+
+[data-theme="light"] .music-stat-lbl {
+  color: #64748B;
+}
+
+[data-theme="light"] .music-stat-divider {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Buscador en Modo Claro */
+[data-theme="light"] .music-search-input {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #0F172A;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .music-search-input::placeholder {
+  color: #94A3B8;
+}
+
+[data-theme="light"] .music-search-icon {
+  color: #94A3B8;
+}
+
+[data-theme="light"] .btn-primary-purple {
+  background: linear-gradient(135deg, #7C3AED 0%, #6D5CFF 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(109, 92, 255, 0.35);
+}
+
+/* Chips de Filtros en Modo Claro */
+[data-theme="light"] .music-filter-chip {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  color: #475569;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .music-filter-chip:hover {
+  border-color: rgba(109, 92, 255, 0.4);
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .music-filter-chip.active {
+  background: #6D5CFF;
+  color: #FFFFFF;
+  border-color: #6D5CFF;
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.35);
+}
+
+/* Desplegable Glassmorphism en Modo Claro */
+[data-theme="light"] .music-custom-dropdown-menu {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(109, 92, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .music-dropdown-item {
+  color: #1E293B;
+}
+
+[data-theme="light"] .music-dropdown-item:hover {
+  background: rgba(109, 92, 255, 0.1);
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .music-dropdown-item.active {
+  background: rgba(109, 92, 255, 0.15);
+  color: #6D5CFF;
+}
+
+/* Resultados de búsqueda en Modo Claro */
+[data-theme="light"] .music-live-results-dropdown {
+  background: #FFFFFF;
+  border: 1px solid rgba(109, 92, 255, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .music-result-item {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .music-result-item:hover {
+  background: rgba(109, 92, 255, 0.08);
+}
+
+[data-theme="light"] .music-result-title {
+  color: #0F172A;
+}
+
+/* Tarjetas Musicales en Modo Claro */
+[data-theme="light"] .song-collab-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .song-collab-card:hover {
+  border-color: rgba(109, 92, 255, 0.3);
+  box-shadow: 0 10px 28px rgba(109, 92, 255, 0.1);
+}
+
+[data-theme="light"] .song-art-img {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .song-floating-play-btn {
+  background: #6D5CFF;
+  border: 2px solid #FFFFFF;
+  color: #FFFFFF;
+  box-shadow: 0 3px 12px rgba(109, 92, 255, 0.45);
+}
+
+[data-theme="light"] .song-collab-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .song-collab-artist {
+  color: #64748B;
+}
+
+[data-theme="light"] .song-collab-author-row {
+  color: #64748B;
+}
+
+[data-theme="light"] .song-author-name-highlight {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .song-collab-quote-box {
+  color: #334155;
+}
+
+[data-theme="light"] .song-collab-memories-pill {
+  background: rgba(109, 92, 255, 0.07);
+  border: 1px solid rgba(109, 92, 255, 0.2);
+}
+
+[data-theme="light"] .song-memories-pill-text {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .song-mem-arrow {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .song-comments-count-pill {
+  background: #F8FAFC;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #475569;
+}
+
+[data-theme="light"] .song-comments-count-pill:hover {
+  background: rgba(109, 92, 255, 0.12);
+  border-color: #6D5CFF;
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .song-dots-menu-btn {
+  color: #94A3B8;
+}
+
+/* Reproductor Flotante en Modo Claro */
+[data-theme="light"] .global-floating-player {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(109, 92, 255, 0.2);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.1), 0 0 20px rgba(109, 92, 255, 0.15);
+}
+
+[data-theme="light"] .player-track-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .player-track-artist {
+  color: #64748B;
+}
+
+[data-theme="light"] .player-progress-track {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .btn-player-ctl {
+  color: #475569;
+}
+
+[data-theme="light"] .btn-player-ctl.play-toggle {
+  background: #6D5CFF;
+  color: #FFFFFF;
+  box-shadow: 0 3px 12px rgba(109, 92, 255, 0.45);
+}
+
+[data-theme="light"] .btn-player-ctl.close-ctl {
+  color: #94A3B8;
+}
+
+/* Modales y Formularios en Modo Claro */
+[data-theme="light"] .modal-content {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  color: #0F172A;
+}
+
+[data-theme="light"] .form-control {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #0F172A;
+}
+
+[data-theme="light"] .btn-secondary {
+  background: #F1F5F9;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #334155;
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
