@@ -248,24 +248,126 @@
     movies: [
       {
         id: 'mov_1',
+        tmdbId: 157336,
         title: 'Interstellar',
         year: '2014',
+        duration: '2h 49m',
+        genres: 'Aventura, Drama, Ciencia ficción',
         poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
-        synopsis: 'Un grupo de exploradores viaja a través de un agujero de gusano en el espacio en un intento por asegurar la supervivencia de la humanidad.',
-        proposedBy: 'Alex',
-        platform: 'HBO Max',
+        backdrop: 'https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg',
+        tmdbRating: '8.6',
         status: 'Vista',
-        groupAverage: '9.8',
-        ratings: {
-          usr_me: '10',
-          luma_host_1: '10',
-          luma_member_2: '9.5',
-          luma_member_3: '10'
+        priority: 5,
+        proposedBy: {
+          id: 'luma_member_2',
+          name: 'Laura',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+          date: '10 Sep 2025'
         },
-        comments: {
-          usr_me: 'Obra maestra absoluta de la ciencia ficción.'
+        review: 'La ciencia, el tiempo y el amor en su máxima expresión.',
+        synopsis: 'Un grupo de científicos y exploradores, encabezados por Cooper, se embarcan en un viaje espacial para encontrar un lugar con las condiciones necesarias para reemplazar a una Tierra que se muere.',
+        groupRatings: [
+          { userId: 'usr_me', userName: 'Kevin', userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', score: 9.5 },
+          { userId: 'luma_member_2', userName: 'Laura', userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80', score: 8.5 },
+          { userId: 'luma_host_1', userName: 'Andrés', userAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', score: 10 }
+        ],
+        reviews: [
+          { id: 'rev_1', userId: 'usr_me', userName: 'Kevin', userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', text: 'El final nos dejó hablando media hora.', date: '10 Sep 2025' },
+          { id: 'rev_2', userId: 'luma_member_2', userName: 'Laura', userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80', text: 'La mejor película del viaje.', date: '11 Sep 2025' }
+        ],
+        gallery: [
+          'https://image.tmdb.org/t/p/w780/xJHokMbljvjADYdit5fK5VQsXEG.jpg',
+          'https://image.tmdb.org/t/p/w780/rAiYTsqJiOqw8vXJ9VO12sqZGqH.jpg',
+          'https://image.tmdb.org/t/p/w780/pbrkL804c8yAv3zBZR4QPEafpAR.jpg'
+        ],
+        trailerUrl: 'https://www.youtube.com/watch?v=zSWdZVtXT7E',
+        linkedMemories: ['mem_1', 'mem_2'],
+        comments: [
+          { id: 'mc_1', authorId: 'usr_me', authorName: 'Kevin', authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', text: 'La escena de las olas gigantes de Miller todavía me da ansiedad 😂🍿', time: '10 Sep 2025, 22:15', reactions: { heart: 4, popcorn: 3 } },
+          { id: 'mc_2', authorId: 'luma_member_2', authorName: 'Laura', authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80', text: 'La música de Hans Zimmer es otra cosa ✨', time: '10 Sep 2025, 22:40', reactions: { heart: 5 } }
+        ],
+        commentsCount: 14,
+        createdAt: '2025-09-10T20:00:00Z'
+      },
+      {
+        id: 'mov_2',
+        tmdbId: 634649,
+        title: 'Spider-Man: No Way Home',
+        year: '2021',
+        duration: '2h 28m',
+        genres: 'Acción, Aventura, Ciencia ficción',
+        poster: 'https://image.tmdb.org/t/p/w500/uJYYizSuA9Y3DCs0qS4qWvHfZg4.jpg',
+        backdrop: 'https://image.tmdb.org/t/p/w1280/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg',
+        tmdbRating: '8.2',
+        status: 'Por ver',
+        priority: 4,
+        proposedBy: {
+          id: 'usr_me',
+          name: 'Kevin',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+          date: '02 Sep 2025'
         },
-        createdAt: '2026-01-20T20:00:00Z'
+        review: 'Nostalgia pura, ver a los tres Spider-Man juntos no tiene precio.',
+        synopsis: 'Peter Parker es desenmascarado y por tanto no es capaz de separar su vida normal de los enormes riesgos que conlleva ser un superhéroe. Cuando pide ayuda al Doctor Strange, los riesgos pasan a ser aún más peligrosos.',
+        groupRatings: [
+          { userId: 'usr_me', userName: 'Kevin', userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', score: 8.0 },
+          { userId: 'luma_member_2', userName: 'Laura', userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80', score: 9.0 },
+          { userId: 'luma_host_1', userName: 'Andrés', userAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', score: 9.5 }
+        ],
+        reviews: [
+          { id: 'rev_3', userId: 'usr_me', userName: 'Kevin', userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', text: 'Nostalgia pura y un cierre épico.', date: '02 Sep 2025' }
+        ],
+        gallery: [
+          'https://image.tmdb.org/t/p/w780/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg',
+          'https://image.tmdb.org/t/p/w780/CpR4vd7aEEnRacDuGNz93ACwhZ.jpg'
+        ],
+        trailerUrl: 'https://www.youtube.com/watch?v=JfVOs4VSpmA',
+        linkedMemories: [],
+        comments: [
+          { id: 'mc_3', authorId: 'luma_host_1', authorName: 'Andrés', authorAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', text: 'Tenemos que hacer maratón del hombre araña este viernes 🕸️🍿', time: '02 Sep 2025, 19:30', reactions: { popcorn: 5, fire: 3 } }
+        ],
+        commentsCount: 6,
+        createdAt: '2025-09-02T19:00:00Z'
+      },
+      {
+        id: 'mov_3',
+        tmdbId: 313369,
+        title: 'La La Land',
+        year: '2016',
+        duration: '2h 8m',
+        genres: 'Romance, Comedia, Musical',
+        poster: 'https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkVJb0Rf0.jpg',
+        backdrop: 'https://image.tmdb.org/t/p/w1280/qJeU7KM4nT2C1WpOrwNuSDuqvgP.jpg',
+        tmdbRating: '8.0',
+        status: 'Favorita',
+        priority: 5,
+        proposedBy: {
+          id: 'luma_host_1',
+          name: 'Andrés',
+          avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+          date: '20 Ago 2025'
+        },
+        review: 'Música, fotografía y un final agridulce que te rompe el corazón.',
+        synopsis: 'Mia, una solitaria aspirante a actriz, y Sebastian, un carismático pianista de jazz, se enamoran en la ciudad de Los Ángeles mientras luchan por conseguir sus sueños artísticos.',
+        groupRatings: [
+          { userId: 'usr_me', userName: 'Kevin', userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', score: 9.0 },
+          { userId: 'luma_member_2', userName: 'Laura', userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80', score: 9.0 },
+          { userId: 'luma_host_1', userName: 'Andrés', userAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', score: 9.5 }
+        ],
+        reviews: [
+          { id: 'rev_4', userId: 'luma_host_1', userName: 'Andrés', userAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', text: 'La escena del planetario y el epílogo son puro arte.', date: '20 Ago 2025' }
+        ],
+        gallery: [
+          'https://image.tmdb.org/t/p/w780/qJeU7KM4nT2C1WpOrwNuSDuqvgP.jpg',
+          'https://image.tmdb.org/t/p/w780/d6AicQhYc0sE70c9sW5yA12.jpg'
+        ],
+        trailerUrl: 'https://www.youtube.com/watch?v=0pdqf4P9MB8',
+        linkedMemories: ['mem_1'],
+        comments: [
+          { id: 'mc_4', authorId: 'usr_me', authorName: 'Kevin', authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', text: 'City of Stars es inolvidable 🎹✨', time: '20 Ago 2025, 21:00', reactions: { heart: 8, fire: 4 } }
+        ],
+        commentsCount: 22,
+        createdAt: '2025-08-20T18:00:00Z'
       }
     ],
 
@@ -758,11 +860,17 @@
       return null;
     }
 
-    getMovies() { return this.getGroupData().movies || []; }
+    getMovies() {
+      const data = this.getGroupData();
+      return data.movies || [];
+    }
+    getMovie(id) {
+      return this.getMovies().find(m => m.id === id);
+    }
     saveMovie(movie) {
       const data = this.getGroupData();
       if (!data.movies) data.movies = [];
-      if (!movie.id) movie.id = window.Utils.generateId();
+      if (!movie.id) movie.id = 'mov_' + Date.now().toString(36);
       if (!movie.createdAt) movie.createdAt = new Date().toISOString();
       const idx = data.movies.findIndex(m => m.id === movie.id);
       if (idx >= 0) data.movies[idx] = movie;
@@ -770,30 +878,102 @@
       this.saveGroupData(null, data);
       return movie;
     }
-    addMovieRating(movieId, rating, comment) {
-      const user = this.getUserProfile();
-      return this.rateMovie(movieId, user.id, rating, comment);
-    }
-    rateMovie(movieId, userId, rating, comment) {
-      const data = this.getGroupData();
-      const movie = (data.movies || []).find(m => m.id === movieId);
-      if (movie) {
-        if (!movie.ratings) movie.ratings = {};
-        if (!movie.comments) movie.comments = {};
-        movie.ratings[userId] = rating;
-        if (comment) movie.comments[userId] = comment;
-        
-        const values = Object.values(movie.ratings).map(Number).filter(n => !isNaN(n));
-        const avg = values.length ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1) : null;
-        movie.groupAverage = avg;
-        
-        this.saveGroupData(null, data);
-      }
-    }
     deleteMovie(id) {
       const data = this.getGroupData();
       data.movies = (data.movies || []).filter(m => m.id !== id);
       this.saveGroupData(null, data);
+    }
+    rateMovieScore(movieId, score) {
+      const data = this.getGroupData();
+      const movie = (data.movies || []).find(m => m.id === movieId);
+      const user = this.getUserProfile();
+      if (!movie) return null;
+
+      if (!movie.groupRatings) movie.groupRatings = [];
+      const num = Number(score);
+      const idx = movie.groupRatings.findIndex(r => r.userId === user.id || r.userName === user.name);
+      if (idx >= 0) {
+        movie.groupRatings[idx].score = num;
+        if (user.avatar) movie.groupRatings[idx].userAvatar = user.avatar;
+      } else {
+        movie.groupRatings.push({
+          userId: user.id || 'usr_me',
+          userName: user.name || 'Kevin',
+          userAvatar: user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+          score: num
+        });
+      }
+      this.saveGroupData(null, data);
+      return movie;
+    }
+    addMovieReview(movieId, text) {
+      const data = this.getGroupData();
+      const movie = (data.movies || []).find(m => m.id === movieId);
+      const user = this.getUserProfile();
+      if (!movie || !text || !text.trim()) return null;
+
+      if (!movie.reviews) movie.reviews = [];
+      const idx = movie.reviews.findIndex(r => r.userId === user.id || r.userName === user.name);
+      if (idx >= 0) {
+        movie.reviews[idx].text = text.trim();
+        movie.reviews[idx].date = 'Hoy';
+      } else {
+        movie.reviews.push({
+          id: 'rev_' + Date.now().toString(36),
+          userId: user.id || 'usr_me',
+          userName: user.name || 'Kevin',
+          userAvatar: user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+          text: text.trim(),
+          date: 'Hoy'
+        });
+      }
+      if (!movie.review) movie.review = text.trim();
+      this.saveGroupData(null, data);
+      return movie;
+    }
+    addMovieComment(movieId, text) {
+      const data = this.getGroupData();
+      const movie = (data.movies || []).find(m => m.id === movieId);
+      const user = this.getUserProfile();
+      if (!movie || !text || !text.trim()) return null;
+
+      if (!movie.comments) movie.comments = [];
+      const newC = {
+        id: 'mc_' + Date.now().toString(36),
+        authorId: user.id || 'usr_me',
+        authorName: user.name || 'Kevin',
+        authorAvatar: user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+        text: text.trim(),
+        time: 'Hace un momento',
+        reactions: {}
+      };
+      movie.comments.push(newC);
+      movie.commentsCount = movie.comments.length;
+      this.saveGroupData(null, data);
+      return newC;
+    }
+    reactMovieComment(movieId, commentId, emoji) {
+      const data = this.getGroupData();
+      const movie = (data.movies || []).find(m => m.id === movieId);
+      if (movie && movie.comments) {
+        const c = movie.comments.find(item => item.id === commentId);
+        if (c) {
+          if (!c.reactions) c.reactions = {};
+          c.reactions[emoji] = (c.reactions[emoji] || 0) + 1;
+          this.saveGroupData(null, data);
+          return c;
+        }
+      }
+      return null;
+    }
+    updateMovieStatus(movieId, status) {
+      const data = this.getGroupData();
+      const movie = (data.movies || []).find(m => m.id === movieId);
+      if (movie) {
+        movie.status = status;
+        this.saveGroupData(null, data);
+      }
+      return movie;
     }
 
     getSeries() { return this.getGroupData().series || []; }
