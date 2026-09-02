@@ -735,7 +735,7 @@
 
     getDriveWebhook() {
       const data = this.getGroupData();
-      return data.driveWebhook || '';
+      return data.driveWebhook || window.CONFIG.googleDrive?.defaultBridgeUrl || '';
     }
 
     saveDriveFolder(url, webhookUrl = null) {
