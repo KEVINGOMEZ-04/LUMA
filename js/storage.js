@@ -672,6 +672,18 @@
       this.saveGroupData(null, data);
     }
 
+    getDriveFolder() {
+      const data = this.getGroupData();
+      return data.driveFolder || '';
+    }
+
+    saveDriveFolder(url) {
+      const data = this.getGroupData();
+      data.driveFolder = url ? url.trim() : '';
+      this.saveGroupData(null, data);
+      return data.driveFolder;
+    }
+
     // --- CÁLCULO DINÁMICO DE INSIGHTS ---
     calculateInsights() {
       const data = this.getGroupData();
