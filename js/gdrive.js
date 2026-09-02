@@ -41,10 +41,16 @@
 
       // 1. Portada
       if (memory.coverImage) {
-        const isVideo = Boolean(memory.isVideo);
+        const isVideo = Boolean(memory.isVideo) || memory.coverImage.startsWith('data:video') || memory.coverImage.includes('.mp4');
+        let mime = isVideo ? 'video/mp4' : 'image/jpeg';
+        if (memory.coverImage.startsWith('data:image/png')) mime = 'image/png';
+        if (memory.coverImage.startsWith('data:image/webp')) mime = 'image/webp';
+        if (memory.coverImage.startsWith('data:video/quicktime')) mime = 'video/quicktime';
+        if (memory.coverImage.startsWith('data:video/webm')) mime = 'video/webm';
+
         filesToUpload.push({
           name: isVideo ? 'Portada_Video.mp4' : 'Portada.jpg',
-          type: isVideo ? 'video/mp4' : 'image/jpeg',
+          type: mime,
           dataUrl: memory.coverImage
         });
       }
@@ -54,11 +60,19 @@
         let photoIndex = 1;
         let videoIndex = 1;
         memory.photos.forEach((p) => {
-          if (p !== memory.coverImage) {
-            const isVid = typeof p === 'string' && (p.startsWith('data:video') || p.includes('.mp4'));
+          if (p && p !== memory.coverImage) {
+            const isVid = typeof p === 'string' && (p.startsWith('data:video') || p.includes('.mp4') || p.includes('video'));
+            let mime = isVid ? 'video/mp4' : 'image/jpeg';
+            if (typeof p === 'string') {
+              if (p.startsWith('data:image/png')) mime = 'image/png';
+              if (p.startsWith('data:image/webp')) mime = 'image/webp';
+              if (p.startsWith('data:video/quicktime')) mime = 'video/quicktime';
+              if (p.startsWith('data:video/webm')) mime = 'video/webm';
+            }
+
             filesToUpload.push({
               name: isVid ? `Video_${videoIndex++}.mp4` : `Foto_${photoIndex++}.jpg`,
-              type: isVid ? 'video/mp4' : 'image/jpeg',
+              type: mime,
               dataUrl: p
             });
           }
@@ -98,7 +112,7 @@
         files: files.map(f => ({
           name: f.name,
           type: f.type,
-          base64: f.dataUrl ? f.dataUrl.split(',')[1] || f.dataUrl : ''
+          base64: f.dataUrl ? (f.dataUrl.includes(',') ? f.dataUrl.split(',')[1] : f.dataUrl) : ''
         }))
       };
 
