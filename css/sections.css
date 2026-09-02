@@ -1121,15 +1121,15 @@
 /* LÍNEA TEMPORAL DE RECUERDOS VIVA */
 .emotional-timeline-wrapper {
   position: relative;
-  padding-left: 62px;
+  padding-left: 82px;
   margin-bottom: 2rem;
 }
 
 .emotional-timeline-track {
   position: absolute;
-  top: 15px;
-  bottom: 15px;
-  left: 30px;
+  top: 25px;
+  bottom: 25px;
+  left: 65px;
   width: 2px;
   background: linear-gradient(180deg, #6366F1 0%, #A855F7 50%, #38BDF8 100%);
   box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
@@ -1138,7 +1138,7 @@
 
 .timeline-memory-node {
   position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.65rem;
   transition: all var(--transition-fast);
 }
 
@@ -1147,39 +1147,41 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Marca de Fecha en la Columna Izquierda */
+/* Marca de Fecha en la Columna Izquierda (Separada y 100% Legible) */
 .node-date-stamp {
   position: absolute;
-  left: -62px;
+  left: -82px;
   top: 1.25rem;
-  width: 50px;
+  width: 52px;
   text-align: right;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  z-index: 2;
+  z-index: 4;
 }
 
 .node-date-day {
   font-family: var(--font-heading);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 800;
   color: var(--color-text-main);
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .node-date-year {
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--color-primary-light);
-  margin-top: 0.1rem;
+  margin-top: 0.15rem;
+  font-weight: 700;
 }
 
 /* Pin circular brillante sobre la línea */
 .node-pin-dot {
   position: absolute;
-  left: -38px;
-  top: 1.5rem;
+  left: -23px;
+  top: 1.45rem;
   width: 14px;
   height: 14px;
   border-radius: 50%;
@@ -1204,7 +1206,7 @@
   overflow: hidden;
   box-shadow: var(--shadow-card);
   display: grid;
-  grid-template-columns: 130px 1fr;
+  grid-template-columns: 125px 1fr;
   cursor: pointer;
   position: relative;
   z-index: 2;
