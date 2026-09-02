@@ -39,6 +39,13 @@ class LumaApp {
     this.bindSearchEvents();
     this.bindProfileCustomizerInteractions();
 
+    // 6.1 Inicializar Módulo de Música Colaborativa y Reproductor Global
+    this.initMusicLiveSearch();
+    this.initMusicFilters();
+    this.initSongModalInteractions();
+    this.initSongCommentsInteractions();
+    this.initGlobalPlayerControls();
+
     // 7. Verificar Estado Inicial y Mostrar Dashboard
     this.checkInitialState();
   }
@@ -2174,116 +2181,804 @@ class LumaApp {
 
   playMemorySong(memoryId) {
     const memory = (this.storage.getMemories() || []).find(m => m.id === memoryId);
-    if (memory && memory.song && memory.song.previewUrl) {
-      this.audioManager.playTrack(memory.song);
-    } else {
-      window.Utils.showToast('Buscando melodía...', 'info');
-      if (memory && memory.song && memory.song.title) {
+    if (memory && memory.song && (memory.song.previewUrl || memory.song.title)) {
+      if (memory.song.previewUrl) {
+        this.playTrackAudioDirectly(memory.song);
+      } else {
+        window.Utils.showToast('Buscando melodía oficial...', 'info');
         this.media.searchSongs(`${memory.song.title} ${memory.song.artist || ''}`).then(results => {
           if (results.length > 0 && results[0].previewUrl) {
             memory.song.previewUrl = results[0].previewUrl;
             this.storage.saveMemory(memory);
-            this.audioManager.playTrack(results[0]);
+            this.playTrackAudioDirectly(results[0]);
           } else {
-            window.Utils.showToast('No se encontró audio disponible para esta canción', 'warning');
+            window.Utils.showToast('No se encontró preview oficial para esta melodía', 'warning');
           }
         });
       }
     }
   }
 
-  // --- 3. RENDER MÚSICA ---
+  // =========================================
+  // 3. MÚSICA COLABORATIVA DEL GRUPO (REDESIGN)
+  // =========================================
   renderSongs() {
+    this.renderMusic();
+  }
+
+  renderMusic() {
     const container = document.getElementById('songs-grid-list');
     if (!container) return;
 
-    const songs = this.storage.getSongs();
-    if (songs.length === 0) {
+    const songs = this.storage.getSongs() || [];
+    const allMemories = this.storage.getMemories() || [];
+    const userProfile = this.storage.getUserProfile() || {};
+
+    // 1. Estadísticas Rápidas del Grupo
+    const statSongs = document.getElementById('stat-songs-count');
+    const statMembers = document.getElementById('stat-members-count');
+    const statHours = document.getElementById('stat-hours-count');
+
+    if (statSongs) statSongs.textContent = songs.length;
+    
+    // Calcular integrantes únicos que han añadido música
+    const authorNames = new Set();
+    songs.forEach(s => {
+      const name = s.author?.name || s.addedBy;
+      if (name) authorNames.add(name);
+    });
+    if (statMembers) statMembers.textContent = Math.max(authorNames.size, 1);
+    
+    // Tiempo total estimado (ej. ~3.5 min por canción o personalizado)
+    const totalMinutes = songs.length * 3.5;
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = Math.round(totalMinutes % 60);
+    if (statHours) statHours.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+
+    // 2. Llenar Select de Integrantes para el Filtro
+    const selectMember = document.getElementById('select-filter-member');
+    if (selectMember) {
+      const currentSelected = selectMember.value;
+      let memberOptions = '<option value="">Todos los integrantes</option>';
+      authorNames.forEach(author => {
+        memberOptions += `<option value="${window.Utils.sanitizeHTML(author)}" ${currentSelected === author ? 'selected' : ''}>👤 ${window.Utils.sanitizeHTML(author)}</option>`;
+      });
+      selectMember.innerHTML = memberOptions;
+    }
+
+    // 3. Filtrado de Canciones
+    let filtered = [...songs];
+    const filter = this.activeMusicFilter || 'all';
+
+    if (filter === 'top-rated') {
+      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (filter === 'by-member') {
+      const targetMember = this.activeMemberFilter;
+      if (targetMember) {
+        filtered = filtered.filter(s => (s.author?.name === targetMember || s.addedBy === targetMember));
+      }
+    } else if (filter === 'with-memories') {
+      filtered = filtered.filter(s => s.linkedMemories && s.linkedMemories.length > 0);
+    } else if (filter === 'my-songs') {
+      const myName = (userProfile.name || '').toLowerCase();
+      filtered = filtered.filter(s => {
+        const author = (s.author?.name || s.addedBy || '').toLowerCase();
+        return author.includes(myName) || (s.author?.id === userProfile.id);
+      });
+    } else {
+      // 'all': más recientes primero
+      filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+
+    if (filtered.length === 0) {
       container.innerHTML = `
-        <div class="song-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
-          <span style="font-size: 2.2rem;">🎵</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay canciones añadidas al grupo todavía.</p>
-          <p style="font-size: 0.85rem; color: var(--color-text-muted);">Usa el buscador para añadir temas con preview oficial de 30s.</p>
+        <div class="song-collab-card" style="text-align: center; justify-content: center; padding: 2.5rem 1.5rem; flex-direction: column; align-items: center; border-style: dashed;">
+          <span style="font-size: 2.5rem; filter: drop-shadow(0 0 12px rgba(109, 92, 255, 0.6));">🎵</span>
+          <h4 style="margin: 0.8rem 0 0.2rem; color: #FFFFFF; font-size: 1.05rem;">No hay canciones en este filtro</h4>
+          <p style="font-size: 0.82rem; color: var(--color-text-secondary); max-width: 280px; margin: 0 auto 1.2rem;">
+            Sé el primero en añadir la canción que represente un momento especial del parche.
+          </p>
+          <button type="button" class="btn-primary-purple" onclick="window.app.openAddSongModal()">
+            <span>+ Añadir primera canción</span>
+          </button>
         </div>
       `;
       return;
     }
 
     container.innerHTML = '';
-    songs.forEach(song => {
+    filtered.forEach(song => {
       const card = document.createElement('div');
-      card.className = 'song-card';
+      card.className = 'song-collab-card';
+      card.dataset.songId = song.id;
+
       const artwork = song.artwork || 'assets/icon.png';
+      const isPlaying = (this.currentPlayingSongId === song.id && this.isGlobalPlaying);
+      const ratingScore = (song.rating || 5.0).toFixed(1);
+      const ratingCount = song.ratingCount || 1;
+      const authorName = song.author?.name || song.addedBy || 'Kevin';
+      const authorAvatar = song.author?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80';
+      const addedDate = window.Utils.formatDateES(song.createdAt || new Date().toISOString());
+      const commentsCount = song.commentsCount || (song.comments ? song.comments.length : 0);
+
+      // Recuerdos vinculados
+      let linkedMemoriesHtml = '';
+      if (song.linkedMemories && song.linkedMemories.length > 0) {
+        const mems = allMemories.filter(m => song.linkedMemories.includes(m.id));
+        if (mems.length > 0) {
+          const thumbs = mems.slice(0, 3).map(m => {
+            const thumbSrc = m.coverImage || (m.photos && m.photos[0]) || 'assets/icon.png';
+            return `<img src="${thumbSrc}" class="song-mem-stack-img" alt="${window.Utils.sanitizeHTML(m.title)}">`;
+          }).join('');
+
+          linkedMemoriesHtml = `
+            <div class="song-collab-memories-pill" onclick="window.app.navigateToLinkedMemories('${song.linkedMemories.join(',')}')">
+              <span class="song-memories-pill-text">
+                <span>🎴</span> Usada en ${mems.length} ${mems.length === 1 ? 'recuerdo' : 'recuerdos'}
+              </span>
+              <div class="song-memory-thumb-stack">
+                ${thumbs}
+              </div>
+              <span class="song-mem-arrow">›</span>
+            </div>
+          `;
+        }
+      }
 
       card.innerHTML = `
-        <div class="song-header">
-          <img src="${artwork}" class="song-artwork" alt="${window.Utils.sanitizeHTML(song.title)}" loading="lazy" />
-          <div class="song-details">
-            <div class="song-title">${window.Utils.sanitizeHTML(song.title)}</div>
-            <div class="song-artist">${window.Utils.sanitizeHTML(song.artist)}</div>
-            <div class="song-rating-stars">${'⭐'.repeat(song.rating || 5)}</div>
-          </div>
-        </div>
-        ${song.review ? `<div style="font-size: 0.82rem; color: var(--color-text-secondary); font-style: italic;">«${window.Utils.sanitizeHTML(song.review)}» — ${window.Utils.sanitizeHTML(song.addedBy || 'Miembro')}</div>` : ''}
-        <div class="song-actions">
-          <button type="button" class="btn-play-preview" onclick="window.app.playTrackDirectly('${song.id}')">
-            <span>▶</span> Reproducir Preview
+        <!-- Columna Izquierda: Carátula 88x88 con Botón Play Flotante -->
+        <div class="song-art-square-wrap">
+          <img src="${artwork}" class="song-art-img" alt="${window.Utils.sanitizeHTML(song.title)}" loading="lazy" />
+          <button type="button" class="song-floating-play-btn ${isPlaying ? 'playing' : ''}" onclick="window.app.playSongTrack('${song.id}')" title="Reproducir Preview">
+            ${isPlaying ? '⏸' : '▶'}
           </button>
-          <div style="display: flex; gap: 0.3rem;">
-            <button type="button" class="btn-ghost" style="font-size: 0.78rem;" onclick="window.app.showLyrics('${window.Utils.sanitizeHTML(song.artist)}', '${window.Utils.sanitizeHTML(song.title)}')">
-              📄 Letra
-            </button>
-            <button type="button" class="btn-ghost" style="font-size: 0.78rem; color: var(--color-error);" onclick="window.app.deleteSong('${song.id}')">
-              🗑️
-            </button>
+        </div>
+
+        <!-- Columna Derecha: Detalles, Calificación, Autor, Reseña y Recuerdos -->
+        <div class="song-collab-details">
+          <div class="song-collab-header-row">
+            <div style="min-width: 0;">
+              <h3 class="song-collab-title">${window.Utils.sanitizeHTML(song.title)}</h3>
+              <div class="song-collab-artist">${window.Utils.sanitizeHTML(song.artist)}</div>
+            </div>
+            <div class="song-top-actions">
+              <div class="song-comments-count-pill" onclick="window.app.openSongComments('${song.id}')" title="Ver conversaciones">
+                <span>💬</span> <span>${commentsCount}</span>
+              </div>
+              <button type="button" class="song-dots-menu-btn" onclick="window.app.openSongContextMenu('${song.id}', event)" title="Opciones">⋮</button>
+            </div>
           </div>
+
+          <!-- Estrellas y Score -->
+          <div class="song-collab-rating-row">
+            <span class="song-stars-gold">⭐⭐⭐⭐⭐</span>
+            <span class="song-score-text">${ratingScore} (${ratingCount})</span>
+          </div>
+
+          <!-- Autor y Fecha -->
+          <div class="song-collab-author-row">
+            <img src="${authorAvatar}" class="song-author-mini-avatar" alt="${window.Utils.sanitizeHTML(authorName)}">
+            <span>Añadida por <strong class="song-author-name-highlight">${window.Utils.sanitizeHTML(authorName)}</strong> • ${addedDate}</span>
+          </div>
+
+          <!-- Reseña del Parche -->
+          ${song.review ? `<div class="song-collab-quote-box">“${window.Utils.sanitizeHTML(song.review)}”</div>` : ''}
+
+          <!-- Píldora de Recuerdos Vinculados -->
+          ${linkedMemoriesHtml}
         </div>
       `;
+
       container.appendChild(card);
     });
   }
 
+  // --- BUSCADOR INTELIGENTE EN VIVO (iTUNES API) ---
+  initMusicLiveSearch() {
+    const input = document.getElementById('music-search-input');
+    const clearBtn = document.getElementById('music-search-clear');
+    const resultsDropdown = document.getElementById('music-live-search-results');
+    const btnOpenAdd = document.getElementById('btn-open-add-song');
+
+    if (!input) return;
+
+    let debounceTimer = null;
+
+    input.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+
+      clearTimeout(debounceTimer);
+      if (!query) {
+        if (resultsDropdown) resultsDropdown.style.display = 'none';
+        return;
+      }
+
+      debounceTimer = setTimeout(async () => {
+        if (resultsDropdown) {
+          resultsDropdown.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--color-primary-light); font-size: 0.84rem;">🔍 Buscando canciones oficiales en iTunes...</div>';
+          resultsDropdown.style.display = 'flex';
+        }
+
+        try {
+          const results = await this.media.searchSongs(query);
+          this.lastMusicSearchResults = results || [];
+
+          if (!results || results.length === 0) {
+            if (resultsDropdown) {
+              resultsDropdown.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--color-text-muted); font-size: 0.82rem;">No se encontraron canciones. Puedes añadirla manualmente con el botón + Añadir canción.</div>';
+            }
+            return;
+          }
+
+          if (resultsDropdown) {
+            resultsDropdown.innerHTML = results.slice(0, 6).map((r, idx) => `
+              <div class="music-result-item" data-idx="${idx}">
+                <img src="${r.artwork || 'assets/icon.png'}" class="music-result-art" alt="${window.Utils.sanitizeHTML(r.title)}" />
+                <div class="music-result-info">
+                  <div class="music-result-title">${window.Utils.sanitizeHTML(r.title)}</div>
+                  <div class="music-result-artist">${window.Utils.sanitizeHTML(r.artist)} · ${window.Utils.sanitizeHTML(r.album || 'Single')}</div>
+                </div>
+                <div style="display: flex; gap: 0.35rem; align-items: center;">
+                  ${r.previewUrl ? `
+                    <button type="button" class="btn-ghost" style="padding: 0.35rem 0.6rem; font-size: 0.75rem; border-radius: var(--radius-full);" onclick="window.app.playLivePreviewAudio('${r.previewUrl}', '${window.Utils.sanitizeHTML(r.title)}', '${window.Utils.sanitizeHTML(r.artist)}', '${r.artwork}')">
+                      ▶ Preview
+                    </button>
+                  ` : ''}
+                  <button type="button" class="btn-primary-purple" style="padding: 0.35rem 0.7rem; font-size: 0.75rem;" onclick="window.app.selectSearchSongToAdd(${idx})">
+                    + Añadir
+                  </button>
+                </div>
+              </div>
+            `).join('');
+          }
+        } catch (err) {
+          if (resultsDropdown) {
+            resultsDropdown.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--color-text-muted); font-size: 0.82rem;">Error al buscar canciones. Intenta de nuevo.</div>';
+          }
+        }
+      }, 300);
+    });
+
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        input.value = '';
+        clearBtn.style.display = 'none';
+        if (resultsDropdown) resultsDropdown.style.display = 'none';
+        input.focus();
+      };
+    }
+
+    if (btnOpenAdd) {
+      btnOpenAdd.onclick = () => {
+        const query = input.value.trim();
+        if (query && this.lastMusicSearchResults && this.lastMusicSearchResults.length > 0) {
+          this.selectSearchSongToAdd(0);
+        } else {
+          this.openAddSongModal();
+        }
+      };
+    }
+  }
+
+  selectSearchSongToAdd(index) {
+    const item = (this.lastMusicSearchResults || [])[index];
+    const resultsDropdown = document.getElementById('music-live-search-results');
+    if (resultsDropdown) resultsDropdown.style.display = 'none';
+
+    this.openAddSongModal(item || null);
+  }
+
+  playLivePreviewAudio(previewUrl, title, artist, artwork) {
+    this.playTrackAudioDirectly({
+      id: 'live_preview_' + Date.now(),
+      title,
+      artist,
+      artwork,
+      previewUrl
+    });
+  }
+
+  // --- FILTROS DE MÚSICA ---
+  initMusicFilters() {
+    const chipsContainer = document.getElementById('music-filter-chips');
+    const selectMember = document.getElementById('select-filter-member');
+
+    if (chipsContainer) {
+      chipsContainer.querySelectorAll('.music-filter-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          const filter = chip.dataset.filter;
+          if (filter === 'by-member') return; // Handled by select
+
+          chipsContainer.querySelectorAll('.music-filter-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+
+          this.activeMusicFilter = filter;
+          this.activeMemberFilter = '';
+          this.renderMusic();
+        });
+      });
+    }
+
+    if (selectMember) {
+      selectMember.addEventListener('change', (e) => {
+        const member = e.target.value;
+        const btnMember = document.getElementById('btn-filter-member');
+
+        if (chipsContainer) {
+          chipsContainer.querySelectorAll('.music-filter-chip').forEach(c => c.classList.remove('active'));
+        }
+
+        if (member) {
+          if (btnMember) {
+            btnMember.classList.add('active');
+            btnMember.querySelector('span').textContent = `👤 ${member}`;
+          }
+          this.activeMusicFilter = 'by-member';
+          this.activeMemberFilter = member;
+        } else {
+          if (btnMember) {
+            btnMember.classList.remove('active');
+            btnMember.querySelector('span').textContent = 'Por integrante';
+          }
+          this.activeMusicFilter = 'all';
+          this.activeMemberFilter = '';
+          chipsContainer?.querySelector('[data-filter="all"]')?.classList.add('active');
+        }
+
+        this.renderMusic();
+      });
+    }
+  }
+
+  // --- MODAL: AÑADIR CANCIÓN AL PLAYLIST COLABORATIVO ---
+  openAddSongModal(prefill = null) {
+    const titlePreview = document.getElementById('modal-song-title-preview');
+    const artistPreview = document.getElementById('modal-song-artist-preview');
+    const albumPreview = document.getElementById('modal-song-album-preview');
+    const artPreview = document.getElementById('modal-song-art-preview');
+    const reviewInput = document.getElementById('modal-song-review-input');
+    const charCount = document.getElementById('song-review-char-count');
+    const hiddenId = document.getElementById('modal-song-id');
+    const hiddenTitle = document.getElementById('modal-song-title-hidden');
+    const hiddenArtist = document.getElementById('modal-song-artist-hidden');
+    const hiddenAlbum = document.getElementById('modal-song-album-hidden');
+    const hiddenArtwork = document.getElementById('modal-song-artwork-hidden');
+    const hiddenPreview = document.getElementById('modal-song-preview-hidden');
+    const memoriesContainer = document.getElementById('song-memory-links-container');
+
+    const title = prefill?.title || 'Canción Personalizada';
+    const artist = prefill?.artist || 'Artista';
+    const album = prefill?.album || 'Álbum del Parche';
+    const artwork = prefill?.artwork || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80';
+    const previewUrl = prefill?.previewUrl || '';
+
+    if (titlePreview) titlePreview.textContent = title;
+    if (artistPreview) artistPreview.textContent = artist;
+    if (albumPreview) albumPreview.textContent = album;
+    if (artPreview) artPreview.src = artwork;
+
+    if (hiddenId) hiddenId.value = '';
+    if (hiddenTitle) hiddenTitle.value = title;
+    if (hiddenArtist) hiddenArtist.value = artist;
+    if (hiddenAlbum) hiddenAlbum.value = album;
+    if (hiddenArtwork) hiddenArtwork.value = artwork;
+    if (hiddenPreview) hiddenPreview.value = previewUrl;
+
+    if (reviewInput) {
+      reviewInput.value = '';
+      if (charCount) charCount.textContent = '0';
+    }
+
+    // Resetear selector de estrellas a 5.0
+    this.selectedModalStarRating = 5;
+    const ratingValHidden = document.getElementById('modal-song-rating-val');
+    const scoreNumber = document.getElementById('song-star-score');
+    if (ratingValHidden) ratingValHidden.value = '5';
+    if (scoreNumber) scoreNumber.textContent = '5.0';
+    document.querySelectorAll('#song-star-picker .star-btn').forEach(btn => btn.classList.add('active'));
+
+    // Llenar Checklist de Recuerdos
+    if (memoriesContainer) {
+      const memories = this.storage.getMemories() || [];
+      if (memories.length === 0) {
+        memoriesContainer.innerHTML = '<div style="font-size: 0.75rem; color: var(--color-text-muted); padding: 0.35rem;">No hay recuerdos registrados aún para vincular.</div>';
+      } else {
+        memoriesContainer.innerHTML = memories.map(mem => {
+          const thumb = mem.coverImage || (mem.photos && mem.photos[0]) || 'assets/icon.png';
+          return `
+            <label class="song-mem-check-item">
+              <input type="checkbox" name="linked_memory_id" value="${mem.id}" style="accent-color: #6D5CFF;">
+              <img src="${thumb}" class="song-mem-check-thumb" alt="${window.Utils.sanitizeHTML(mem.title)}">
+              <span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(mem.title)}</span>
+            </label>
+          `;
+        }).join('');
+      }
+    }
+
+    this.openModal('modal-song-add');
+  }
+
+  initSongModalInteractions() {
+    // Star Picker
+    const starPicker = document.getElementById('song-star-picker');
+    const ratingValHidden = document.getElementById('modal-song-rating-val');
+    const scoreNumber = document.getElementById('song-star-score');
+
+    if (starPicker) {
+      starPicker.querySelectorAll('.star-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseInt(btn.dataset.value, 10);
+          this.selectedModalStarRating = val;
+          if (ratingValHidden) ratingValHidden.value = val;
+          if (scoreNumber) scoreNumber.textContent = `${val}.0`;
+
+          starPicker.querySelectorAll('.star-btn').forEach(b => {
+            const bVal = parseInt(b.dataset.value, 10);
+            if (bVal <= val) {
+              b.classList.add('active');
+            } else {
+              b.classList.remove('active');
+            }
+          });
+        });
+      });
+    }
+
+    // Char counter
+    const reviewInput = document.getElementById('modal-song-review-input');
+    const charCount = document.getElementById('song-review-char-count');
+    if (reviewInput && charCount) {
+      reviewInput.addEventListener('input', () => {
+        charCount.textContent = reviewInput.value.length;
+      });
+    }
+
+    // Form Submit
+    const formSongAdd = document.getElementById('form-song-add');
+    if (formSongAdd) {
+      formSongAdd.onsubmit = (e) => {
+        e.preventDefault();
+        const user = this.storage.getUserProfile() || {};
+        const title = document.getElementById('modal-song-title-hidden')?.value || 'Canción';
+        const artist = document.getElementById('modal-song-artist-hidden')?.value || 'Artista';
+        const album = document.getElementById('modal-song-album-hidden')?.value || '';
+        const artwork = document.getElementById('modal-song-artwork-hidden')?.value || 'assets/icon.png';
+        const previewUrl = document.getElementById('modal-song-preview-hidden')?.value || '';
+        const rating = parseFloat(document.getElementById('modal-song-rating-val')?.value || '5');
+        const review = document.getElementById('modal-song-review-input')?.value.trim() || '';
+
+        // Checkboxes de recuerdos vinculados
+        const checkboxes = document.querySelectorAll('input[name="linked_memory_id"]:checked');
+        const linkedMemories = Array.from(checkboxes).map(cb => cb.value);
+
+        const newSong = {
+          id: 'song_' + window.Utils.generateId(),
+          title,
+          artist,
+          album,
+          artwork,
+          previewUrl,
+          rating,
+          ratingCount: 1,
+          author: {
+            id: user.id || 'usr_me',
+            name: user.name || 'Kevin',
+            avatar: user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+            color: user.favoriteColor || '#6D5CFF'
+          },
+          review,
+          linkedMemories,
+          comments: [],
+          commentsCount: 0,
+          createdAt: new Date().toISOString()
+        };
+
+        this.storage.saveSong(newSong);
+        this.closeModal('modal-song-add');
+        window.Utils.showToast('¡Canción agregada al playlist colaborativo! 🎵✨', 'success');
+
+        this.renderMusic();
+        this.renderInicio();
+      };
+    }
+  }
+
+  // --- BOTTOM SHEET: COMENTARIOS Y REACCIONES DE CANCIÓN ---
+  openSongComments(songId) {
+    const song = (this.storage.getSongs() || []).find(s => s.id === songId);
+    if (!song) return;
+
+    this.activeCommentSongId = songId;
+
+    const sheetArt = document.getElementById('sheet-song-art');
+    const sheetTitle = document.getElementById('sheet-song-title');
+    const sheetArtist = document.getElementById('sheet-song-artist');
+    const stream = document.getElementById('song-comments-stream');
+
+    if (sheetArt) sheetArt.src = song.artwork || 'assets/icon.png';
+    if (sheetTitle) sheetTitle.textContent = `💬 ${song.title}`;
+    if (sheetArtist) sheetArtist.textContent = song.artist;
+
+    this.renderSongCommentsStream(song);
+    this.openModal('modal-song-comments');
+  }
+
+  renderSongCommentsStream(song) {
+    const stream = document.getElementById('song-comments-stream');
+    if (!stream) return;
+
+    const comments = song.comments || [];
+    if (comments.length === 0) {
+      stream.innerHTML = `
+        <div style="text-align: center; padding: 2rem 1rem; color: var(--color-text-secondary); font-size: 0.85rem;">
+          <span>💬</span>
+          <p style="margin: 0.4rem 0 0;">Sé el primero en comentar qué te hace recordar este tema.</p>
+        </div>
+      `;
+      return;
+    }
+
+    stream.innerHTML = comments.map(c => {
+      const reactions = c.reactions || {};
+      const rxEntries = Object.entries(reactions);
+      const rxHtml = rxEntries.map(([em, count]) => `<span class="badge" style="background: rgba(109, 92, 255, 0.2); font-size: 0.72rem; padding: 0.15rem 0.4rem; border-radius: var(--radius-full);">${em} ${count}</span>`).join(' ');
+
+      return `
+        <div class="comment-bubble-chat" style="margin-bottom: 0.65rem;">
+          <img src="${c.authorAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" alt="${window.Utils.sanitizeHTML(c.authorName)}">
+          <div class="comment-card-msg" style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
+              <strong style="font-size: 0.8rem; color: #FFFFFF;">${window.Utils.sanitizeHTML(c.authorName)}</strong>
+              <span style="font-size: 0.68rem; color: var(--color-text-muted);">${c.time || 'Reciente'}</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--color-text-main); margin: 0; line-height: 1.4;">${window.Utils.sanitizeHTML(c.text)}</p>
+            ${rxHtml ? `<div style="display: flex; gap: 0.25rem; margin-top: 0.35rem;">${rxHtml}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    stream.scrollTop = stream.scrollHeight;
+  }
+
+  initSongCommentsInteractions() {
+    const form = document.getElementById('form-add-song-comment');
+    const input = document.getElementById('input-song-comment-text');
+    const emojisBar = document.getElementById('song-quick-emojis');
+
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const text = input?.value.trim();
+        if (!text || !this.activeCommentSongId) return;
+
+        this.storage.addSongComment(this.activeCommentSongId, text);
+        input.value = '';
+
+        const song = (this.storage.getSongs() || []).find(s => s.id === this.activeCommentSongId);
+        if (song) this.renderSongCommentsStream(song);
+        this.renderMusic();
+      };
+    }
+
+    if (emojisBar) {
+      emojisBar.querySelectorAll('.btn-quick-emoji').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const emoji = btn.dataset.emoji;
+          if (!this.activeCommentSongId || !emoji) return;
+
+          const song = (this.storage.getSongs() || []).find(s => s.id === this.activeCommentSongId);
+          if (song && song.comments && song.comments.length > 0) {
+            const lastComment = song.comments[song.comments.length - 1];
+            this.storage.reactSongComment(song.id, lastComment.id, emoji);
+            this.renderSongCommentsStream(song);
+            window.Utils.showToast(`Reacción ${emoji} enviada`, 'info');
+          } else {
+            this.storage.addSongComment(this.activeCommentSongId, `${emoji} ¡Temazo del parche!`);
+            const updated = (this.storage.getSongs() || []).find(s => s.id === this.activeCommentSongId);
+            if (updated) this.renderSongCommentsStream(updated);
+            this.renderMusic();
+          }
+        });
+      });
+    }
+  }
+
+  // --- REPRODUCTOR FLOTANTE GLOBAL (CON ANIMACIÓN DE ONDAS Y CONTROLES) ---
+  playSongTrack(songId) {
+    const song = (this.storage.getSongs() || []).find(s => s.id === songId);
+    if (!song) return;
+
+    if (this.currentPlayingSongId === songId && this.isGlobalPlaying) {
+      this.toggleGlobalPlay();
+      return;
+    }
+
+    this.playTrackAudioDirectly(song);
+  }
+
+  playTrackAudioDirectly(track) {
+    const playerEl = document.getElementById('global-music-player');
+    const audioEl = document.getElementById('global-audio-element');
+    const artEl = document.getElementById('player-art');
+    const titleEl = document.getElementById('player-title');
+    const artistEl = document.getElementById('player-artist');
+    const playBtn = document.getElementById('btn-player-play-toggle');
+
+    if (!playerEl || !audioEl) return;
+
+    this.currentPlayingSongId = track.id;
+    this.currentPlayingTrack = track;
+
+    if (artEl) artEl.src = track.artwork || 'assets/icon.png';
+    if (titleEl) titleEl.textContent = track.title;
+    if (artistEl) artistEl.textContent = track.artist;
+
+    if (track.previewUrl) {
+      audioEl.src = track.previewUrl;
+      audioEl.play().then(() => {
+        this.isGlobalPlaying = true;
+        playerEl.style.display = 'flex';
+        playerEl.classList.add('playing');
+        if (playBtn) playBtn.textContent = '⏸';
+        this.renderMusic();
+      }).catch(() => {
+        window.Utils.showToast('No se pudo reproducir el preview de audio', 'warning');
+      });
+    } else {
+      window.Utils.showToast('Canción sin preview de audio disponible', 'info');
+      playerEl.style.display = 'flex';
+      this.isGlobalPlaying = true;
+      playerEl.classList.add('playing');
+      if (playBtn) playBtn.textContent = '⏸';
+      this.renderMusic();
+    }
+  }
+
+  toggleGlobalPlay() {
+    const audioEl = document.getElementById('global-audio-element');
+    const playerEl = document.getElementById('global-music-player');
+    const playBtn = document.getElementById('btn-player-play-toggle');
+
+    if (!audioEl || !playerEl) return;
+
+    if (this.isGlobalPlaying) {
+      audioEl.pause();
+      this.isGlobalPlaying = false;
+      playerEl.classList.remove('playing');
+      if (playBtn) playBtn.textContent = '▶';
+    } else {
+      audioEl.play().catch(() => {});
+      this.isGlobalPlaying = true;
+      playerEl.classList.add('playing');
+      if (playBtn) playBtn.textContent = '⏸';
+    }
+
+    this.renderMusic();
+  }
+
+  playNextTrack() {
+    const songs = this.storage.getSongs() || [];
+    if (songs.length === 0) return;
+
+    const currentIdx = songs.findIndex(s => s.id === this.currentPlayingSongId);
+    const nextIdx = (currentIdx + 1) % songs.length;
+    this.playTrackAudioDirectly(songs[nextIdx]);
+  }
+
+  playPrevTrack() {
+    const songs = this.storage.getSongs() || [];
+    if (songs.length === 0) return;
+
+    const currentIdx = songs.findIndex(s => s.id === this.currentPlayingSongId);
+    const prevIdx = (currentIdx - 1 + songs.length) % songs.length;
+    this.playTrackAudioDirectly(songs[prevIdx]);
+  }
+
+  closeGlobalPlayer() {
+    const audioEl = document.getElementById('global-audio-element');
+    const playerEl = document.getElementById('global-music-player');
+
+    if (audioEl) {
+      audioEl.pause();
+      audioEl.currentTime = 0;
+    }
+    if (playerEl) {
+      playerEl.style.display = 'none';
+      playerEl.classList.remove('playing');
+    }
+
+    this.isGlobalPlaying = false;
+    this.currentPlayingSongId = null;
+    this.renderMusic();
+  }
+
+  initGlobalPlayerControls() {
+    const audioEl = document.getElementById('global-audio-element');
+    const playBtn = document.getElementById('btn-player-play-toggle');
+    const prevBtn = document.getElementById('btn-player-prev');
+    const nextBtn = document.getElementById('btn-player-next');
+    const closeBtn = document.getElementById('btn-player-close');
+    const progressFill = document.getElementById('player-progress-fill');
+    const progressTrack = document.getElementById('player-progress-track');
+    const currentTimeEl = document.getElementById('player-current-time');
+    const totalTimeEl = document.getElementById('player-total-time');
+
+    if (playBtn) playBtn.onclick = () => this.toggleGlobalPlay();
+    if (prevBtn) prevBtn.onclick = () => this.playPrevTrack();
+    if (nextBtn) nextBtn.onclick = () => this.playNextTrack();
+    if (closeBtn) closeBtn.onclick = () => this.closeGlobalPlayer();
+
+    if (audioEl) {
+      audioEl.addEventListener('timeupdate', () => {
+        if (!audioEl.duration) return;
+        const percent = (audioEl.currentTime / audioEl.duration) * 100;
+        if (progressFill) progressFill.style.width = `${percent}%`;
+
+        const curMins = Math.floor(audioEl.currentTime / 60);
+        const curSecs = Math.floor(audioEl.currentTime % 60).toString().padStart(2, '0');
+        if (currentTimeEl) currentTimeEl.textContent = `${curMins}:${curSecs}`;
+
+        const durMins = Math.floor(audioEl.duration / 60);
+        const durSecs = Math.floor(audioEl.duration % 60).toString().padStart(2, '0');
+        if (totalTimeEl) totalTimeEl.textContent = `${durMins}:${durSecs}`;
+      });
+
+      audioEl.addEventListener('ended', () => {
+        this.playNextTrack();
+      });
+    }
+
+    if (progressTrack && audioEl) {
+      progressTrack.addEventListener('click', (e) => {
+        const rect = progressTrack.getBoundingClientRect();
+        const clickPos = (e.clientX - rect.left) / rect.width;
+        if (audioEl.duration) {
+          audioEl.currentTime = clickPos * audioEl.duration;
+        }
+      });
+    }
+  }
+
+  // Menú contextual 3 puntos de tarjeta musical
+  openSongContextMenu(songId, event) {
+    event.stopPropagation();
+    const song = (this.storage.getSongs() || []).find(s => s.id === songId);
+    if (!song) return;
+
+    const action = prompt(`Opciones para "${song.title}":\n\n1. ⭐ Calificar canción (1 a 5)\n2. 💬 Ver conversaciones\n3. 🔗 Copiar enlace de canción\n4. 🗑️ Eliminar del playlist\n\nEscribe el número de la opción (1-4):`);
+
+    if (action === '1') {
+      const score = prompt(`Califica "${song.title}" (1 al 5):`, '5');
+      const num = parseFloat(score);
+      if (!isNaN(num) && num >= 1 && num <= 5) {
+        this.storage.rateSong(songId, num);
+        window.Utils.showToast(`¡Calificación de ${num}⭐ guardada!`, 'success');
+        this.renderMusic();
+      }
+    } else if (action === '2') {
+      this.openSongComments(songId);
+    } else if (action === '3') {
+      window.Utils.copyToClipboard(`${song.title} - ${song.artist}`, '¡Nombre de canción copiado!');
+    } else if (action === '4') {
+      this.deleteSong(songId);
+    }
+  }
+
   deleteSong(songId) {
-    if (confirm('¿Eliminar esta canción de la lista del grupo?')) {
-      const data = this.storage.getGroupData();
-      data.songs = (data.songs || []).filter(s => s.id !== songId);
-      this.storage.saveGroupData(null, data);
-      window.Utils.showToast('Canción eliminada', 'info');
-      this.renderSongs();
+    if (confirm('¿Eliminar esta canción del playlist colaborativo del grupo?')) {
+      this.storage.deleteSong(songId);
+      window.Utils.showToast('Canción eliminada del grupo 🎵', 'info');
+      this.renderMusic();
       this.renderInicio();
     }
   }
 
-  playTrackDirectly(songId) {
-    const song = this.storage.getSongs().find(s => s.id === songId);
-    if (song) {
-      this.audioManager.playTrack(song);
-    }
-  }
-
-  async showLyrics(artist, title) {
-    this.openModal('modal-lyrics');
-    const titleEl = document.getElementById('lyrics-title');
-    const artistEl = document.getElementById('lyrics-artist');
-    const bodyEl = document.getElementById('lyrics-content-body');
-    const buttonsEl = document.getElementById('lyrics-platform-buttons');
-
-    if (titleEl) titleEl.textContent = title;
-    if (artistEl) artistEl.textContent = artist;
-    if (bodyEl) bodyEl.textContent = 'Cargando letra...';
-
-    if (buttonsEl) {
-      buttonsEl.innerHTML = `
-        <a href="${this.media.spotifyUrl(title, artist)}" target="_blank" class="btn-secondary" style="font-size: 0.78rem; padding: 0.35rem 0.7rem;">🟢 Spotify</a>
-        <a href="${this.media.youtubeUrl(title, artist)}" target="_blank" class="btn-secondary" style="font-size: 0.78rem; padding: 0.35rem 0.7rem;">🔴 YouTube</a>
-        <a href="${this.media.geniusUrl(title, artist)}" target="_blank" class="btn-secondary" style="font-size: 0.78rem; padding: 0.35rem 0.7rem;">🟡 Genius</a>
-      `;
-    }
-
-    const lyrics = await this.media.fetchLyrics(artist, title);
-    if (bodyEl) {
-      bodyEl.textContent = lyrics || 'No se encontró la letra para esta canción. Puedes verla directamente en Spotify o Genius con los enlaces.';
-    }
+  navigateToLinkedMemories(memIdsStr) {
+    window.location.hash = '#recuerdos';
+    window.Utils.showToast('Filtrando recuerdos asociados a esta canción 🎴✨', 'info');
   }
 
   // --- 4. RENDER CINE (ATRIA MOVIE RATING BAR & COMMENTS) ---
@@ -2770,9 +3465,13 @@ class LumaApp {
       this.openModal('modal-memory');
     });
 
+    document.getElementById('btn-sheet-create-song')?.addEventListener('click', () => {
+      this.closeModal('modal-create-sheet');
+      this.openAddSongModal();
+    });
+
     document.getElementById('btn-new-song')?.addEventListener('click', () => {
-      document.getElementById('form-song')?.reset();
-      this.openModal('modal-song');
+      this.openAddSongModal();
     });
 
     document.getElementById('btn-new-movie')?.addEventListener('click', () => {
@@ -3231,35 +3930,7 @@ class LumaApp {
       };
     }
 
-    // 7. Formulario Canción
-    const formSong = document.getElementById('form-song');
-    if (formSong) {
-      formSong.onsubmit = (e) => {
-        e.preventDefault();
-        const title = document.getElementById('song-title-input').value.trim();
-        const artist = document.getElementById('song-artist-input').value.trim();
-        const rating = parseInt(document.getElementById('song-rating-select').value, 10);
-        const addedBy = document.getElementById('song-recommender-input').value.trim();
-        const review = document.getElementById('song-review-input').value.trim();
-        const previewUrl = document.getElementById('song-preview-url').value;
-        const artwork = document.getElementById('song-artwork-url').value;
-
-        this.storage.saveSong({
-          title,
-          artist,
-          rating,
-          addedBy: addedBy || this.storage.getUserProfile()?.name || 'Miembro',
-          review,
-          previewUrl,
-          artwork
-        });
-
-        this.closeModal('modal-song');
-        window.Utils.showToast('Canción añadida al grupo 🎵', 'success');
-        this.renderSongs();
-        this.renderInicio();
-      };
-    }
+    // 7. Formulario Canción Colaborativa (Manejado por initSongModalInteractions)
 
     // 8. Formulario Serie
     const formSeries = document.getElementById('form-series');
