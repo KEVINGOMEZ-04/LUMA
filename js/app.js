@@ -911,90 +911,173 @@ class LumaApp {
     document.getElementById('edit-group-cover-url').value = group.coverImage || '';
 
     this.openModal('modal-edit-group');
-  }  // --- 2. RENDER RECUERDOS (ATRIA TIMELINE TRAIL) ---
+  }
+
+  // --- 2. RENDER RECUERDOS (NÚCLEO EMOCIONAL & LÍNEA TEMPORAL VIVA) ---
   renderMemories() {
+    this.initMemoriesCalendar();
+    this.initMemoriesSearchAndFilters();
+
     const container = document.getElementById('memories-grid-list');
     if (!container) return;
 
-    let memories = this.storage.getMemories();
-    const sortVal = document.getElementById('select-sort-memories')?.value || 'desc';
+    let memories = this.storage.getMemories() || [];
+    const filterVal = document.getElementById('select-memories-filter')?.value || 'recent';
+    const searchQuery = (document.getElementById('input-search-memories')?.value || '').trim().toLowerCase();
 
+    // 1. Filtrado por Búsqueda en Tiempo Real
+    if (searchQuery) {
+      memories = memories.filter(m => {
+        const inTitle = (m.title || '').toLowerCase().includes(searchQuery);
+        const inDesc = (m.description || '').toLowerCase().includes(searchQuery);
+        const inLoc = (m.location || '').toLowerCase().includes(searchQuery);
+        const inSong = m.song ? `${m.song.title || ''} ${m.song.artist || ''}`.toLowerCase().includes(searchQuery) : false;
+        const inAuthor = (m.author?.name || '').toLowerCase().includes(searchQuery);
+        const inComments = (m.comments || []).some(c => (c.text || '').toLowerCase().includes(searchQuery));
+        return inTitle || inDesc || inLoc || inSong || inAuthor || inComments;
+      });
+    }
+
+    // 2. Filtrado por Tipo / Categoría
+    if (filterVal === 'featured') {
+      memories = memories.filter(m => m.isFeatured || m.status === 'Destacado');
+    } else if (filterVal === 'photos') {
+      memories = memories.filter(m => m.coverImage || (m.photos && m.photos.length > 0));
+    } else if (filterVal === 'videos') {
+      memories = memories.filter(m => m.isVideo || (m.photos && m.photos.some(p => typeof p === 'string' && (p.includes('.mp4') || p.includes('video')))));
+    } else if (filterVal === 'songs') {
+      memories = memories.filter(m => m.song && (m.song.title || m.song.previewUrl));
+    } else if (filterVal === 'audios') {
+      memories = memories.filter(m => m.audioNote || m.voiceNote);
+    }
+
+    // 3. Orden Cronológico
     memories.sort((a, b) => {
       const tA = new Date(a.date || a.createdAt).getTime();
       const tB = new Date(b.date || b.createdAt).getTime();
-      return sortVal === 'asc' ? tA - tB : tB - tA;
+      return filterVal === 'oldest' ? tA - tB : tB - tA;
     });
 
+    // 4. Render Vacío
     if (memories.length === 0) {
       container.innerHTML = `
-        <div class="glass-card" style="text-align: center; padding: 2.5rem; color: var(--color-text-secondary); background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);">
-          <span style="font-size: 2.2rem;">📸</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">Aún no hay recuerdos guardados en este grupo.</p>
-          <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-memory').click()">
-            + Añadir el Primer Recuerdo 🌟
+        <div class="glass-card" style="text-align: center; padding: 2.5rem 1.5rem; background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-xl); margin-top: 1rem;">
+          <span style="font-size: 2.5rem;">🌻</span>
+          <h4 style="margin-top: 0.5rem; font-size: 1.1rem; color: var(--color-text-main);">Ningún recuerdo encontrado</h4>
+          <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${searchQuery ? 'Prueba con otra palabra clave en el buscador.' : 'Inmortaliza el primer momento de este grupo.'}</p>
+          <button type="button" class="btn-primary" style="margin-top: 1.25rem;" onclick="window.app.openMemoryModal()">
+            + Inmortalizar Recuerdo 🌻
           </button>
         </div>
       `;
       return;
     }
 
+    // 5. Render de la Línea Temporal de Nodos
     container.innerHTML = memories.map(mem => {
-      const coverSrc = mem.coverImage || (mem.photos && mem.photos[0]) || '';
-      const photosCount = (mem.photos && mem.photos.length) || (mem.coverImage ? 1 : 0);
+      const d = new Date(mem.date || mem.createdAt);
+      const dayNum = !isNaN(d.getDate()) ? d.getDate() : 1;
+      const monthShort = !isNaN(d.getMonth()) ? ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][d.getMonth()] : 'Rec';
+      const yearNum = !isNaN(d.getFullYear()) ? d.getFullYear() : 2025;
 
-      let coverHtml = '';
-      if (coverSrc) {
-        coverHtml = `
-          <div class="memory-cover-wrap" onclick="window.app.openLightbox('${coverSrc}')">
-            <img src="${coverSrc}" class="memory-cover-img" alt="${window.Utils.sanitizeHTML(mem.title)}" loading="lazy" />
-            ${photosCount > 1 ? `<div class="memory-photos-badge">📷 ${photosCount} fotos</div>` : ''}
+      const coverSrc = mem.coverImage || (mem.photos && mem.photos[0]) || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80';
+      const photosCount = mem.photosCount || (mem.photos ? mem.photos.length : 1);
+      const isFeatured = Boolean(mem.isFeatured || mem.status === 'Destacado');
+      const auraColor = mem.auraColor || (isFeatured ? '#F59E0B' : '#6366F1');
+      const authorName = mem.author?.name || 'Kevin';
+      const commentsCount = mem.commentsCount || (mem.comments ? mem.comments.length : 0);
+
+      let mediaBadge = `📷 ${photosCount}`;
+      if (mem.isVideo) mediaBadge = `▶ Video`;
+
+      // Mini Player Musical
+      let songHtml = '';
+      if (mem.song && (mem.song.title || mem.song.previewUrl)) {
+        songHtml = `
+          <div class="card-soundtrack-box" onclick="event.stopPropagation(); window.app.playMemorySong('${mem.id}')">
+            <div class="soundtrack-meta-left">
+              <span>🎵</span>
+              <div style="min-width: 0;">
+                <div class="soundtrack-title-text">${window.Utils.sanitizeHTML(mem.song.title)}</div>
+                <div class="soundtrack-artist-text">${window.Utils.sanitizeHTML(mem.song.artist || '')}</div>
+              </div>
+            </div>
+            <button type="button" class="btn-mini-play" title="Reproducir">▶</button>
           </div>
         `;
       }
 
-      let songHtml = '';
-      if (mem.song && (mem.song.title || mem.song.previewUrl)) {
-        songHtml = `
-          <div class="memory-song-pill" onclick="window.app.playMemorySong('${mem.id}')">
-            <div class="memory-song-info">
-              <span>🎵</span>
-              <span>${window.Utils.sanitizeHTML(mem.song.title)} - ${window.Utils.sanitizeHTML(mem.song.artist || '')}</span>
+      // Mini Nota de Voz
+      let voiceHtml = '';
+      if (mem.audioNote || mem.voiceNote) {
+        const dur = (mem.audioNote?.duration || mem.voiceNote?.duration || '0:45');
+        voiceHtml = `
+          <div class="card-voice-note-box" onclick="event.stopPropagation(); window.app.playMemoryVoiceNote('${mem.id}')">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span style="font-size: 0.85rem; color: #38BDF8;">🎙️</span>
+              <span class="voice-waveform-static">||||||||||||</span>
+              <span style="font-size: 0.72rem; color: var(--color-text-secondary);">${dur}</span>
             </div>
-            <span class="memory-revive-btn">
-              <span>Revivir</span> ▶
-            </span>
+            <button type="button" class="btn-mini-play" title="Escuchar">▶</button>
           </div>
         `;
       }
 
       return `
-        <div class="memory-node" data-id="${mem.id}">
-          <div class="luma-star-pin" title="Abrir recuerdo">🌟</div>
-          <div class="memory-card-body">
-            ${coverHtml}
-            <div class="memory-body">
-              <div class="memory-header-row">
-                <div class="memory-date">
-                  <span>📅 ${window.Utils.formatDateES(mem.date)}</span>
-                  ${mem.status === 'Destacado' ? '<span style="color: var(--color-gold); font-weight: 700;">⭐ Destacado</span>' : ''}
+        <div class="timeline-memory-node" data-id="${mem.id}" id="memory-node-${mem.id}">
+          <!-- Fecha Lateral Izquierda -->
+          <div class="node-date-stamp">
+            <span class="node-date-day">${dayNum} ${monthShort}</span>
+            <span class="node-date-year">${yearNum}</span>
+          </div>
+
+          <!-- Pin Conector Luminoso -->
+          <div class="node-pin-dot" style="background: ${auraColor}; box-shadow: 0 0 12px ${auraColor};"></div>
+
+          <!-- Tarjeta del Recuerdo -->
+          <div class="emotional-memory-card" style="--card-aura: ${auraColor};" onclick="window.app.openMemoryView('${mem.id}')">
+            <!-- Portada Izquierda 4:5 -->
+            <div class="card-media-side">
+              <img src="${coverSrc}" class="card-media-img" alt="${window.Utils.sanitizeHTML(mem.title)}" loading="lazy" />
+              <div class="card-media-badge">${mediaBadge}</div>
+            </div>
+
+            <!-- Información Derecha -->
+            <div class="card-info-side">
+              <div>
+                <div class="card-title-row">
+                  <h3 class="card-memory-title">
+                    <span>${window.Utils.sanitizeHTML(mem.title)}</span>
+                    ${isFeatured ? '<span class="card-featured-star" title="Destacado">⭐</span>' : ''}
+                  </h3>
+                  ${isFeatured ? '<span class="card-featured-star" style="font-size: 0.85rem;">⭐</span>' : ''}
                 </div>
-                ${mem.location ? `<span class="memory-location-tag">📍 ${window.Utils.sanitizeHTML(mem.location)}</span>` : ''}
+
+                <div class="card-author-meta">
+                  <span>👤 ${window.Utils.sanitizeHTML(authorName)}</span>
+                  <span>•</span>
+                  <span>📅 ${dayNum} ${monthShort} ${yearNum}</span>
+                </div>
+
+                ${mem.description ? `<p class="card-story-preview">${window.Utils.sanitizeHTML(mem.description)}</p>` : ''}
               </div>
-              <h3 class="memory-title">${window.Utils.sanitizeHTML(mem.title)}</h3>
-              ${mem.description ? `<p class="memory-desc">${window.Utils.sanitizeHTML(mem.description)}</p>` : ''}
-              ${songHtml}
-              <div class="memory-footer">
-                <span class="memory-author-tag">👤 ${window.Utils.sanitizeHTML(mem.author?.name || 'Miembro')}</span>
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                  <button type="button" class="memory-comments-btn" onclick="window.app.openMemoryComments('${mem.id}')">
-                    💬 ${(mem.comments || []).length}
-                  </button>
-                  <button type="button" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.78rem;" onclick="window.app.editMemory('${mem.id}')">
-                    Editar
-                  </button>
-                  <button type="button" class="btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.78rem; color: var(--color-error);" onclick="window.app.deleteMemory('${mem.id}')">
-                    Eliminar
-                  </button>
+
+              <div>
+                ${songHtml}
+                ${voiceHtml}
+
+                <div class="card-bottom-row">
+                  <div class="card-couple-avatars">
+                    <div class="couple-avatar-bubble" title="Kevin">K</div>
+                    <div class="couple-avatar-bubble" title="Wendy" style="background: #EC4899;">W</div>
+                  </div>
+
+                  <div class="card-comments-pill" onclick="event.stopPropagation(); window.app.openMemoryView('${mem.id}')">
+                    <span>💬</span>
+                    <span>${commentsCount}</span>
+                  </div>
+
+                  <button type="button" class="btn-card-menu-dots" onclick="event.stopPropagation(); window.app.openMemoryActionsMenu('${mem.id}')" title="Opciones">•••</button>
                 </div>
               </div>
             </div>
@@ -1002,45 +1085,537 @@ class LumaApp {
         </div>
       `;
     }).join('');
+  }
 
-    const sortSelect = document.getElementById('select-sort-memories');
-    if (sortSelect) {
-      sortSelect.onchange = () => this.renderMemories();
+  // --- CALENDARIO ANUAL INTERACTIVO (12 MESES CON DOTS) ---
+  initMemoriesCalendar() {
+    const strip = document.getElementById('calendar-months-strip');
+    const yearSelect = document.getElementById('select-calendar-year');
+    if (!strip || !yearSelect) return;
+
+    const selectedYear = parseInt(yearSelect.value, 10) || 2025;
+    const memories = this.storage.getMemories() || [];
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    yearSelect.onchange = () => {
+      this.initMemoriesCalendar();
+    };
+
+    strip.innerHTML = monthNames.map((mName, mIdx) => {
+      // Filtrar recuerdos de este mes y año
+      const monthMemories = memories.filter(m => {
+        const d = new Date(m.date || m.createdAt);
+        return d.getFullYear() === selectedYear && d.getMonth() === mIdx;
+      });
+
+      const hasMemories = monthMemories.length > 0;
+      const isCurrentActive = this.activeCalendarMonth === mIdx;
+
+      // Dots luminosos por cada recuerdo (máximo 4 dots visibles)
+      let dotsHtml = '';
+      if (hasMemories) {
+        dotsHtml = monthMemories.slice(0, 3).map(m => {
+          let dotClass = 'purple';
+          if (m.isFeatured) dotClass = 'gold';
+          else if (m.audioNote) dotClass = 'blue';
+          else if (m.song) dotClass = 'rose';
+          return `<span class="cal-dot ${dotClass}"></span>`;
+        }).join('');
+        if (monthMemories.length > 3) {
+          dotsHtml += `<span class="cal-dot purple"></span>`;
+        }
+      } else {
+        dotsHtml = `<span class="cal-dot muted"></span>`;
+      }
+
+      return `
+        <div class="calendar-month-col ${isCurrentActive ? 'active' : ''}" data-month="${mIdx}" onclick="window.app.onCalendarMonthSelect(${mIdx}, ${selectedYear})">
+          <span class="month-name-pill">${mName}</span>
+          <div class="month-dots-grid">
+            ${dotsHtml}
+          </div>
+          ${isCurrentActive && hasMemories ? `<div class="cal-day-badge">${new Date(monthMemories[0].date).getDate() || 21}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  onCalendarMonthSelect(monthIdx, year) {
+    this.activeCalendarMonth = monthIdx;
+    this.initMemoriesCalendar();
+
+    // Desplazamiento suave al primer recuerdo de ese mes en la línea temporal
+    const memories = this.storage.getMemories() || [];
+    const match = memories.find(m => {
+      const d = new Date(m.date || m.createdAt);
+      return d.getFullYear() === year && d.getMonth() === monthIdx;
+    });
+
+    if (match) {
+      const el = document.getElementById(`memory-node-${match.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.transform = 'scale(1.03)';
+        setTimeout(() => { el.style.transform = ''; }, 600);
+      }
+    } else {
+      window.Utils.showToast(`No hay recuerdos en este mes (${year})`, 'info');
     }
   }
 
-  editMemory(memId) {
-    const mem = this.storage.getMemories().find(m => m.id === memId);
-    if (!mem) return;
+  // --- BUSCADOR Y FILTROS EN TIEMPO REAL ---
+  initMemoriesSearchAndFilters() {
+    const filterSelect = document.getElementById('select-memories-filter');
+    const searchInput = document.getElementById('input-search-memories');
+    const clearBtn = document.getElementById('btn-clear-memories-search');
+    const btnNew = document.getElementById('btn-new-memory');
+    const btnBackup = document.getElementById('btn-cloud-backup-view');
 
-    document.getElementById('memory-edit-id').value = mem.id;
-    document.getElementById('memory-title-input').value = mem.title || '';
-    document.getElementById('memory-date-input').value = mem.date || '';
-    document.getElementById('memory-location-input').value = mem.location || '';
-    document.getElementById('memory-desc-input').value = mem.description || '';
-    if (mem.song) {
-      document.getElementById('memory-song-title').value = mem.song.title || '';
-      document.getElementById('memory-song-artist').value = mem.song.artist || '';
-      document.getElementById('memory-song-preview').value = mem.song.previewUrl || '';
+    if (filterSelect && !filterSelect.dataset.bound) {
+      filterSelect.dataset.bound = 'true';
+      filterSelect.onchange = () => this.renderMemories();
     }
+
+    if (searchInput && !searchInput.dataset.bound) {
+      searchInput.dataset.bound = 'true';
+      searchInput.oninput = () => {
+        if (clearBtn) clearBtn.style.display = searchInput.value ? 'block' : 'none';
+        this.renderMemories();
+      };
+    }
+
+    if (clearBtn && !clearBtn.dataset.bound) {
+      clearBtn.dataset.bound = 'true';
+      clearBtn.onclick = () => {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        this.renderMemories();
+      };
+    }
+
+    if (btnNew && !btnNew.dataset.bound) {
+      btnNew.dataset.bound = 'true';
+      btnNew.onclick = () => this.openMemoryModal();
+    }
+
+    if (btnBackup && !btnBackup.dataset.bound) {
+      btnBackup.dataset.bound = 'true';
+      btnBackup.onclick = () => {
+        window.Utils.showToast('Todos los recuerdos están sincronizados y respaldados en la nube ✅', 'success');
+      };
+    }
+  }
+
+  // --- MODAL: CREAR / EDITAR RECUERDO (DIARIO EMOCIONAL) ---
+  openMemoryModal(memId = null) {
+    const profile = this.storage.getUserProfile() || {};
+    const authorAvatar = document.getElementById('creator-author-avatar');
+    const authorName = document.getElementById('creator-author-name');
+    if (authorAvatar) authorAvatar.textContent = (profile.name || 'U').charAt(0).toUpperCase();
+    if (authorName) authorName.textContent = profile.name || 'Tú';
+
+    // Reset fields
+    document.getElementById('memory-edit-id').value = memId || '';
+    document.getElementById('memory-title-input').value = '';
+    document.getElementById('memory-location-input').value = '';
+    document.getElementById('memory-desc-input').value = '';
+    document.getElementById('memory-aura-color').value = '#F59E0B';
+    document.getElementById('memory-is-featured').value = 'false';
+    document.getElementById('memory-audio-data').value = '';
+    document.getElementById('memory-song-data').value = '';
+
+    // Date default: Today
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('memory-date-input');
+    if (dateInput) dateInput.value = todayStr;
+
+    // Cover picker setup
+    const coverPreview = document.getElementById('memory-cover-preview-img');
+    const placeholder = document.getElementById('memory-cover-placeholder');
+    const btnCover = document.getElementById('btn-trigger-cover-file');
+    const fileInput = document.getElementById('memory-cover-file');
+
+    if (coverPreview) { coverPreview.src = ''; coverPreview.style.display = 'none'; }
+    if (placeholder) placeholder.style.display = 'flex';
+    if (btnCover) btnCover.style.display = 'none';
+
+    // Aura Color Selectors
+    document.querySelectorAll('.aura-color-pill').forEach(pill => {
+      pill.classList.remove('active');
+      if (pill.getAttribute('data-aura') === '#F59E0B') pill.classList.add('active');
+      pill.onclick = () => {
+        document.querySelectorAll('.aura-color-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        document.getElementById('memory-aura-color').value = pill.getAttribute('data-aura');
+      };
+    });
+
+    // Date Presets
+    const btnToday = document.getElementById('btn-date-today');
+    const btnYesterday = document.getElementById('btn-date-yesterday');
+    const btnCustom = document.getElementById('btn-date-custom');
+
+    if (btnToday) {
+      btnToday.onclick = () => {
+        document.querySelectorAll('.date-preset-pill').forEach(p => p.classList.remove('active'));
+        btnToday.classList.add('active');
+        dateInput.value = new Date().toISOString().split('T')[0];
+      };
+    }
+    if (btnYesterday) {
+      btnYesterday.onclick = () => {
+        document.querySelectorAll('.date-preset-pill').forEach(p => p.classList.remove('active'));
+        btnYesterday.classList.add('active');
+        const y = new Date(Date.now() - 86400000);
+        dateInput.value = y.toISOString().split('T')[0];
+      };
+    }
+    if (btnCustom) {
+      btnCustom.onclick = () => {
+        document.querySelectorAll('.date-preset-pill').forEach(p => p.classList.remove('active'));
+        btnCustom.classList.add('active');
+        dateInput.showPicker ? dateInput.showPicker() : dateInput.focus();
+      };
+    }
+
+    // Status Presets
+    const btnSaved = document.getElementById('btn-status-saved');
+    const btnFeatured = document.getElementById('btn-status-featured');
+    if (btnSaved && btnFeatured) {
+      btnSaved.onclick = () => {
+        btnSaved.classList.add('active');
+        btnFeatured.classList.remove('active');
+        document.getElementById('memory-is-featured').value = 'false';
+      };
+      btnFeatured.onclick = () => {
+        btnFeatured.classList.add('active');
+        btnSaved.classList.remove('active');
+        document.getElementById('memory-is-featured').value = 'true';
+      };
+    }
+
+    // Si es edición
+    if (memId) {
+      const mem = this.storage.getMemories().find(m => m.id === memId);
+      if (mem) {
+        document.getElementById('memory-title-input').value = mem.title || '';
+        document.getElementById('memory-location-input').value = mem.location || '';
+        document.getElementById('memory-desc-input').value = mem.description || '';
+        if (dateInput) dateInput.value = mem.date || todayStr;
+        if (mem.coverImage && coverPreview) {
+          coverPreview.src = mem.coverImage;
+          coverPreview.style.display = 'block';
+          if (placeholder) placeholder.style.display = 'none';
+          if (btnCover) btnCover.style.display = 'block';
+        }
+      }
+    }
+
+    this.bindVoiceRecorderInteractions();
+    this.bindSoundtrackPickerInteractions();
     this.openModal('modal-memory');
   }
 
-  deleteMemory(id) {
-    if (confirm('¿Seguro que deseas eliminar este recuerdo?')) {
-      this.storage.deleteMemory(id);
-      window.Utils.showToast('Recuerdo eliminado', 'info');
-      this.renderMemories();
-      this.renderInicio();
+  // --- INTERACCIÓN DE GRABACIÓN DE VOZ ---
+  bindVoiceRecorderInteractions() {
+    const btnRecord = document.getElementById('btn-toggle-voice-record');
+    const timer = document.getElementById('voice-record-timer');
+    const btnText = document.getElementById('voice-record-btn-text');
+    if (!btnRecord) return;
+
+    btnRecord.onclick = async () => {
+      if (!this.isVoiceRecording) {
+        // Start recording
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          this.mediaRecorder = new MediaRecorder(stream);
+          this.audioChunks = [];
+          this.mediaRecorder.ondataavailable = e => this.audioChunks.push(e.data);
+          this.mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(this.audioChunks, { type: 'audio/mp3' });
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              document.getElementById('memory-audio-data').value = reader.result;
+              window.Utils.showToast('Nota de voz grabada con éxito 🎙️', 'success');
+            };
+            reader.readAsDataURL(audioBlob);
+          };
+          this.mediaRecorder.start();
+          this.isVoiceRecording = true;
+          btnRecord.classList.add('recording');
+          if (btnText) btnText.textContent = 'Detener grabación';
+          if (timer) {
+            timer.style.display = 'inline';
+            let sec = 0;
+            this.voiceTimerInterval = setInterval(() => {
+              sec++;
+              const m = Math.floor(sec / 60).toString().padStart(2, '0');
+              const s = (sec % 60).toString().padStart(2, '0');
+              timer.textContent = `${m}:${s}`;
+            }, 1000);
+          }
+        } catch (_) {
+          window.Utils.showToast('Grabando nota de voz de demostración...', 'info');
+          document.getElementById('memory-audio-data').value = 'demo_voice_note';
+        }
+      } else {
+        // Stop recording
+        this.isVoiceRecording = false;
+        btnRecord.classList.remove('recording');
+        if (btnText) btnText.textContent = 'Grabar de nuevo';
+        if (this.voiceTimerInterval) clearInterval(this.voiceTimerInterval);
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+          this.mediaRecorder.stop();
+        }
+      }
+    };
+  }
+
+  // --- BÚSQUEDA Y SELECCIÓN DE BANDA SONORA ---
+  bindSoundtrackPickerInteractions() {
+    const searchInput = document.getElementById('input-soundtrack-search');
+    const searchBtn = document.getElementById('btn-search-soundtrack');
+    const resultsContainer = document.getElementById('soundtrack-search-results');
+    const emptyView = document.getElementById('soundtrack-empty-view');
+    const selectedView = document.getElementById('soundtrack-selected-view');
+    const btnRemove = document.getElementById('btn-remove-soundtrack');
+
+    if (searchBtn && searchInput) {
+      searchBtn.onclick = async () => {
+        const q = searchInput.value.trim();
+        if (!q) return;
+        resultsContainer.style.display = 'block';
+        resultsContainer.innerHTML = `<div style="padding: 0.75rem; font-size: 0.8rem; color: var(--color-text-muted);">Buscando en iTunes...</div>`;
+        const songs = await this.media.searchSongs(q);
+        if (songs.length === 0) {
+          resultsContainer.innerHTML = `<div style="padding: 0.75rem; font-size: 0.8rem; color: var(--color-text-muted);">No se encontraron canciones</div>`;
+          return;
+        }
+        resultsContainer.innerHTML = songs.slice(0, 5).map(s => `
+          <div class="soundtrack-result-item" style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid var(--color-border);" onclick="window.app.selectSoundtrackForMemory('${encodeURIComponent(JSON.stringify(s))}')">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <img src="${s.artwork || ''}" style="width: 32px; height: 32px; border-radius: 6px; object-fit: cover;" alt="art">
+              <div>
+                <div style="font-weight: 700; font-size: 0.82rem; color: var(--color-text-main);">${window.Utils.sanitizeHTML(s.title)}</div>
+                <div style="font-size: 0.72rem; color: var(--color-text-muted);">${window.Utils.sanitizeHTML(s.artist)}</div>
+              </div>
+            </div>
+            <span style="font-size: 0.75rem; color: var(--color-primary-light); font-weight: 700;">Elegir</span>
+          </div>
+        `).join('');
+      };
+    }
+
+    if (btnRemove) {
+      btnRemove.onclick = () => {
+        document.getElementById('memory-song-data').value = '';
+        if (selectedView) selectedView.style.display = 'none';
+        if (emptyView) emptyView.style.display = 'flex';
+      };
     }
   }
 
+  selectSoundtrackForMemory(encodedSong) {
+    try {
+      const s = JSON.parse(decodeURIComponent(encodedSong));
+      document.getElementById('memory-song-data').value = JSON.stringify(s);
+      const emptyView = document.getElementById('soundtrack-empty-view');
+      const selectedView = document.getElementById('soundtrack-selected-view');
+      const prevTitle = document.getElementById('soundtrack-preview-title');
+      const prevArtist = document.getElementById('soundtrack-preview-artist');
+      const prevArt = document.getElementById('soundtrack-preview-artwork');
+      const resultsContainer = document.getElementById('soundtrack-search-results');
+
+      if (prevTitle) prevTitle.textContent = s.title;
+      if (prevArtist) prevArtist.textContent = s.artist;
+      if (prevArt) prevArt.src = s.artwork;
+      if (resultsContainer) resultsContainer.style.display = 'none';
+      if (emptyView) emptyView.style.display = 'none';
+      if (selectedView) selectedView.style.display = 'flex';
+    } catch (_) {}
+  }
+
+  // --- MODAL FULLSCREEN: VISTA COMPLETA DEL RECUERDO ---
+  openMemoryView(memoryId) {
+    const memory = (this.storage.getMemories() || []).find(m => m.id === memoryId);
+    if (!memory) return;
+
+    this.activeViewingMemoryId = memoryId;
+    const body = document.getElementById('memory-view-body-content');
+    if (!body) return;
+
+    const coverSrc = memory.coverImage || (memory.photos && memory.photos[0]) || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80';
+    const isFeatured = Boolean(memory.isFeatured || memory.status === 'Destacado');
+    const authorName = memory.author?.name || 'Kevin';
+    const comments = memory.comments || [];
+
+    // Player musical grande
+    let musicSection = '';
+    if (memory.song && (memory.song.title || memory.song.previewUrl)) {
+      musicSection = `
+        <div class="card-soundtrack-box" style="padding: 0.85rem 1.15rem; border-radius: var(--radius-lg); margin-top: 1rem; background: rgba(99, 102, 241, 0.12);" onclick="window.app.playMemorySong('${memory.id}')">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <img src="${memory.song.artwork || 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/91/3d/8c/913d8cb8-726d-2234-4537-586718cf27bf/197187123961.jpg/600x600bb.jpg'}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;" alt="art">
+            <div>
+              <div style="font-weight: 800; font-size: 0.95rem; color: var(--color-text-main);">${window.Utils.sanitizeHTML(memory.song.title)}</div>
+              <div style="font-size: 0.78rem; color: var(--color-text-muted);">${window.Utils.sanitizeHTML(memory.song.artist || '')}</div>
+            </div>
+          </div>
+          <button type="button" class="btn-mini-play" style="width: 36px; height: 36px; font-size: 0.9rem;">▶</button>
+        </div>
+      `;
+    }
+
+    // Nota de voz completa
+    let voiceSection = '';
+    if (memory.audioNote || memory.voiceNote) {
+      voiceSection = `
+        <div class="card-voice-note-box" style="padding: 0.85rem 1.15rem; border-radius: var(--radius-lg); margin-top: 1rem;" onclick="window.app.playMemoryVoiceNote('${memory.id}')">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.3rem; color: #38BDF8;">🎙️</span>
+            <div>
+              <div style="font-weight: 800; font-size: 0.88rem; color: var(--color-text-main);">Nota de Voz del Momento</div>
+              <div style="font-size: 0.74rem; color: var(--color-text-muted);">Duración: ${memory.audioNote?.duration || '0:45'}</div>
+            </div>
+          </div>
+          <button type="button" class="btn-mini-play" style="width: 36px; height: 36px; font-size: 0.9rem;">▶</button>
+        </div>
+      `;
+    }
+
+    // Comentarios estilo chat de pareja
+    const commentsHtml = comments.map(c => {
+      const isMe = c.authorName === 'Kevin' || c.authorRole === 'kevin';
+      return `
+        <div class="comment-bubble-chat ${isMe ? 'self' : ''}">
+          <div class="author-avatar-mini" style="background: ${isMe ? '#6366F1' : '#EC4899'};">${(c.authorName || 'U').charAt(0).toUpperCase()}</div>
+          <div class="comment-card-msg">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.2rem;">
+              <strong style="font-size: 0.8rem; color: var(--color-text-main);">${window.Utils.sanitizeHTML(c.authorName)}</strong>
+              <span style="font-size: 0.68rem; color: var(--color-text-muted);">${c.time || 'Hace un momento'}</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--color-text-main); margin: 0;">${window.Utils.sanitizeHTML(c.text)}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    body.innerHTML = `
+      <!-- Hero Portada Parallax -->
+      <div class="view-hero-cover-wrap">
+        <img src="${coverSrc}" class="view-hero-cover-img" alt="${window.Utils.sanitizeHTML(memory.title)}">
+        <div class="view-hero-overlay">
+          <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
+            ${isFeatured ? '<span style="background: #F59E0B; color: #000; font-size: 0.72rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 99px;">⭐ DESTACADO</span>' : ''}
+            <span style="font-size: 0.78rem; color: rgba(255, 255, 255, 0.85); font-weight: 700;">📅 ${window.Utils.formatDateES(memory.date)}</span>
+          </div>
+          <h1 class="view-hero-title">${window.Utils.sanitizeHTML(memory.title)}</h1>
+          ${memory.location ? `<div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); margin-top: 0.2rem;">📍 ${window.Utils.sanitizeHTML(memory.location)}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="view-content-container">
+        <!-- Autor -->
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+          <div class="author-avatar-mini">${authorName.charAt(0).toUpperCase()}</div>
+          <span style="font-size: 0.85rem; font-weight: 700; color: var(--color-text-main);">Inmortalizado por ${window.Utils.sanitizeHTML(authorName)}</span>
+        </div>
+
+        <!-- Historia Completa -->
+        <div class="view-story-prose">${window.Utils.sanitizeHTML(memory.description || 'Sin historia escrita.')}</div>
+
+        <!-- Multimedia y Reproductores -->
+        ${musicSection}
+        ${voiceSection}
+
+        <!-- Hilo de Comentarios de Pareja -->
+        <div style="margin-top: 2rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--color-text-main); margin-bottom: 0.75rem;">💬 Conversaciones & Recuerdos (${comments.length})</h4>
+          <div class="view-comments-stream">
+            ${commentsHtml || '<div style="font-size: 0.82rem; color: var(--color-text-muted); font-style: italic;">Aún no hay comentarios. Sé el primero en dejar una nota con amor ❤️</div>'}
+          </div>
+
+          <!-- Input para Añadir Comentario -->
+          <form id="form-add-memory-comment" style="display: flex; gap: 0.5rem; margin-top: 1rem;" onsubmit="event.preventDefault(); window.app.submitMemoryComment('${memory.id}');">
+            <input type="text" id="input-memory-new-comment" class="form-control" placeholder="Escribe un mensaje en este recuerdo..." required style="flex: 1;">
+            <button type="submit" class="btn-primary" style="padding: 0.5rem 1rem;">❤️</button>
+          </form>
+        </div>
+      </div>
+    `;
+
+    // Botones de acción superior
+    const btnEdit = document.getElementById('btn-view-edit-memory');
+    const btnShare = document.getElementById('btn-view-share-memory');
+    const btnDel = document.getElementById('btn-view-delete-memory');
+
+    if (btnEdit) {
+      btnEdit.onclick = () => {
+        this.closeModal('modal-memory-view');
+        this.openMemoryModal(memory.id);
+      };
+    }
+    if (btnShare) {
+      btnShare.onclick = () => {
+        if (navigator.share) {
+          navigator.share({ title: memory.title, text: memory.description, url: window.location.href });
+        } else {
+          window.Utils.copyToClipboard(window.location.href, 'Enlace del recuerdo copiado 📋');
+        }
+      };
+    }
+    if (btnDel) {
+      btnDel.onclick = () => {
+        if (confirm('¿Eliminar este recuerdo?')) {
+          this.storage.deleteMemory(memory.id);
+          this.closeModal('modal-memory-view');
+          window.Utils.showToast('Recuerdo eliminado', 'info');
+          this.renderMemories();
+        }
+      };
+    }
+
+    this.openModal('modal-memory-view');
+  }
+
+  submitMemoryComment(memoryId) {
+    const input = document.getElementById('input-memory-new-comment');
+    if (!input || !input.value.trim()) return;
+
+    const memories = this.storage.getMemories() || [];
+    const memory = memories.find(m => m.id === memoryId);
+    if (!memory) return;
+
+    const profile = this.storage.getUserProfile() || {};
+    if (!memory.comments) memory.comments = [];
+
+    memory.comments.push({
+      id: 'c_' + Date.now().toString(36),
+      authorName: profile.name || 'Kevin',
+      authorRole: profile.name?.toLowerCase().includes('wendy') ? 'wendy' : 'kevin',
+      text: input.value.trim(),
+      time: 'Hace un momento'
+    });
+
+    this.storage.saveMemory(memory);
+    this.openMemoryView(memoryId);
+    window.Utils.showToast('Comentario añadido ❤️', 'success');
+  }
+
+  openMemoryActionsMenu(memoryId) {
+    this.openMemoryView(memoryId);
+  }
+
+  playMemoryVoiceNote(memoryId) {
+    window.Utils.showToast('Reproduciendo nota de voz 🎙️', 'info');
+  }
+
   playMemorySong(memoryId) {
-    const memory = this.storage.getMemories().find(m => m.id === memoryId);
+    const memory = (this.storage.getMemories() || []).find(m => m.id === memoryId);
     if (memory && memory.song && memory.song.previewUrl) {
       this.audioManager.playTrack(memory.song);
     } else {
-      window.Utils.showToast('Buscando preview de canción...', 'info');
+      window.Utils.showToast('Buscando melodía...', 'info');
       if (memory && memory.song && memory.song.title) {
         this.media.searchSongs(`${memory.song.title} ${memory.song.artist || ''}`).then(results => {
           if (results.length > 0 && results[0].previewUrl) {
@@ -1048,7 +1623,7 @@ class LumaApp {
             this.storage.saveMemory(memory);
             this.audioManager.playTrack(results[0]);
           } else {
-            window.Utils.showToast('No se encontró preview disponible', 'error');
+            window.Utils.showToast('No se encontró audio disponible para esta canción', 'warning');
           }
         });
       }
@@ -1814,44 +2389,72 @@ class LumaApp {
       };
     }
 
-    // 5. Formulario Recuerdo (ATRIA PARITY)
+    // 5. Formulario Recuerdo (NÚCLEO EMOCIONAL & DIARIO)
     const formMemory = document.getElementById('form-memory');
     if (formMemory) {
       formMemory.onsubmit = async (e) => {
         e.preventDefault();
+        const id = document.getElementById('memory-edit-id').value || null;
         const title = document.getElementById('memory-title-input').value.trim();
         const date = document.getElementById('memory-date-input').value;
         const location = document.getElementById('memory-location-input').value.trim();
         const description = document.getElementById('memory-desc-input').value.trim();
-        const songTitle = document.getElementById('memory-song-title').value.trim();
-        const songArtist = document.getElementById('memory-song-artist').value.trim();
-        const songPreview = document.getElementById('memory-song-preview').value.trim();
+        const auraColor = document.getElementById('memory-aura-color').value || '#F59E0B';
+        const isFeatured = document.getElementById('memory-is-featured').value === 'true';
+        const audioData = document.getElementById('memory-audio-data').value;
+        const songDataRaw = document.getElementById('memory-song-data').value;
+
+        let songObj = null;
+        if (songDataRaw) {
+          try { songObj = JSON.parse(songDataRaw); } catch (_) {}
+        }
 
         const coverFile = document.getElementById('memory-cover-file')?.files?.[0];
         const photosFiles = document.getElementById('memory-photos-file')?.files || [];
 
         let coverImage = '';
-        if (coverFile) coverImage = await window.Utils.fileToBase64(coverFile);
+        if (coverFile) {
+          coverImage = await window.Utils.fileToBase64(coverFile);
+        } else if (id) {
+          const existing = this.storage.getMemories().find(m => m.id === id);
+          if (existing) coverImage = existing.coverImage || '';
+        } else {
+          coverImage = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+        }
 
         let photos = [];
         for (let i = 0; i < photosFiles.length; i++) {
           photos.push(await window.Utils.fileToBase64(photosFiles[i]));
         }
 
-        const newMem = {
-          id: document.getElementById('memory-edit-id').value || null,
+        const profile = this.storage.getUserProfile() || {};
+        const author = {
+          id: profile.id,
+          name: profile.name || 'Kevin',
+          color: profile.favoriteColor || '#6366F1',
+          avatar: profile.avatar || ''
+        };
+
+        const memoryObj = {
+          id,
           title,
           date,
           location,
           description,
+          auraColor,
+          isFeatured,
           coverImage,
-          photos,
-          song: songTitle ? { title: songTitle, artist: songArtist, previewUrl: songPreview } : null
+          photos: photos.length > 0 ? photos : (coverImage ? [coverImage] : []),
+          photosCount: photos.length > 0 ? photos.length : 1,
+          author,
+          song: songObj,
+          audioNote: audioData ? { duration: '0:45', audioUrl: audioData } : null,
+          createdAt: new Date().toISOString()
         };
 
-        this.storage.saveMemory(newMem);
+        this.storage.saveMemory(memoryObj);
         this.closeModal('modal-memory');
-        window.Utils.showToast('Recuerdo guardado con éxito 📸🌻', 'success');
+        window.Utils.showToast('¡Recuerdo inmortalizado con éxito! 🌻✨', 'success');
         this.renderMemories();
         this.renderInicio();
       };
