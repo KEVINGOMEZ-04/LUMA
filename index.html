@@ -107,7 +107,7 @@
         </a>
       </div>
 
-      <!-- Lado Derecho: Ajustes de Estilo, Notificaciones y Perfil -->
+      <!-- Lado Derecho: Ajustes de Estilo, Notificaciones y Emoji del Grupo -->
       <div class="header-right-col">
         <button type="button" class="header-icon-btn" id="btn-header-settings" title="Ajustes y Modo Claro / Oscuro">
           <span>⚙️</span>
@@ -116,12 +116,10 @@
           <span>🔔</span>
           <span class="header-badge-count">3</span>
         </button>
-        <div class="header-user-profile-btn" id="header-profile-avatar-btn" title="Miembros y Presencia">
-          <div class="header-avatar-circle" id="header-user-avatar-img-wrap">
-            <span id="header-user-avatar-text">U</span>
-          </div>
+        <button type="button" class="header-icon-btn group-members-btn" id="header-group-members-btn" title="Miembros del Grupo y Presencia">
+          <span id="header-group-icon-display" style="font-size: 1.15rem;">👥</span>
           <span class="header-user-presence-dot" id="header-user-presence-dot"></span>
-        </div>
+        </button>
       </div>
     </header>
 
@@ -467,19 +465,22 @@
     <!-- MOBILE BOTTOM NAVIGATION BAR (4 TABS) -->
     <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
       <a href="#inicio" class="bottom-nav-item active" id="bottom-tab-inicio">
-        <span class="bottom-nav-icon">🏠</span>
+        <img src="assets/nav/nav-home.png" class="bottom-nav-img-icon" alt="Inicio" />
         <span class="bottom-nav-label">Inicio</span>
       </a>
       <a href="#recuerdos" class="bottom-nav-item" id="bottom-tab-recuerdos">
-        <span class="bottom-nav-icon">🖼️</span>
+        <img src="assets/nav/nav-memories.png" class="bottom-nav-img-icon" alt="Recuerdos" />
         <span class="bottom-nav-label">Recuerdos</span>
       </a>
       <a href="#notas" class="bottom-nav-item" id="bottom-tab-mensajes">
-        <span class="bottom-nav-icon">💬</span>
+        <div style="position: relative; display: inline-flex;">
+          <img src="assets/nav/nav-messages.png" class="bottom-nav-img-icon" alt="Mensajes" />
+          <span class="nav-msg-badge-dot"></span>
+        </div>
         <span class="bottom-nav-label">Mensajes</span>
       </a>
       <button type="button" class="bottom-nav-item nav-item-exit" id="bottom-tab-salir" title="Opciones de salida y grupos">
-        <span class="bottom-nav-icon">🚪</span>
+        <img src="assets/nav/nav-exit.png" class="bottom-nav-img-icon" alt="Salir" />
         <span class="bottom-nav-label">Salir</span>
       </button>
     </nav>
@@ -728,34 +729,53 @@
     </div>
   </div>
 
-  <!-- 3. MODAL: PERFILES Y PRESENCIA DE MIEMBROS -->
+  <!-- 3. MODAL: PERFILES Y MIEMBROS DEL GRUPO -->
   <div id="modal-members-presence" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
-        <h3 class="modal-title"><span>👥</span> Miembros y Presencia</h3>
+        <h3 class="modal-title"><span>👥</span> Miembros de <span id="presence-modal-group-title" style="color: var(--color-primary-light);">Grupo</span></h3>
         <button type="button" class="btn-modal-close" data-close-modal="modal-members-presence">✕</button>
       </div>
       
-      <!-- Mi Perfil Activo -->
+      <!-- Banner Informativo del Grupo Activo -->
+      <div style="background: var(--color-bg-surface-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 0.85rem 1rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0;">
+          <span id="presence-modal-group-emoji" style="font-size: 1.6rem;">🌟</span>
+          <div style="min-width: 0;">
+            <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--color-text-muted); font-weight: 700;">Código de Invitación</div>
+            <div id="presence-modal-group-code-btn" role="button" tabindex="0" style="font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700; color: var(--color-primary-light); cursor: pointer; display: flex; align-items: center; gap: 0.35rem;" title="Copiar código">
+              <span id="presence-modal-group-code">------</span> 📋
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn-primary" id="btn-presence-modal-invite" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;">
+          👥 Invitar
+        </button>
+      </div>
+
+      <!-- Mi Perfil en este Grupo -->
       <div class="active-user-profile-badge">
         <div class="active-user-avatar-box" id="presence-modal-my-avatar">U</div>
         <div style="flex: 1; min-width: 0;">
           <div style="display: flex; align-items: center; gap: 0.4rem;">
-            <strong id="presence-modal-my-name" style="font-size: 1.05rem; color: var(--color-text-main);">Mi Nombre</strong>
+            <strong id="presence-modal-my-name" style="font-size: 1rem; color: var(--color-text-main);">Mi Nombre</strong>
             <span class="user-role-badge self">Tú</span>
           </div>
           <div id="presence-modal-my-status" style="font-size: 0.78rem; color: var(--color-primary); font-weight: 600; margin-top: 0.1rem;">✨ En línea</div>
-          <p id="presence-modal-my-bio" style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: 0.15rem;"></p>
+          <p id="presence-modal-my-bio" style="font-size: 0.78rem; color: var(--color-text-secondary); margin-top: 0.15rem;"></p>
         </div>
-        <button type="button" class="btn-secondary" id="btn-presence-modal-edit-profile" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
-          ✏️ Editar Perfil
+        <button type="button" class="btn-secondary" id="btn-presence-modal-edit-profile" style="padding: 0.35rem 0.75rem; font-size: 0.78rem; flex-shrink: 0;">
+          ✏️ Mi Perfil
         </button>
       </div>
 
-      <!-- Lista de Miembros -->
-      <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--color-primary); text-transform: uppercase; margin: 1.25rem 0 0.75rem;">
-        Integrantes del Grupo (<span id="presence-modal-members-count">0</span>)
-      </h4>
+      <!-- Lista de Miembros del Grupo -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin: 1.15rem 0 0.65rem;">
+        <h4 style="font-size: 0.82rem; font-weight: 800; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em;">
+          Integrantes (<span id="presence-modal-members-count">0</span>)
+        </h4>
+        <span style="font-size: 0.72rem; color: var(--color-text-muted);">Actualizado en tiempo real</span>
+      </div>
       <div class="members-presence-list" id="presence-modal-members-list"></div>
     </div>
   </div>
