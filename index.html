@@ -107,8 +107,11 @@
         </a>
       </div>
 
-      <!-- Lado Derecho: Notificaciones y Perfil -->
+      <!-- Lado Derecho: Ajustes de Estilo, Notificaciones y Perfil -->
       <div class="header-right-col">
+        <button type="button" class="header-icon-btn" id="btn-header-settings" title="Ajustes y Modo Claro / Oscuro">
+          <span>⚙️</span>
+        </button>
         <button type="button" class="header-icon-btn" id="btn-header-notifs" title="Notificaciones">
           <span>🔔</span>
           <span class="header-badge-count">3</span>
@@ -142,7 +145,7 @@
             <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80" alt="Portada del grupo" id="group-cover-img" class="group-cover-img">
             <div class="group-cover-overlay"></div>
             <button type="button" class="btn-change-cover" id="btn-edit-cover-quick" title="Cambiar portada del grupo">
-              <span>🖼️</span> Cambiar portada
+              <span>📷</span> Cambiar portada
             </button>
           </div>
 
@@ -182,43 +185,47 @@
                 <span>✏️ Editar grupo</span>
               </button>
               <button type="button" class="btn-hero-secondary" id="btn-invite-members">
-                <span>👤+ Invitar</span>
+                <span>👥 Invitar</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- ACCIONES RÁPIDAS (5 DARK PILLS) -->
+        <!-- ACCIONES RÁPIDAS (6 DARK PILLS INCLUYENDO STATS ANTES DE OBJETIVOS) -->
         <div class="quick-actions-grid">
-          <a href="#recuerdos" class="quick-action-pill">
+          <a href="#recuerdos" class="quick-action-pill" id="action-btn-recuerdo">
             <div class="quick-action-icon-box purple">📸</div>
             <span>Recuerdo</span>
           </a>
-          <a href="#musica" class="quick-action-pill">
+          <a href="#musica" class="quick-action-pill" id="action-btn-musica">
             <div class="quick-action-icon-box blue">🎵</div>
             <span>Música</span>
           </a>
-          <a href="#cine" class="quick-action-pill">
+          <a href="#cine" class="quick-action-pill" id="action-btn-cine">
             <div class="quick-action-icon-box indigo">🎬</div>
             <span>Cine</span>
           </a>
-          <a href="#series" class="quick-action-pill">
+          <a href="#series" class="quick-action-pill" id="action-btn-series">
             <div class="quick-action-icon-box teal">📺</div>
             <span>Series</span>
           </a>
-          <a href="#objetivos" class="quick-action-pill">
+          <a href="#objetivos" class="quick-action-pill" id="action-btn-stats">
+            <div class="quick-action-icon-box purple">📊</div>
+            <span>Stats</span>
+          </a>
+          <a href="#objetivos" class="quick-action-pill" id="action-btn-objetivos">
             <div class="quick-action-icon-box orange">🎯</div>
             <span>Objetivos</span>
           </a>
         </div>
 
-        <!-- INSIGHTS DEL GRUPO (6 CARDS EN INICIO) -->
+        <!-- RESUMEN DEL GRUPO (INSIGHTS DASHBOARD) -->
         <div class="home-insights-block">
           <div class="section-title-row">
             <h3 class="section-block-title">
-              <span>📊</span> Insights del Grupo
+              <span>📊</span> Resumen del grupo
             </h3>
-            <a href="#inicio" class="section-block-link" id="btn-refresh-insights">
+            <a href="#objetivos" class="section-block-link" id="btn-refresh-insights">
               Ver todo ➔
             </a>
           </div>
@@ -457,7 +464,7 @@
 
     </main>
 
-    <!-- MOBILE BOTTOM NAVIGATION BAR (FLOATING CAPSULE) -->
+    <!-- MOBILE BOTTOM NAVIGATION BAR (4 TABS) -->
     <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
       <a href="#inicio" class="bottom-nav-item active" id="bottom-tab-inicio">
         <span class="bottom-nav-icon">🏠</span>
@@ -467,22 +474,18 @@
         <span class="bottom-nav-icon">🖼️</span>
         <span class="bottom-nav-label">Recuerdos</span>
       </a>
-      
-      <!-- Central Floating Action Button (FAB) -->
-      <button type="button" class="bottom-nav-fab" id="btn-global-create" aria-label="Crear nuevo en LUMA">
-        <span class="fab-plus-icon">+</span>
-      </button>
-
-      <a href="#objetivos" class="bottom-nav-item" id="bottom-tab-stats">
-        <span class="bottom-nav-icon">📊</span>
-        <span class="bottom-nav-label">Stats</span>
+      <a href="#notas" class="bottom-nav-item" id="bottom-tab-mensajes">
+        <span class="bottom-nav-icon">💬</span>
+        <span class="bottom-nav-label">Mensajes</span>
       </a>
-      <button type="button" class="bottom-nav-item" id="bottom-tab-perfil">
-        <span class="bottom-nav-icon">👤</span>
-        <span class="bottom-nav-label">Perfil</span>
+      <button type="button" class="bottom-nav-item nav-item-exit" id="bottom-tab-salir" title="Opciones de salida y grupos">
+        <span class="bottom-nav-icon">🚪</span>
+        <span class="bottom-nav-label">Salir</span>
       </button>
     </nav>
-  </div>  <!-- =========================================
+  </div>
+
+  <!-- =========================================
        REPRODUCTOR DE AUDIO FLOTANTE (MINI-BAR)
        ========================================= -->
   <div id="luma-audio-player" class="audio-player-bar" style="display: none;" role="region" aria-label="Reproductor de audio">
@@ -508,6 +511,58 @@
   <!-- =========================================
        MODALES DEL SISTEMA LUMA
        ========================================= -->
+
+  <!-- 0. MODAL AJUSTES Y TEMA (MODO CLARO / OSCURO) -->
+  <div id="modal-settings" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-settings">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 id="modal-title-settings" class="modal-title"><span>⚙️</span> Ajustes & Apariencia</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-settings">✕</button>
+      </div>
+      
+      <div class="settings-modal-body">
+        <!-- Selector de Tema Visual -->
+        <div class="form-group">
+          <label class="form-label">Tema de la Aplicación</label>
+          <div class="theme-selector-grid">
+            <button type="button" class="theme-option-card active" id="btn-theme-dark" data-theme-choice="dark">
+              <div class="theme-card-preview dark">
+                <div class="theme-preview-dot"></div>
+              </div>
+              <span class="theme-card-title">🌙 Modo Oscuro</span>
+              <span class="theme-card-desc">Midnight OLED</span>
+            </button>
+            <button type="button" class="theme-option-card" id="btn-theme-light" data-theme-choice="light">
+              <div class="theme-card-preview light">
+                <div class="theme-preview-dot"></div>
+              </div>
+              <span class="theme-card-title">☀️ Modo Claro</span>
+              <span class="theme-card-desc">Luxe Light</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Acciones de Cuenta / Grupo -->
+        <div class="form-group" style="margin-top: 1.25rem;">
+          <label class="form-label">Gestión de Grupos</label>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <button type="button" class="btn-secondary" id="btn-settings-open-groups" style="justify-content: flex-start; gap: 0.6rem; padding: 0.75rem 1rem;">
+              <span>📁</span> Mis Grupos Guardados
+            </button>
+            <button type="button" class="btn-secondary" id="btn-settings-open-profile" style="justify-content: flex-start; gap: 0.6rem; padding: 0.75rem 1rem;">
+              <span>👤</span> Personalizar Perfil
+            </button>
+          </div>
+        </div>
+
+        <!-- Info de la Versión -->
+        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); color: var(--color-text-muted); font-size: 0.78rem;">
+          <div><strong>LUMA Mobile Native Edition</strong> · v1.0.0</div>
+          <div style="font-size: 0.72rem; margin-top: 0.2rem;">Plataforma social privada para grupos y parejas</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- 1. MODAL ULTRA-PREMIUM: PERSONALIZAR PERFIL -->
   <div id="modal-profile" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-profile">
