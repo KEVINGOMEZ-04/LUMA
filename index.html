@@ -434,7 +434,6 @@
             </div>
             <div class="music-hero-titles">
               <h2 class="music-hero-title">Música del Grupo</h2>
-              <p class="music-hero-subtitle">Cada canción cuenta una <span class="highlight-purple-text">historia</span> del parche.</p>
             </div>
           </div>
           <div class="music-hero-stats-card">
@@ -474,13 +473,11 @@
         <div class="music-filter-chips-scroll" id="music-filter-chips">
           <button type="button" class="music-filter-chip active" data-filter="all">Más recientes</button>
           <button type="button" class="music-filter-chip" data-filter="top-rated">Mejor valoradas</button>
-          <div class="music-filter-dropdown-wrap">
+          <div class="music-filter-dropdown-wrap" id="music-member-filter-wrap">
             <button type="button" class="music-filter-chip" id="btn-filter-member" data-filter="by-member">
-              <span>Por integrante</span> <span class="chevron">⌄</span>
+              <span id="btn-filter-member-text">Por integrante</span> <span class="chevron">⌄</span>
             </button>
-            <select id="select-filter-member" class="music-member-hidden-select">
-              <option value="">Todos los integrantes</option>
-            </select>
+            <div class="music-custom-dropdown-menu" id="music-member-dropdown-menu" style="display: none;"></div>
           </div>
           <button type="button" class="music-filter-chip" data-filter="with-memories">Vinculadas a recuerdos</button>
           <button type="button" class="music-filter-chip" data-filter="my-songs">Mis añadidas</button>
@@ -1494,7 +1491,7 @@
       <button type="button" class="btn-player-ctl" id="btn-player-prev" title="Anterior">⏮</button>
       <button type="button" class="btn-player-ctl play-toggle" id="btn-player-play-toggle" title="Play/Pausa">▶</button>
       <button type="button" class="btn-player-ctl" id="btn-player-next" title="Siguiente">⏭</button>
-      <button type="button" class="btn-player-ctl close-ctl" id="btn-player-close" title="Cerrar">✕</button>
+      <button type="button" class="btn-player-ctl close-ctl" id="btn-player-close" onclick="window.app.closeGlobalPlayer(event)" title="Cerrar">✕</button>
     </div>
     <audio id="global-audio-element" preload="none"></audio>
   </div>
