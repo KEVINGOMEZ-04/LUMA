@@ -222,6 +222,21 @@
         image: '',
         createdAt: '2026-02-18T16:30:00Z'
       }
+    ],
+
+    plans: [
+      {
+        id: 'plan_1',
+        title: 'Cena y Noche de Películas',
+        date: '2026-10-15',
+        time: '19:30',
+        location: 'Restaurante Central',
+        category: 'Cena',
+        icon: '🍽️',
+        description: 'Reservar mesa con anticipación y llevar el postre favorito.',
+        author: { id: 'usr_kevin', name: 'Kevin', color: '#6366F1' },
+        createdAt: '2026-02-20T12:00:00Z'
+      }
     ]
   };
 
@@ -636,6 +651,24 @@
     deleteNote(id) {
       const data = this.getGroupData();
       data.notes = (data.notes || []).filter(n => n.id !== id);
+      this.saveGroupData(null, data);
+    }
+
+    getPlans() { return this.getGroupData().plans || []; }
+    savePlan(plan) {
+      const data = this.getGroupData();
+      if (!data.plans) data.plans = [];
+      if (!plan.id) plan.id = 'plan_' + window.Utils.generateId();
+      if (!plan.createdAt) plan.createdAt = new Date().toISOString();
+      const idx = data.plans.findIndex(p => p.id === plan.id);
+      if (idx >= 0) data.plans[idx] = plan;
+      else data.plans.unshift(plan);
+      this.saveGroupData(null, data);
+      return plan;
+    }
+    deletePlan(id) {
+      const data = this.getGroupData();
+      data.plans = (data.plans || []).filter(p => p.id !== id);
       this.saveGroupData(null, data);
     }
 
