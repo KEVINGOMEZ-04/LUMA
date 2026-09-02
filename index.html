@@ -1591,10 +1591,11 @@
     </div>
   </div>
 
-  <!-- 17. MODAL LIGHTBOX FOTOS -->
+  <!-- 17. MODAL LIGHTBOX FOTOS & VIDEOS -->
   <div id="modal-lightbox" class="modal-overlay lightbox-overlay" role="dialog" aria-modal="true">
     <button type="button" class="btn-lightbox-close" data-close-modal="modal-lightbox">✕</button>
-    <img src="" id="lightbox-img" class="lightbox-img-element" alt="Vista ampliada">
+    <img src="" id="lightbox-img" class="lightbox-img-element" alt="Vista ampliada" style="display: none;">
+    <video src="" id="lightbox-video" class="lightbox-img-element" controls playsinline style="display: none; max-width: 90vw; max-height: 85vh; border-radius: var(--radius-lg);"></video>
   </div>
 
   <!-- Firebase SDKs -->
@@ -1604,6 +1605,7 @@
   <!-- LUMA Core Modules -->
   <script src="js/config.js"></script>
   <script src="js/utils.js"></script>
+  <script src="js/gdrive.js"></script>
   <script src="js/media.js"></script>
   <script src="js/presence.js"></script>
   <script src="js/animations.js"></script>
