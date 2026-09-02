@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LUMA 🌟 - Servicio de Medios y Reproductor Singleton
  */
 
@@ -111,6 +111,7 @@ window.MediaService = {
         album: item.collectionName,
         previewUrl: item.previewUrl,
         artwork: (item.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
+        trackTimeMillis: item.trackTimeMillis || 210000,
         externalUrl: item.trackViewUrl
       }));
     } catch (err) {
