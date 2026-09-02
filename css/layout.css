@@ -241,7 +241,7 @@ html, body {
   font-family: var(--font-heading);
   font-weight: 800;
   font-size: 1.25rem;
-  color: #FFFFFF;
+  color: var(--color-text-main);
   letter-spacing: -0.02em;
 }
 
@@ -256,9 +256,9 @@ html, body {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: #111728;
+  background: var(--color-btn-surface);
   border: 1px solid var(--color-border);
-  color: #FFFFFF;
+  color: var(--color-text-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -268,7 +268,7 @@ html, body {
 }
 
 .header-icon-btn:hover {
-  background: #182035;
+  background: var(--color-btn-surface-hover);
   transform: scale(1.05);
 }
 
@@ -397,14 +397,23 @@ html, body {
 }
 
 .bottom-nav-item.active {
-  color: #FFFFFF;
-  background: #1E1B4B;
-  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.25);
+  color: var(--color-primary-light);
+  background: rgba(99, 102, 241, 0.15);
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="light"] .bottom-nav-item.active {
+  color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.12);
 }
 
 .bottom-nav-item.active .bottom-nav-label {
   color: var(--color-primary-light);
   font-weight: 700;
+}
+
+[data-theme="light"] .bottom-nav-item.active .bottom-nav-label {
+  color: var(--color-primary);
 }
 
 .bottom-nav-item.nav-item-exit {
@@ -525,7 +534,8 @@ html, body {
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  background: #0E1322;
+  background: var(--color-modal-bg);
+  color: var(--color-text-main);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: 1.5rem;
@@ -560,7 +570,7 @@ html, body {
   width: 38px;
   height: 4px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(128, 128, 128, 0.4);
   margin: -0.5rem auto 1.25rem;
 }
 
@@ -577,11 +587,11 @@ html, body {
   font-family: var(--font-heading);
   font-size: 1.2rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--color-text-main);
 }
 
 .btn-modal-close {
-  background: #182035;
+  background: var(--color-close-btn-bg);
   border: 1px solid var(--color-border);
   width: 32px;
   height: 32px;
@@ -596,11 +606,11 @@ html, body {
 }
 
 .btn-modal-close:hover {
-  color: #FFFFFF;
-  background: #232D48;
+  color: var(--color-text-main);
+  background: var(--color-btn-surface-hover);
 }
 
-/* Formularios Dark */
+/* Formularios */
 .modal-form {
   display: flex;
   flex-direction: column;
@@ -627,11 +637,11 @@ html, body {
 
 .form-control {
   width: 100%;
-  background: #111728;
+  background: var(--color-input-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
-  color: #FFFFFF;
+  color: var(--color-text-main);
   font-family: var(--font-main);
   font-size: 0.9rem;
   transition: all var(--transition-fast);
@@ -641,7 +651,7 @@ html, body {
   outline: none;
   border-color: var(--color-primary-light);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-  background: #151C30;
+  background: var(--color-input-bg);
 }
 
 /* Botones Principales */
@@ -650,8 +660,8 @@ html, body {
   color: #FFFFFF;
   border: none;
   border-radius: var(--radius-md);
-  padding: 0.75rem 1.25rem;
-  font-size: 0.9rem;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
@@ -663,18 +673,18 @@ html, body {
 }
 
 .btn-primary:hover {
+  background: var(--color-primary-dark);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
 }
 
 .btn-secondary {
-  background: #161D31;
-  color: #FFFFFF;
+  background: var(--color-btn-surface);
+  color: var(--color-btn-text);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 0.75rem 1.25rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 0.85rem 1.25rem;
+  font-size: 0.92rem;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -684,8 +694,8 @@ html, body {
 }
 
 .btn-secondary:hover {
-  background: #1C2640;
-  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--color-btn-surface-hover);
+  color: var(--color-text-main);
 }
 
 .modal-footer {
