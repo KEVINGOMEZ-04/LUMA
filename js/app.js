@@ -962,11 +962,11 @@ class LumaApp {
     if (memories.length === 0) {
       container.innerHTML = `
         <div class="glass-card" style="text-align: center; padding: 2.5rem 1.5rem; background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-xl); margin-top: 1rem;">
-          <span style="font-size: 2.5rem;">🌻</span>
+          <span style="font-size: 2.5rem;">📸</span>
           <h4 style="margin-top: 0.5rem; font-size: 1.1rem; color: var(--color-text-main);">Ningún recuerdo encontrado</h4>
           <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">${searchQuery ? 'Prueba con otra palabra clave en el buscador.' : 'Inmortaliza el primer momento de este grupo.'}</p>
           <button type="button" class="btn-primary" style="margin-top: 1.25rem;" onclick="window.app.openMemoryModal()">
-            + Inmortalizar Recuerdo 🌻
+            + Inmortalizar Recuerdo
           </button>
         </div>
       `;
@@ -1087,45 +1087,143 @@ class LumaApp {
     }).join('');
   }
 
-  // --- CALENDARIO ANUAL INTERACTIVO (12 MESES CON DOTS) ---
+  // --- MOTOR DE DÍAS FESTIVOS (COLOMBIA & INTERNACIONAL PARA CUALQUIER AÑO) ---
+  getHolidaysForYear(year) {
+    const y = parseInt(year, 10);
+    // Algoritmo de Pascua de Gauss / Meeus
+    const a = y % 19;
+    const b = Math.floor(y / 100);
+    const c = y % 100;
+    const d = Math.floor(b / 4);
+    const e = b % 4;
+    const f = Math.floor((b + 8) / 25);
+    const g = Math.floor((b - f + 1) / 3);
+    const h = (19 * a + b - d - g + 15) % 30;
+    const i = Math.floor(c / 4);
+    const k = c % 4;
+    const l = (32 + 2 * e + 2 * i - h - k) % 7;
+    const m = Math.floor((a + 11 * h + 22 * l) / 451);
+    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+    const day = ((h + l - 7 * m + 114) % 31) + 1;
+    const easterDate = new Date(Date.UTC(y, month, day));
+
+    function addDays(dt, days) {
+      const res = new Date(dt.getTime());
+      res.setUTCDate(res.getUTCDate() + days);
+      return res;
+    }
+
+    function getNextMonday(dt) {
+      const res = new Date(dt.getTime());
+      const dayOfWeek = res.getUTCDay();
+      if (dayOfWeek === 1) return res;
+      const daysToAdd = (8 - dayOfWeek) % 7;
+      res.setUTCDate(res.getUTCDate() + (daysToAdd === 0 ? 7 : daysToAdd));
+      return res;
+    }
+
+    const holidays = [
+      { date: new Date(Date.UTC(y, 0, 1)), name: 'Año Nuevo' },
+      { date: getNextMonday(new Date(Date.UTC(y, 0, 6))), name: 'Reyes Magos' },
+      { date: getNextMonday(new Date(Date.UTC(y, 2, 19))), name: 'San José' },
+      { date: addDays(easterDate, -3), name: 'Jueves Santo' },
+      { date: addDays(easterDate, -2), name: 'Viernes Santo' },
+      { date: new Date(Date.UTC(y, 4, 1)), name: 'Día del Trabajo' },
+      { date: getNextMonday(addDays(easterDate, 39)), name: 'Ascensión del Señor' },
+      { date: getNextMonday(addDays(easterDate, 60)), name: 'Corpus Christi' },
+      { date: getNextMonday(addDays(easterDate, 68)), name: 'Sagrado Corazón' },
+      { date: getNextMonday(new Date(Date.UTC(y, 5, 29))), name: 'San Pedro y San Pablo' },
+      { date: new Date(Date.UTC(y, 6, 20)), name: 'Día de la Independencia' },
+      { date: new Date(Date.UTC(y, 7, 7)), name: 'Batalla de Boyacá' },
+      { date: getNextMonday(new Date(Date.UTC(y, 7, 15))), name: 'Asunción de la Virgen' },
+      { date: getNextMonday(new Date(Date.UTC(y, 9, 12))), name: 'Día de la Raza' },
+      { date: getNextMonday(new Date(Date.UTC(y, 10, 1))), name: 'Todos los Santos' },
+      { date: getNextMonday(new Date(Date.UTC(y, 10, 11))), name: 'Independencia de Cartagena' },
+      { date: new Date(Date.UTC(y, 11, 8)), name: 'Inmaculada Concepción' },
+      { date: new Date(Date.UTC(y, 11, 25)), name: 'Navidad' }
+    ];
+
+    return holidays.map(h => ({
+      year: y,
+      month: h.date.getUTCMonth(),
+      day: h.date.getUTCDate(),
+      name: h.name,
+      dateStr: `${y}-${(h.date.getUTCMonth() + 1).toString().padStart(2, '0')}-${h.date.getUTCDate().toString().padStart(2, '0')}`
+    }));
+  }
+
+  // --- CALENDARIO ANUAL INTERACTIVO (MES SIEMPRE SELECCIONADO + DÍA ACTUAL & FESTIVOS) ---
   initMemoriesCalendar() {
     const strip = document.getElementById('calendar-months-strip');
     const yearSelect = document.getElementById('select-calendar-year');
+    const detailsContainer = document.getElementById('calendar-active-month-details');
     if (!strip || !yearSelect) return;
 
-    const selectedYear = parseInt(yearSelect.value, 10) || 2025;
+    const now = new Date();
+    const currentRealYear = now.getFullYear();
+    const currentRealMonth = now.getMonth();
+    const currentRealDay = now.getDate();
+
+    if (this.activeCalendarYear === undefined) {
+      this.activeCalendarYear = currentRealYear;
+      yearSelect.value = currentRealYear.toString();
+    }
+    if (this.activeCalendarMonth === undefined) {
+      this.activeCalendarMonth = currentRealMonth;
+    }
+
+    const selectedYear = parseInt(yearSelect.value, 10) || this.activeCalendarYear;
+    this.activeCalendarYear = selectedYear;
+
+    const holidays = this.getHolidaysForYear(selectedYear);
     const memories = this.storage.getMemories() || [];
     const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const monthFullNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
     yearSelect.onchange = () => {
+      this.activeCalendarYear = parseInt(yearSelect.value, 10);
       this.initMemoriesCalendar();
     };
 
     strip.innerHTML = monthNames.map((mName, mIdx) => {
-      // Filtrar recuerdos de este mes y año
       const monthMemories = memories.filter(m => {
         const d = new Date(m.date || m.createdAt);
         return d.getFullYear() === selectedYear && d.getMonth() === mIdx;
       });
+      const monthHolidays = holidays.filter(h => h.month === mIdx);
 
-      const hasMemories = monthMemories.length > 0;
       const isCurrentActive = this.activeCalendarMonth === mIdx;
+      const isCurrentRealMonthAndYear = (selectedYear === currentRealYear && mIdx === currentRealMonth);
 
-      // Dots luminosos por cada recuerdo (máximo 4 dots visibles)
+      // Render dots: Recuerdos + Días Festivos (Dot verde brillante exclusivo)
       let dotsHtml = '';
-      if (hasMemories) {
-        dotsHtml = monthMemories.slice(0, 3).map(m => {
+      if (monthMemories.length > 0) {
+        dotsHtml += monthMemories.slice(0, 2).map(m => {
           let dotClass = 'purple';
           if (m.isFeatured) dotClass = 'gold';
           else if (m.audioNote) dotClass = 'blue';
           else if (m.song) dotClass = 'rose';
-          return `<span class="cal-dot ${dotClass}"></span>`;
+          return `<span class="cal-dot ${dotClass}" title="Recuerdo: ${window.Utils.sanitizeHTML(m.title)}"></span>`;
         }).join('');
-        if (monthMemories.length > 3) {
-          dotsHtml += `<span class="cal-dot purple"></span>`;
-        }
-      } else {
+      }
+      if (monthHolidays.length > 0) {
+        dotsHtml += `<span class="cal-dot holiday" title="Festivo: ${monthHolidays.map(h => h.name).join(', ')}"></span>`;
+      }
+      if (!monthMemories.length && !monthHolidays.length) {
         dotsHtml = `<span class="cal-dot muted"></span>`;
+      }
+
+      // Badge de día destacado
+      let badgeHtml = '';
+      if (isCurrentActive) {
+        if (isCurrentRealMonthAndYear) {
+          badgeHtml = `<div class="cal-day-badge today" title="Hoy: ${currentRealDay} de ${monthNames[mIdx]}">${currentRealDay}</div>`;
+        } else if (monthHolidays.length > 0) {
+          badgeHtml = `<div class="cal-day-badge" style="background:#10B981;" title="Festivo: ${monthHolidays[0].day} de ${monthNames[mIdx]}">${monthHolidays[0].day}</div>`;
+        } else if (monthMemories.length > 0) {
+          const dNum = new Date(monthMemories[0].date || monthMemories[0].createdAt).getDate();
+          badgeHtml = `<div class="cal-day-badge">${dNum || 1}</div>`;
+        }
       }
 
       return `
@@ -1134,10 +1232,61 @@ class LumaApp {
           <div class="month-dots-grid">
             ${dotsHtml}
           </div>
-          ${isCurrentActive && hasMemories ? `<div class="cal-day-badge">${new Date(monthMemories[0].date).getDate() || 21}</div>` : ''}
+          ${badgeHtml}
         </div>
       `;
     }).join('');
+
+    // Render Panel Informativo del Mes Activo: Día actual y Días Festivos
+    if (detailsContainer) {
+      const activeHolidays = holidays.filter(h => h.month === this.activeCalendarMonth);
+      const isCurrentRealMonthAndYear = (selectedYear === currentRealYear && this.activeCalendarMonth === currentRealMonth);
+
+      let todayInfoHtml = '';
+      if (isCurrentRealMonthAndYear) {
+        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const dayName = days[now.getDay()];
+        todayInfoHtml = `
+          <div class="calendar-today-row">
+            <span class="calendar-today-badge">
+              <span style="color:#10B981;">🟢</span>
+              <span>Hoy es <strong>${dayName}, ${currentRealDay} de ${monthFullNames[currentRealMonth]}</strong></span>
+            </span>
+            <span style="font-size: 0.72rem; color: var(--color-primary-light); font-weight: 700;">Día actual remarcado</span>
+          </div>
+        `;
+      }
+
+      let holidaysListHtml = '';
+      if (activeHolidays.length > 0) {
+        holidaysListHtml = `
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 800; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem;">
+              🎉 Días Festivos en ${monthFullNames[this.activeCalendarMonth]} (${activeHolidays.length})
+            </div>
+            <div class="calendar-holidays-list">
+              ${activeHolidays.map(h => `
+                <span class="holiday-pill-item" title="${h.name}">
+                  <span>🎉</span>
+                  <span><strong>${h.day} ${monthNames[h.month]}:</strong> ${h.name}</span>
+                </span>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        holidaysListHtml = `
+          <div style="font-size: 0.72rem; color: var(--color-text-muted);">
+            No hay días festivos en ${monthFullNames[this.activeCalendarMonth]}.
+          </div>
+        `;
+      }
+
+      detailsContainer.innerHTML = `
+        ${todayInfoHtml}
+        ${holidaysListHtml}
+      `;
+    }
   }
 
   onCalendarMonthSelect(monthIdx, year) {
@@ -1158,8 +1307,6 @@ class LumaApp {
         el.style.transform = 'scale(1.03)';
         setTimeout(() => { el.style.transform = ''; }, 600);
       }
-    } else {
-      window.Utils.showToast(`No hay recuerdos en este mes (${year})`, 'info');
     }
   }
 
@@ -2454,7 +2601,7 @@ class LumaApp {
 
         this.storage.saveMemory(memoryObj);
         this.closeModal('modal-memory');
-        window.Utils.showToast('¡Recuerdo inmortalizado con éxito! 🌻✨', 'success');
+        window.Utils.showToast('¡Recuerdo guardado con éxito! ✨', 'success');
         this.renderMemories();
         this.renderInicio();
       };
