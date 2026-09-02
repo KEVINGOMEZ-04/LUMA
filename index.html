@@ -447,12 +447,6 @@
             </div>
             <div class="music-stat-divider"></div>
             <div class="music-stat-col">
-              <span class="music-stat-top-icon blue">👥</span>
-              <span class="music-stat-val" id="stat-members-count">18</span>
-              <span class="music-stat-lbl">integrantes</span>
-            </div>
-            <div class="music-stat-divider"></div>
-            <div class="music-stat-col">
               <span class="music-stat-top-icon violet">🕒</span>
               <span class="music-stat-val pink-highlight" id="stat-hours-count">36h</span>
               <span class="music-stat-lbl">tiempo total</span>
@@ -1457,6 +1451,76 @@
         <input type="text" id="input-song-comment-text" class="form-control" placeholder="Escribe tu historia o comentario..." required>
         <button type="submit" class="btn-primary-purple" style="padding: 0.6rem 1rem;">Enviar</button>
       </form>
+    </div>
+  </div>
+
+  <!-- 9.15 MODAL: MENÚ DE ACCIONES DE CANCIÓN (GLASSMORPHISM) -->
+  <div id="modal-song-actions" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="sheet-actions-title">
+    <div class="modal-content modal-action-sheet" style="max-width: 420px; border-radius: 26px;">
+      <div class="action-sheet-header">
+        <img id="sheet-actions-art" src="assets/icon.png" class="action-sheet-art" alt="Cover">
+        <div class="action-sheet-titles">
+          <h3 id="sheet-actions-title" class="action-sheet-title">Título Canción</h3>
+          <p id="sheet-actions-artist" class="action-sheet-subtitle">Artista</p>
+        </div>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-song-actions">✕</button>
+      </div>
+
+      <!-- Calificación Rápida de Estrellas -->
+      <div class="sheet-rating-section">
+        <span class="sheet-rating-label">Tu Calificación:</span>
+        <div class="star-rating-interactive" id="sheet-action-star-picker">
+          <button type="button" class="star-btn active" data-value="1">⭐</button>
+          <button type="button" class="star-btn active" data-value="2">⭐</button>
+          <button type="button" class="star-btn active" data-value="3">⭐</button>
+          <button type="button" class="star-btn active" data-value="4">⭐</button>
+          <button type="button" class="star-btn active" data-value="5">⭐</button>
+          <span class="star-rating-number" id="sheet-action-star-score">5.0</span>
+        </div>
+      </div>
+
+      <!-- Lista de Acciones -->
+      <div class="action-sheet-menu-list">
+        <button type="button" class="action-sheet-btn" id="btn-sheet-view-comments">
+          <span class="sheet-btn-icon">💬</span>
+          <div class="sheet-btn-info">
+            <strong>Ver conversaciones</strong>
+            <small>Comentarios, historias y reacciones del parche</small>
+          </div>
+        </button>
+
+        <a href="#" target="_blank" rel="noopener noreferrer" class="action-sheet-btn" id="btn-sheet-open-spotify">
+          <span class="sheet-btn-icon">🟢</span>
+          <div class="sheet-btn-info">
+            <strong>Escuchar en Spotify</strong>
+            <small>Abrir canción oficial en Spotify</small>
+          </div>
+        </a>
+
+        <a href="#" target="_blank" rel="noopener noreferrer" class="action-sheet-btn" id="btn-sheet-open-youtube">
+          <span class="sheet-btn-icon">🔴</span>
+          <div class="sheet-btn-info">
+            <strong>Buscar en YouTube</strong>
+            <small>Ver videoclip oficial o en vivo</small>
+          </div>
+        </a>
+
+        <button type="button" class="action-sheet-btn" id="btn-sheet-copy-info">
+          <span class="sheet-btn-icon">🔗</span>
+          <div class="sheet-btn-info">
+            <strong>Copiar nombre y artista</strong>
+            <small>Para compartir fácilmente</small>
+          </div>
+        </button>
+
+        <button type="button" class="action-sheet-btn danger" id="btn-sheet-delete-song">
+          <span class="sheet-btn-icon">🗑️</span>
+          <div class="sheet-btn-info">
+            <strong style="color: #EF4444;">Eliminar del playlist</strong>
+            <small>Quitar este tema de la biblioteca grupal</small>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 
