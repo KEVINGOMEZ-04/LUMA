@@ -108,7 +108,7 @@ window.Utils = {
     if (!file) return '';
     if (file.type && file.type.startsWith('image/')) {
       try {
-        const compressed = await this.compressImage(file);
+        const compressed = await this.compressImage(file, 900, 0.7);
         if (compressed) return compressed;
       } catch (_) {}
     }
@@ -120,7 +120,7 @@ window.Utils = {
     });
   },
 
-  async compressImage(file, maxDimension = 1200, quality = 0.8) {
+  async compressImage(file, maxDimension = 900, quality = 0.7) {
     return new Promise((resolve) => {
       if (!file || !file.type.startsWith('image/')) {
         return resolve('');
@@ -149,7 +149,7 @@ window.Utils = {
 
           resolve(canvas.toDataURL('image/jpeg', quality));
         };
-        img.onerror = () => resolve('');
+        img.onerror = () => resolve(e.target.result || '');
         img.src = e.target.result;
       };
       reader.onerror = () => resolve('');
