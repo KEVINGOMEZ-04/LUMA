@@ -9,7 +9,11 @@ window.CONFIG = {
 
   // TMDb API (The Movie Database)
   tmdb: {
-    apiKey: '900355444a10e6e76cf0e359c19b023f',
+    apiKey: 'e9e9d8da18ae29fc430845952232787c',
+    backupKeys: [
+      '8265bd1679663a7ea12ac168da84d2e8',
+      'cfe422613b250f702980a3bbf9e90716'
+    ],
     baseUrl: 'https://api.themoviedb.org/3',
     imageBaseUrl: 'https://image.tmdb.org/t/p/w500',
     language: 'es-ES'
