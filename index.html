@@ -303,13 +303,12 @@
       <!-- 2. SECCIÓN RECUERDOS (NÚCLEO EMOCIONAL & LÍNEA TEMPORAL VIVA) -->
       <section id="section-recuerdos" class="luma-section" role="tabpanel">
         
-        <!-- Hero Emocional -->
+        <!-- Header de Recuerdos -->
         <div class="memories-emotional-hero">
-          <h2 class="memories-hero-title">📸 Campo de Recuerdos 🌻</h2>
-          <p class="memories-hero-quote">«Cada recuerdo florece como una estrella en nuestro camino compartido.»</p>
+          <h2 class="memories-hero-title">Recuerdos</h2>
         </div>
 
-        <!-- Calendario Anual Interactivo (Mapa Visual del Año) -->
+        <!-- Calendario Anual Interactivo (Mapa Visual del Año con Festivos) -->
         <div class="interactive-year-calendar-card" id="memories-year-calendar">
           <div class="calendar-card-header">
             <div class="calendar-title-left">
@@ -319,15 +318,19 @@
             <div class="calendar-year-selector-wrap">
               <select id="select-calendar-year" class="calendar-year-select" aria-label="Seleccionar año">
                 <option value="2024">2024</option>
-                <option value="2025" selected>2025</option>
-                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
                 <option value="2027">2027</option>
+                <option value="2028">2028</option>
               </select>
             </div>
           </div>
 
-          <!-- 12 Meses con Puntos Luminosos de Recuerdos -->
+          <!-- 12 Meses con Puntos de Recuerdos y Festivos -->
           <div class="calendar-months-strip" id="calendar-months-strip"></div>
+
+          <!-- Panel Informativo del Mes Activo: Día Actual y Días Festivos -->
+          <div class="calendar-active-month-details" id="calendar-active-month-details"></div>
 
           <!-- Leyenda Inferior -->
           <div class="calendar-legend-row">
@@ -336,8 +339,12 @@
               <span>Con recuerdos</span>
             </div>
             <div class="calendar-legend-item">
-              <span class="legend-dot muted"></span>
-              <span>Sin recuerdos</span>
+              <span class="legend-dot holiday"></span>
+              <span>Días festivos</span>
+            </div>
+            <div class="calendar-legend-item">
+              <span class="legend-dot today"></span>
+              <span>Día actual</span>
             </div>
           </div>
         </div>
@@ -367,7 +374,7 @@
         <button type="button" class="btn-wide-new-memory" id="btn-new-memory">
           <div class="btn-wide-icon-circle">+</div>
           <div class="btn-wide-text-col">
-            <div class="btn-wide-title">Nuevo recuerdo 🌻</div>
+            <div class="btn-wide-title">Nuevo recuerdo</div>
             <div class="btn-wide-subtext">Crea un nuevo momento para recordar</div>
           </div>
           <div class="btn-wide-arrow">➔</div>
@@ -972,7 +979,7 @@
     <div class="modal-content modal-fullscreen-content memory-creator-sheet">
       <div class="modal-header sticky-header">
         <button type="button" class="btn-modal-close" data-close-modal="modal-memory" aria-label="Cerrar">✕</button>
-        <h3 id="modal-title-memory" class="modal-title"><span>🌻</span> Nuevo Recuerdo Diario</h3>
+        <h3 id="modal-title-memory" class="modal-title"><span>📸</span> Nuevo Recuerdo Diario</h3>
         <div style="width: 32px;"></div>
       </div>
 
@@ -1026,7 +1033,7 @@
         <!-- 4. Historia / Diario Emocional -->
         <div class="form-group">
           <label class="form-label" for="memory-desc-input">Historia & Diario del Día</label>
-          <textarea id="memory-desc-input" class="form-control memory-story-textarea" rows="4" placeholder="Escribe qué ocurrió, cómo se sintieron, qué hizo especial este día... (Permite emojis ✨🌻)"></textarea>
+          <textarea id="memory-desc-input" class="form-control memory-story-textarea" rows="4" placeholder="Escribe qué ocurrió, cómo se sintieron, qué hizo especial este día..."></textarea>
         </div>
 
         <!-- 5. Color del Recuerdo (Paleta de Auras) -->
@@ -1035,7 +1042,7 @@
           <div class="aura-colors-grid" id="aura-colors-selector">
             <button type="button" class="aura-color-pill active" data-aura="#F59E0B" style="--aura-c: #F59E0B;">
               <span class="aura-dot" style="background: #F59E0B;"></span>
-              <span>🌻 Girasol</span>
+              <span>💛 Ámbar</span>
             </button>
             <button type="button" class="aura-color-pill" data-aura="#A855F7" style="--aura-c: #A855F7;">
               <span class="aura-dot" style="background: #A855F7;"></span>
@@ -1136,7 +1143,7 @@
         <div class="memory-creator-footer">
           <button type="submit" class="btn-primary btn-bloom-save" id="btn-submit-memory">
             <span class="bloom-icon">✨</span>
-            <span>Inmortalizar Recuerdo 🌻</span>
+            <span>Guardar Recuerdo</span>
           </button>
         </div>
       </form>
