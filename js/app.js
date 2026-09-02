@@ -1555,20 +1555,120 @@ class LumaApp {
     }
   }
 
-  // --- MODAL: VINCULAR CARPETA DE GOOGLE DRIVE ---
+  // --- MODAL: VINCULAR CARPETA Y WEBHOOK DE GOOGLE DRIVE ---
   openDriveSyncModal() {
     const currentFolder = this.storage.getDriveFolder();
-    const input = document.getElementById('drive-folder-url-input');
+    const currentWebhook = this.storage.getDriveWebhook ? this.storage.getDriveWebhook() : '';
+    const inputFolder = document.getElementById('drive-folder-url-input');
+    const inputWebhook = document.getElementById('drive-webhook-url-input');
     const preview = document.getElementById('drive-sync-status-preview');
     const text = document.getElementById('drive-current-folder-text');
+    const btnToggleGuide = document.getElementById('btn-toggle-script-guide');
+    const guideBox = document.getElementById('drive-script-guide-box');
+    const btnCopyCode = document.getElementById('btn-copy-script-code');
+    const btnTest = document.getElementById('btn-test-drive-connection');
 
-    if (input) input.value = currentFolder;
+    if (inputFolder) inputFolder.value = currentFolder;
+    if (inputWebhook) inputWebhook.value = currentWebhook;
+
     if (currentFolder && preview && text) {
       preview.style.display = 'block';
-      text.textContent = currentFolder;
+      text.textContent = `Carpeta: ${currentFolder}` + (currentWebhook ? ` • Webhook Activo ✅` : '');
     } else if (preview) {
       preview.style.display = 'none';
     }
+
+    if (btnToggleGuide && !btnToggleGuide.dataset.bound) {
+      btnToggleGuide.dataset.bound = 'true';
+      btnToggleGuide.onclick = () => {
+        if (guideBox) {
+          guideBox.style.display = guideBox.style.display === 'none' ? 'block' : 'none';
+        }
+      };
+    }
+
+    const scriptCodeText = `function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var parentFolderId = data.parentFolderId;
+    var subfolderName = data.subfolderName;
+    var files = data.files || [];
+
+    var parentFolder = DriveApp.getFolderById(parentFolderId);
+    var targetFolder = parentFolder.createFolder(subfolderName);
+
+    var uploadedFiles = [];
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      var contentType = f.type || 'image/jpeg';
+      var decodedBytes = Utilities.base64Decode(f.base64);
+      var blob = Utilities.newBlob(decodedBytes, contentType, f.name);
+      var driveFile = targetFolder.createFile(blob);
+      uploadedFiles.push({
+        name: driveFile.getName(),
+        id: driveFile.getId(),
+        url: driveFile.getUrl()
+      });
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      folderId: targetFolder.getId(),
+      folderName: targetFolder.getName(),
+      folderUrl: targetFolder.getUrl(),
+      filesCount: uploadedFiles.length
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+
+    if (btnCopyCode && !btnCopyCode.dataset.bound) {
+      btnCopyCode.dataset.bound = 'true';
+      btnCopyCode.onclick = () => {
+        window.Utils.copyToClipboard(scriptCodeText, '¡Código de Google Apps Script copiado! 📋');
+      };
+    }
+
+    if (btnTest && !btnTest.dataset.bound) {
+      btnTest.dataset.bound = 'true';
+      btnTest.onclick = async () => {
+        const folderUrl = inputFolder?.value.trim();
+        const webhookUrl = inputWebhook?.value.trim();
+        if (!folderUrl) {
+          window.Utils.showToast('Ingresa primero el enlace de tu carpeta de Drive', 'error');
+          return;
+        }
+        if (!webhookUrl) {
+          window.Utils.showToast('Para crear carpetas reales automáticamente, añade la URL de tu Webhook', 'info');
+          return;
+        }
+        btnTest.disabled = true;
+        btnTest.textContent = '⏳ Probando...';
+        try {
+          const testMem = {
+            title: 'Prueba de Conexión LUMA',
+            date: new Date().toISOString().split('T')[0],
+            coverImage: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+          };
+          const res = await window.GoogleDriveSync.uploadMemoryToDrive(testMem, folderUrl, webhookUrl);
+          if (res && res.success) {
+            window.Utils.showToast('🎉 ¡Conexión con Google Drive Exitosa! Carpeta de prueba creada.', 'success');
+          } else {
+            window.Utils.showToast('Error en la respuesta del Webhook: ' + (res?.error || 'Verifica permisos'), 'error');
+          }
+        } catch (err) {
+          window.Utils.showToast('Error al conectar con el Webhook: ' + err.message, 'error');
+        } finally {
+          btnTest.disabled = false;
+          btnTest.textContent = '🚀 Probar Conexión';
+        }
+      };
+    }
+
     this.openModal('modal-drive-sync');
   }
 
@@ -3009,9 +3109,11 @@ class LumaApp {
           // Invocar el motor GoogleDriveSync
           if (window.GoogleDriveSync) {
             try {
+              const webhookUrl = this.storage.getDriveWebhook ? this.storage.getDriveWebhook() : '';
               const driveRes = await window.GoogleDriveSync.uploadMemoryToDrive(
                 { title: safeTitle, date: safeDate, coverImage, isVideo: isCoverVideo, photos },
-                driveFolderUrl
+                driveFolderUrl,
+                webhookUrl
               );
               driveUploadInfo = {
                 folderUrl: driveRes.folderUrl || driveFolderUrl,
@@ -3066,15 +3168,16 @@ class LumaApp {
       };
     }
 
-    // 5.04 Formulario Vincular Carpeta de Google Drive
+    // 5.04 Formulario Vincular Carpeta y Webhook de Google Drive
     const formDrive = document.getElementById('form-drive-sync');
     if (formDrive) {
       formDrive.onsubmit = (e) => {
         e.preventDefault();
         const url = document.getElementById('drive-folder-url-input').value.trim();
-        this.storage.saveDriveFolder(url);
+        const webhookUrl = document.getElementById('drive-webhook-url-input')?.value.trim() || '';
+        this.storage.saveDriveFolder(url, webhookUrl);
         this.closeModal('modal-drive-sync');
-        window.Utils.showToast('📁 Carpeta de Google Drive vinculada con éxito al grupo ☁️✨', 'success');
+        window.Utils.showToast('📁 Configuración de Google Drive guardada con éxito ☁️✨', 'success');
       };
     }
 
