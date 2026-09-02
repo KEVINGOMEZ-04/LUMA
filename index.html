@@ -105,21 +105,10 @@
           <img src="assets/icon.png" alt="LUMA" class="header-logo-icon">
           <span class="header-app-title">LUMA</span>
         </a>
-
-        <!-- Botón / Chip de Grupo Activo -->
-        <div class="header-group-chip" id="header-group-chip" title="Opciones de Grupo">
-          <span class="header-group-color-dot" id="header-group-dot">🌟</span>
-          <span class="header-group-name" id="header-group-name">Grupo LUMA</span>
-          <span class="header-group-code-badge" id="header-group-code" title="Toca para copiar código">LUMA01</span>
-          <span style="font-size: 0.65rem; color: #94A3B8; margin-left: 2px;">▼</span>
-        </div>
       </div>
 
-      <!-- Lado Derecho: Búsqueda, Notificaciones y Perfil -->
+      <!-- Lado Derecho: Notificaciones y Perfil -->
       <div class="header-right-col">
-        <button type="button" class="header-icon-btn" id="btn-header-search" title="Buscar en LUMA">
-          <span>🔍</span>
-        </button>
         <button type="button" class="header-icon-btn" id="btn-header-notifs" title="Notificaciones">
           <span>🔔</span>
           <span class="header-badge-count">3</span>
@@ -134,11 +123,13 @@
     </header>
 
     <!-- NAVEGACIÓN PRINCIPAL (TABS) -->
-    <nav class="app-nav" aria-label="Navegación principal de LUMA">
+    <nav class="app-nav" aria-label="Navegación principal de LUMA" style="display: none;">
       <div class="nav-wrapper">
         <div class="nav-pills" id="nav-pills-container" role="tablist"></div>
       </div>
-    </nav>    <!-- ÁREA DE CONTENIDO -->
+    </nav>
+
+    <!-- ÁREA DE CONTENIDO -->
     <main class="main-content">
       
       <!-- 1. SECCIÓN INICIO -->
@@ -164,8 +155,8 @@
               </div>
 
               <div class="group-hero-title-wrap">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <h2 class="group-hero-title" id="group-hero-title">Grupo LUMA</h2>
+                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                  <h2 class="group-hero-title" id="group-hero-title">wtwywywyww</h2>
                   <button type="button" class="btn-ghost-edit" id="btn-edit-group-title" title="Editar nombre del grupo">✏️</button>
                 </div>
                 <div class="group-hero-slogan">Comparte · Guarda · Revive</div>
@@ -173,31 +164,31 @@
                 <!-- Fila de Miembros: Contador + Iconos de Miembros + Código -->
                 <div class="group-hero-meta">
                   <div class="group-members-row-inline" id="hero-members-interactive" title="Ver perfiles y estados de conexión">
-                    <span id="group-hero-members-count" style="font-weight: 700;">👥 4 miembros</span>
+                    <span id="group-hero-members-count" style="font-weight: 700;">👥 1 miembro</span>
                     <div class="hero-inline-member-avatars" id="hero-inline-member-avatars"></div>
                   </div>
                   <button type="button" class="group-code-pill-btn" id="btn-copy-group-code" title="Copiar código para invitar">
                     <span>🔑</span>
-                    <span id="group-hero-code-text">LUMA01</span>
+                    <span id="group-hero-code-text">DKHSKM</span>
                     <span style="font-size: 0.72rem; opacity: 0.8;">📋</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            <!-- Acciones del Hero -->
+            <!-- Acciones del Hero (2 Botones Modernos) -->
             <div class="group-hero-actions-row">
-              <button type="button" class="btn-primary" id="btn-edit-group-hero">
-                <span>✏️ Editar Grupo</span>
+              <button type="button" class="btn-hero-primary" id="btn-edit-group-hero">
+                <span>✏️ Editar grupo</span>
               </button>
-              <button type="button" class="btn-dark" id="btn-invite-members">
-                <span>+ Invitar</span> 🚀
+              <button type="button" class="btn-hero-secondary" id="btn-invite-members">
+                <span>👤+ Invitar</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- ACCIONES RÁPIDAS (CLEAN WHITE CARDS) -->
+        <!-- ACCIONES RÁPIDAS (5 DARK PILLS) -->
         <div class="quick-actions-grid">
           <a href="#recuerdos" class="quick-action-pill">
             <div class="quick-action-icon-box purple">📸</div>
@@ -205,19 +196,19 @@
           </a>
           <a href="#musica" class="quick-action-pill">
             <div class="quick-action-icon-box blue">🎵</div>
-            <span>Canción</span>
+            <span>Música</span>
           </a>
           <a href="#cine" class="quick-action-pill">
             <div class="quick-action-icon-box indigo">🎬</div>
-            <span>Película</span>
+            <span>Cine</span>
           </a>
           <a href="#series" class="quick-action-pill">
             <div class="quick-action-icon-box teal">📺</div>
-            <span>Serie</span>
+            <span>Series</span>
           </a>
           <a href="#objetivos" class="quick-action-pill">
             <div class="quick-action-icon-box orange">🎯</div>
-            <span>Objetivo</span>
+            <span>Objetivos</span>
           </a>
         </div>
 
@@ -465,6 +456,32 @@
       </section>
 
     </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR (FLOATING CAPSULE) -->
+    <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
+      <a href="#inicio" class="bottom-nav-item active" id="bottom-tab-inicio">
+        <span class="bottom-nav-icon">🏠</span>
+        <span class="bottom-nav-label">Inicio</span>
+      </a>
+      <a href="#recuerdos" class="bottom-nav-item" id="bottom-tab-recuerdos">
+        <span class="bottom-nav-icon">🖼️</span>
+        <span class="bottom-nav-label">Recuerdos</span>
+      </a>
+      
+      <!-- Central Floating Action Button (FAB) -->
+      <button type="button" class="bottom-nav-fab" id="btn-global-create" aria-label="Crear nuevo en LUMA">
+        <span class="fab-plus-icon">+</span>
+      </button>
+
+      <a href="#objetivos" class="bottom-nav-item" id="bottom-tab-stats">
+        <span class="bottom-nav-icon">📊</span>
+        <span class="bottom-nav-label">Stats</span>
+      </a>
+      <button type="button" class="bottom-nav-item" id="bottom-tab-perfil">
+        <span class="bottom-nav-icon">👤</span>
+        <span class="bottom-nav-label">Perfil</span>
+      </button>
+    </nav>
   </div>  <!-- =========================================
        REPRODUCTOR DE AUDIO FLOTANTE (MINI-BAR)
        ========================================= -->
@@ -1108,7 +1125,44 @@
     </div>
   </div>
 
-  <!-- 16. MODAL LIGHTBOX FOTOS -->
+  <!-- 16. MODAL: QUICK ACTION CREATE SHEET -->
+  <div id="modal-create-sheet" class="modal-overlay modal-sheet-bottom" role="dialog" aria-modal="true">
+    <div class="modal-content modal-sheet-content">
+      <div class="modal-sheet-handle"></div>
+      <div class="modal-header" style="border: none; padding-bottom: 0.5rem;">
+        <h3 class="modal-title">✨ Crear en LUMA</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-create-sheet">✕</button>
+      </div>
+      <div class="create-sheet-grid">
+        <button type="button" class="create-sheet-btn" id="btn-sheet-create-memory">
+          <div class="create-sheet-icon purple">📸</div>
+          <span>Nuevo Recuerdo</span>
+        </button>
+        <button type="button" class="create-sheet-btn" id="btn-sheet-create-song">
+          <div class="create-sheet-icon blue">🎵</div>
+          <span>Añadir Canción</span>
+        </button>
+        <button type="button" class="create-sheet-btn" id="btn-sheet-create-movie">
+          <div class="create-sheet-icon indigo">🎬</div>
+          <span>Añadir Película</span>
+        </button>
+        <button type="button" class="create-sheet-btn" id="btn-sheet-create-series">
+          <div class="create-sheet-icon teal">📺</div>
+          <span>Añadir Serie</span>
+        </button>
+        <button type="button" class="create-sheet-btn" id="btn-sheet-create-note">
+          <div class="create-sheet-icon orange">📝</div>
+          <span>Escribir Nota</span>
+        </button>
+        <button type="button" class="create-sheet-btn" id="btn-sheet-create-goal">
+          <div class="create-sheet-icon rose">🎯</div>
+          <span>Nuevo Objetivo</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 17. MODAL LIGHTBOX FOTOS -->
   <div id="modal-lightbox" class="modal-overlay lightbox-overlay" role="dialog" aria-modal="true">
     <button type="button" class="btn-lightbox-close" data-close-modal="modal-lightbox">✕</button>
     <img src="" id="lightbox-img" class="lightbox-img-element" alt="Vista ampliada">
