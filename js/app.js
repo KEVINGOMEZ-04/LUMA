@@ -1249,52 +1249,35 @@ class LumaApp {
       this.initMemoriesCalendar();
     };
 
-    // 1. Selector rápido de los 12 meses horizontales
+    // 1. Selector rápido de los 12 meses horizontales (Limpio, sin puntos verdes innecesarios)
     strip.innerHTML = monthNames.map((mName, mIdx) => {
       const monthMemories = memories.filter(m => {
         const d = new Date(m.date || m.createdAt);
         return d.getFullYear() === selectedYear && d.getMonth() === mIdx;
       });
-      const monthHolidays = holidays.filter(h => h.month === mIdx);
 
       const isCurrentActive = this.activeCalendarMonth === mIdx;
-      const isCurrentRealMonthAndYear = (selectedYear === currentRealYear && mIdx === currentRealMonth);
 
+      // Solo puntos morados si hay recuerdos reales
       let dotsHtml = '';
       if (monthMemories.length > 0) {
-        dotsHtml += `<span class="cal-dot purple"></span>`;
-      }
-      if (monthHolidays.length > 0) {
-        dotsHtml += `<span class="cal-dot holiday"></span>`;
-      }
-      if (!dotsHtml) {
-        dotsHtml = `<span class="cal-dot muted"></span>`;
-      }
-
-      let badgeHtml = '';
-      if (isCurrentActive) {
-        if (isCurrentRealMonthAndYear) {
-          badgeHtml = `<div class="cal-day-badge today">${currentRealDay}</div>`;
-        } else if (monthHolidays.length > 0) {
-          badgeHtml = `<div class="cal-day-badge" style="background:#10B981;">${monthHolidays[0].day}</div>`;
-        }
+        dotsHtml = `<span class="cal-dot purple"></span>`;
       }
 
       return `
         <div class="calendar-month-col ${isCurrentActive ? 'active' : ''}" data-month="${mIdx}" onclick="window.app.onCalendarMonthSelect(${mIdx}, ${selectedYear})">
           <span class="month-name-pill">${mName}</span>
-          <div class="month-dots-grid">
-            ${dotsHtml}
-          </div>
-          ${badgeHtml}
+          ${dotsHtml ? `<div class="month-dots-grid">${dotsHtml}</div>` : ''}
         </div>
       `;
     }).join('');
 
     // 2. Cuadrícula de Todos los Días del Mes (Lunes a Domingo)
+    const plans = this.storage.getPlans() || [];
+    const todayStr = `${currentRealYear}-${String(currentRealMonth + 1).padStart(2, '0')}-${String(currentRealDay).padStart(2, '0')}`;
+
     if (daysGrid) {
       const firstDayOfMonth = new Date(selectedYear, this.activeCalendarMonth, 1);
-      // getDay(): 0 is Sunday, 1 is Monday... Convert to Monday=0, Sunday=6
       const startDayIndex = (firstDayOfMonth.getDay() + 6) % 7;
       const daysInMonth = new Date(selectedYear, this.activeCalendarMonth + 1, 0).getDate();
 
@@ -1312,13 +1295,17 @@ class LumaApp {
 
       // Celdas de días del mes
       for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+        const dayDateStr = `${selectedYear}-${String(this.activeCalendarMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
         const isToday = (selectedYear === currentRealYear && this.activeCalendarMonth === currentRealMonth && dayNum === currentRealDay);
         const holiday = holidays.find(h => h.month === this.activeCalendarMonth && h.day === dayNum);
         const dayMemories = memories.filter(m => {
           const d = new Date(m.date || m.createdAt);
           return d.getFullYear() === selectedYear && d.getMonth() === this.activeCalendarMonth && d.getDate() === dayNum;
         });
+        const dayPlans = plans.filter(p => p.date === dayDateStr);
+
         const hasMemory = dayMemories.length > 0;
+        const hasPlan = dayPlans.length > 0;
         const isSelected = this.selectedCalendarDay === dayNum;
 
         let dayClass = 'cal-day-cell';
@@ -1328,6 +1315,7 @@ class LumaApp {
 
         let dotsHtml = '';
         if (hasMemory) dotsHtml += `<span class="day-mini-dot memory" title="${dayMemories.length} recuerdo(s)"></span>`;
+        if (hasPlan) dotsHtml += `<span class="day-mini-dot plan" title="Plan: ${dayPlans[0].title}"></span>`;
         if (holiday) dotsHtml += `<span class="day-mini-dot holiday" title="Festivo: ${holiday.name}"></span>`;
 
         gridHtml += `
@@ -1343,7 +1331,7 @@ class LumaApp {
       daysGrid.innerHTML = gridHtml;
     }
 
-    // 3. Barra de Acción del Día Seleccionado
+    // 3. Barra de Acción del Día Seleccionado (Diferenciando Fechas Futuras vs Recuerdos Pasados/Hoy)
     if (dayActionContainer) {
       const activeDay = this.selectedCalendarDay || 1;
       const targetDate = new Date(selectedYear, this.activeCalendarMonth, activeDay);
@@ -1351,20 +1339,46 @@ class LumaApp {
       const weekdayStr = weekdayNames[targetDate.getDay()];
       const isToday = (selectedYear === currentRealYear && this.activeCalendarMonth === currentRealMonth && activeDay === currentRealDay);
       const holiday = holidays.find(h => h.month === this.activeCalendarMonth && h.day === activeDay);
+      const targetDateStr = `${selectedYear}-${String(this.activeCalendarMonth + 1).padStart(2, '0')}-${String(activeDay).padStart(2, '0')}`;
+      const isFuture = targetDateStr > todayStr;
+
       const dayMemories = memories.filter(m => {
         const d = new Date(m.date || m.createdAt);
         return d.getFullYear() === selectedYear && d.getMonth() === this.activeCalendarMonth && d.getDate() === activeDay;
       });
-
-      const dateStr = `${selectedYear}-${String(this.activeCalendarMonth + 1).padStart(2, '0')}-${String(activeDay).padStart(2, '0')}`;
+      const dayPlans = plans.filter(p => p.date === targetDateStr);
 
       let descHtml = '';
-      if (holiday) {
-        descHtml = `<span style="color: #10B981; font-weight: 700;">🎉 Festivo: ${holiday.name}</span>`;
-      } else if (dayMemories.length > 0) {
-        descHtml = `<span style="color: #A855F7; font-weight: 700;">📸 ${dayMemories.length} recuerdo(s) este día</span>`;
+      let btnActionHtml = '';
+
+      if (isFuture) {
+        // Fecha Futura ➔ Plan a futuro / Cita compartida
+        if (dayPlans.length > 0) {
+          descHtml = `<span style="color: #38BDF8; font-weight: 700;">🗓️ Plan: ${window.Utils.sanitizeHTML(dayPlans[0].title)}</span>`;
+        } else {
+          descHtml = `<span style="color: var(--color-text-secondary);">Planifica una cita, viaje o evento futuro</span>`;
+        }
+        if (holiday) descHtml += ` <span style="color: #10B981; font-weight: 700;">• 🎉 ${holiday.name}</span>`;
+
+        btnActionHtml = `
+          <button type="button" class="btn-add-plan-day" onclick="window.app.openPlanModalForDate('${targetDateStr}')">
+            <span>+ Crear plan a futuro 🗓️</span>
+          </button>
+        `;
       } else {
-        descHtml = `<span>Sin recuerdos registrados</span>`;
+        // Fecha Pasada o Hoy ➔ Recuerdo
+        if (dayMemories.length > 0) {
+          descHtml = `<span style="color: #A855F7; font-weight: 700;">📸 ${dayMemories.length} recuerdo(s) este día</span>`;
+        } else {
+          descHtml = `<span style="color: var(--color-text-secondary);">Sin recuerdos registrados</span>`;
+        }
+        if (holiday) descHtml += ` <span style="color: #10B981; font-weight: 700;">• 🎉 ${holiday.name}</span>`;
+
+        btnActionHtml = `
+          <button type="button" class="btn-add-memory-day" onclick="window.app.openMemoryModalForDate('${targetDateStr}')">
+            <span>+ Añadir recuerdo 📸</span>
+          </button>
+        `;
       }
 
       dayActionContainer.innerHTML = `
@@ -1375,9 +1389,7 @@ class LumaApp {
           </div>
           <div class="action-day-desc">${descHtml}</div>
         </div>
-        <button type="button" class="btn-add-memory-day" onclick="window.app.openMemoryModalForDate('${dateStr}')">
-          <span>+ Añadir recuerdo</span>
-        </button>
+        ${btnActionHtml}
       `;
     }
 
@@ -1463,9 +1475,18 @@ class LumaApp {
       dateInput.value = dateStr;
       dateInput.classList.remove('date-input-hidden');
     }
-    // Desmarcar pills rápidos y marcar personalizado
     document.querySelectorAll('.date-preset-pill').forEach(btn => btn.classList.remove('active'));
     document.getElementById('btn-date-custom')?.classList.add('active');
+  }
+
+  openPlanModalForDate(dateStr) {
+    document.getElementById('form-plan')?.reset();
+    document.getElementById('plan-id').value = '';
+    const dateInput = document.getElementById('plan-date-input');
+    if (dateInput) {
+      dateInput.value = dateStr;
+    }
+    this.openModal('modal-plan');
   }
 
   // --- BUSCADOR Y FILTROS EN TIEMPO REAL ---
@@ -2761,6 +2782,46 @@ class LumaApp {
         this.closeModal('modal-memory');
         window.Utils.showToast('¡Recuerdo guardado con éxito! ✨', 'success');
         this.renderMemories();
+        this.renderInicio();
+      };
+    }
+
+    // 5.1 Formulario Plan a Futuro / Cita
+    const formPlan = document.getElementById('form-plan');
+    if (formPlan) {
+      formPlan.onsubmit = (e) => {
+        e.preventDefault();
+        const id = document.getElementById('plan-id').value || null;
+        const title = document.getElementById('plan-title-input').value.trim();
+        const date = document.getElementById('plan-date-input').value;
+        const time = document.getElementById('plan-time-input').value;
+        const category = document.getElementById('plan-category-select').value;
+        const location = document.getElementById('plan-location-input').value.trim();
+        const description = document.getElementById('plan-desc-input').value.trim();
+
+        const profile = this.storage.getUserProfile() || {};
+        const author = {
+          id: profile.id,
+          name: profile.name || 'Kevin',
+          color: profile.favoriteColor || '#6366F1'
+        };
+
+        const planObj = {
+          id,
+          title,
+          date,
+          time,
+          category,
+          location,
+          description,
+          author,
+          createdAt: new Date().toISOString()
+        };
+
+        this.storage.savePlan(planObj);
+        this.closeModal('modal-plan');
+        window.Utils.showToast('¡Plan a futuro agendado con éxito! 🗓️✨', 'success');
+        this.initMemoriesCalendar();
         this.renderInicio();
       };
     }
