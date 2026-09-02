@@ -120,6 +120,37 @@ window.MediaService = {
     }
   },
 
+  tmdbGenres: {
+    28: 'Acción',
+    12: 'Aventura',
+    16: 'Animación',
+    35: 'Comedia',
+    80: 'Crimen',
+    99: 'Documental',
+    18: 'Drama',
+    10751: 'Familia',
+    14: 'Fantasía',
+    36: 'Historia',
+    27: 'Terror',
+    10402: 'Música',
+    9648: 'Misterio',
+    10749: 'Romance',
+    878: 'Ciencia ficción',
+    10770: 'Película de TV',
+    53: 'Suspense',
+    10752: 'Bélica',
+    37: 'Western'
+  },
+
+  getGenreNames(genreIds) {
+    if (!Array.isArray(genreIds)) return '';
+    return genreIds
+      .map(id => this.tmdbGenres[id])
+      .filter(Boolean)
+      .slice(0, 3)
+      .join(', ');
+  },
+
   async searchMovies(query) {
     if (!query || !query.trim()) return [];
     try {
@@ -129,17 +160,67 @@ window.MediaService = {
       const data = await res.json();
       return (data.results || []).slice(0, 10).map(m => ({
         id: 'tmdb_movie_' + m.id,
+        tmdbId: m.id,
         title: m.title,
         originalTitle: m.original_title,
         year: m.release_date ? m.release_date.split('-')[0] : '',
-        overview: m.overview,
-        poster: m.poster_path ? `${imageBaseUrl}${m.poster_path}` : '',
+        overview: m.overview || 'Sin sinopsis disponible.',
+        poster: m.poster_path ? `${imageBaseUrl}${m.poster_path}` : 'assets/icon.png',
         backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/w1280${m.backdrop_path}` : '',
-        voteAverage: m.vote_average ? m.vote_average.toFixed(1) : 'N/A'
+        voteAverage: m.vote_average ? m.vote_average.toFixed(1) : 'N/A',
+        genres: this.getGenreNames(m.genre_ids) || 'Cine',
+        genreIds: m.genre_ids || []
       }));
     } catch (err) {
       console.warn('Error buscando películas en TMDb:', err);
       return [];
+    }
+  },
+
+  async getMovieDetails(tmdbId) {
+    if (!tmdbId) return null;
+    try {
+      const { baseUrl, apiKey, language, imageBaseUrl } = window.CONFIG.tmdb;
+      const url = `${baseUrl}/movie/${tmdbId}?api_key=${apiKey}&language=${language}&append_to_response=images,videos`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const hours = data.runtime ? Math.floor(data.runtime / 60) : 0;
+      const mins = data.runtime ? data.runtime % 60 : 0;
+      const durationFormatted = hours > 0 ? `${hours}h ${mins}m` : (mins > 0 ? `${mins}m` : '');
+
+      const genresFormatted = (data.genres || []).map(g => g.name).slice(0, 3).join(', ');
+
+      const gallery = (data.images && data.images.backdrops || [])
+        .slice(0, 8)
+        .map(img => `https://image.tmdb.org/t/p/w780${img.file_path}`);
+
+      let trailerUrl = '';
+      if (data.videos && data.videos.results) {
+        const trailer = data.videos.results.find(v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'));
+        if (trailer) {
+          trailerUrl = `https://www.youtube.com/watch?v=${trailer.key}`;
+        }
+      }
+
+      return {
+        tmdbId: data.id,
+        title: data.title,
+        originalTitle: data.original_title,
+        year: data.release_date ? data.release_date.split('-')[0] : '',
+        duration: durationFormatted,
+        runtimeMinutes: data.runtime || 0,
+        genres: genresFormatted || 'Cine',
+        overview: data.overview || 'Sin sinopsis disponible.',
+        poster: data.poster_path ? `${imageBaseUrl}${data.poster_path}` : 'assets/icon.png',
+        backdrop: data.backdrop_path ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}` : '',
+        voteAverage: data.vote_average ? data.vote_average.toFixed(1) : 'N/A',
+        gallery,
+        trailerUrl
+      };
+    } catch (err) {
+      console.warn('Error obteniendo detalles de película TMDb:', err);
+      return null;
     }
   },
 
