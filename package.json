@@ -1,7 +1,7 @@
 {
   "name": "luma-app",
   "version": "1.0.0",
-  "description": "LUMA — La luz de los recuerdos compartidos. Plataforma social de grupos privados",
+  "description": "LUMA — Plataforma social privada para grupos y parejas",
   "scripts": {
     "build": "echo 'Ready'"
   },
