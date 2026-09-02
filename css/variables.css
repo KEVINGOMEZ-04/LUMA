@@ -14,6 +14,16 @@
   --color-header-border: rgba(255, 255, 255, 0.08);
   --color-bottom-bar-bg: rgba(13, 18, 32, 0.95);
 
+  /* Elementos UI & Botones */
+  --color-btn-surface: #161D31;
+  --color-btn-surface-hover: #1C2640;
+  --color-btn-text: #FFFFFF;
+  --color-pill-bg: #0E1322;
+  --color-code-pill-bg: #111728;
+  --color-input-bg: #111728;
+  --color-modal-bg: #0E1322;
+  --color-close-btn-bg: #182035;
+
   /* Acentos y Paleta Cósmica */
   --color-primary: #6366F1;
   --color-primary-dark: #4F46E5;
@@ -93,6 +103,15 @@
   --color-header-border: rgba(0, 0, 0, 0.08);
   --color-bottom-bar-bg: rgba(255, 255, 255, 0.96);
 
+  --color-btn-surface: #F1F5F9;
+  --color-btn-surface-hover: #E2E8F0;
+  --color-btn-text: #0F172A;
+  --color-pill-bg: #FFFFFF;
+  --color-code-pill-bg: #F1F5F9;
+  --color-input-bg: #FFFFFF;
+  --color-modal-bg: #FFFFFF;
+  --color-close-btn-bg: #F1F5F9;
+
   --color-text-main: #0F172A;
   --color-text-secondary: #475569;
   --color-text-muted: #94A3B8;
@@ -102,7 +121,7 @@
   --color-glass-border: rgba(0, 0, 0, 0.06);
 
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 6px 20px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 10px 28px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.09);
   --shadow-elevated: 0 16px 40px rgba(0, 0, 0, 0.12);
 }
