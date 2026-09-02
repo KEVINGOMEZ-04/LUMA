@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#0B1021">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LUMA">
   <meta name="application-name" content="LUMA">
@@ -989,13 +990,12 @@
     </div>
   </div>
 
-  <!-- 8. MODAL FULLSCREEN: CREAR / EDITAR RECUERDO (PÁGINA DE DIARIO) -->
-  <div id="modal-memory" class="modal-overlay modal-fullscreen-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-memory">
-    <div class="modal-content modal-fullscreen-content memory-creator-sheet">
+  <!-- 8. MODAL: CREAR / EDITAR RECUERDO (PÁGINA DE DIARIO) -->
+  <div id="modal-memory" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-memory">
+    <div class="modal-content memory-creator-sheet">
       <div class="modal-header sticky-header">
-        <button type="button" class="btn-modal-close" data-close-modal="modal-memory" aria-label="Cerrar">✕</button>
         <h3 id="modal-title-memory" class="modal-title"><span>📸</span> Nuevo Recuerdo Diario</h3>
-        <div style="width: 32px;"></div>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-memory" aria-label="Cerrar">✕</button>
       </div>
 
       <form id="form-memory" class="modal-form memory-creator-form">
