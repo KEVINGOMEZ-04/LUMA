@@ -1197,7 +1197,7 @@
   box-shadow: 0 0 14px rgba(168, 85, 247, 1);
 }
 
-/* Tarjeta del Recuerdo (Glassmorphism & Split Media) */
+/* Tarjeta del Recuerdo (Diseño Vertical Story Card) */
 .emotional-memory-card {
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -1205,8 +1205,8 @@
   border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--shadow-card);
-  display: grid;
-  grid-template-columns: 125px 1fr;
+  display: flex;
+  flex-direction: column;
   cursor: pointer;
   position: relative;
   z-index: 2;
@@ -1215,8 +1215,8 @@
 
 .card-media-side {
   position: relative;
-  height: 100%;
-  min-height: 170px;
+  width: 100%;
+  height: 155px;
   background: #111728;
   overflow: hidden;
 }
@@ -1229,7 +1229,7 @@
 }
 
 .emotional-memory-card:hover .card-media-img {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .card-media-badge {
@@ -1239,42 +1239,41 @@
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
   color: #FFFFFF;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 0.2rem 0.45rem;
+  padding: 0.2rem 0.5rem;
   border-radius: var(--radius-full);
+}
+
+.card-featured-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(245, 158, 11, 0.95);
+  backdrop-filter: blur(8px);
+  color: #000000;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .card-info-side {
   padding: 0.85rem 1rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 0.45rem;
+  gap: 0.55rem;
   min-width: 0;
-}
-
-.card-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.35rem;
 }
 
 .card-memory-title {
   font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--color-text-main);
-  line-height: 1.25;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.card-featured-star {
-  color: #F59E0B;
-  font-size: 0.95rem;
+  line-height: 1.3;
+  margin: 0;
 }
 
 .card-author-meta {
@@ -1283,24 +1282,26 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .card-story-preview {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: var(--color-text-secondary);
-  line-height: 1.4;
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin: 0.15rem 0 0.25rem 0;
 }
 
 /* Mini Player Musical / Nota de Voz */
 .card-soundtrack-box {
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: var(--radius-md);
-  padding: 0.35rem 0.65rem;
+  padding: 0.45rem 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1316,7 +1317,7 @@
 }
 
 .soundtrack-title-text {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--color-text-main);
   white-space: nowrap;
@@ -1325,13 +1326,16 @@
 }
 
 .soundtrack-artist-text {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-mini-play {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--color-btn-surface);
   border: 1px solid var(--color-border);
@@ -1339,7 +1343,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   cursor: pointer;
   flex-shrink: 0;
   transition: all var(--transition-fast);
@@ -1351,10 +1355,10 @@
 }
 
 .card-voice-note-box {
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: var(--radius-md);
-  padding: 0.35rem 0.65rem;
+  padding: 0.45rem 0.75rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1373,7 +1377,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 0.4rem;
+  padding-top: 0.45rem;
   border-top: 1px solid var(--color-border);
 }
 
@@ -1802,15 +1806,38 @@
   margin-top: 1.25rem;
 }
 
-/* VISTA COMPLETA DEL RECUERDO */
+/* VISTA COMPLETA DEL RECUERDO (FULLSCREEN EXPERIENCE) */
+.modal-fullscreen-overlay {
+  padding: 0 !important;
+  background: var(--color-bg-base) !important;
+}
+
+.modal-fullscreen-overlay .modal-fullscreen-content {
+  max-width: 100vw !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
 .memory-viewer-sheet {
-  padding: 0;
+  padding: 0 !important;
   position: relative;
+  background: var(--color-bg-base);
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .memory-view-top-bar {
   position: absolute;
-  top: 1rem;
+  top: max(1rem, env(safe-area-inset-top, 16px));
   left: 1rem;
   right: 1rem;
   z-index: 100;
@@ -1820,18 +1847,25 @@
 }
 
 .btn-view-circle-back, .btn-view-circle-action {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: #FFFFFF;
   border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-view-circle-back:hover, .btn-view-circle-action:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.05);
 }
 
 .btn-view-circle-action.danger {
@@ -1844,13 +1878,15 @@
 }
 
 .memory-view-body {
+  flex: 1;
   overflow-y: auto;
-  height: 100vh;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 24px));
 }
 
 .view-hero-cover-wrap {
   width: 100%;
-  height: 320px;
+  height: 290px;
   position: relative;
   background: #000;
 }
