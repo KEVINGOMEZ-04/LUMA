@@ -3158,84 +3158,764 @@ class LumaApp {
     window.Utils.showToast('Filtrando recuerdos asociados a esta canción 🎴✨', 'info');
   }
 
-  // --- 4. RENDER CINE (ATRIA MOVIE RATING BAR & COMMENTS) ---
+  // --- 4. RENDER CINE & PELÍCULAS (CARTELERA COLABORATIVA DEL GRUPO) ---
   renderMovies() {
-    const container = document.getElementById('movies-grid-list');
-    const filter = document.getElementById('filter-movies-status')?.value || 'all';
+    const container = document.getElementById('movies-collab-feed');
     if (!container) return;
 
-    let list = this.storage.getMovies();
-    if (filter !== 'all') {
+    let list = this.storage.getMovies() || [];
+    const currentUser = this.storage.getUserProfile() || {};
+
+    // 1. Actualizar Métricas del Hero
+    const statTotal = document.getElementById('stat-movies-count');
+    const statWatched = document.getElementById('stat-movies-watched');
+    const statPending = document.getElementById('stat-movies-pending');
+
+    const watchedCount = list.filter(m => m.status === 'Vista').length;
+    const pendingCount = list.filter(m => m.status === 'Por ver').length;
+
+    if (statTotal) statTotal.textContent = list.length;
+    if (statWatched) statWatched.textContent = watchedCount;
+    if (statPending) statPending.textContent = pendingCount;
+
+    // 2. Filtrado Rápido
+    const filter = this.activeMovieFilter || 'all';
+    if (filter === 'Vista' || filter === 'Por ver' || filter === 'Favorita') {
       list = list.filter(m => m.status === filter);
+    } else if (filter === 'my-proposals') {
+      list = list.filter(m => {
+        const p = m.proposedBy;
+        if (!p) return false;
+        return (p.id && p.id === currentUser.id) || (p.name && p.name === currentUser.name);
+      });
     }
 
     if (list.length === 0) {
-      container.innerHTML = `<div class="glass-card" style="grid-column: 1 / -1; text-align: center; color: var(--color-text-secondary); background: #fff; padding: 2rem; border-radius: var(--radius-lg); border: 1px solid var(--color-border);">No hay películas registradas en esta categoría.</div>`;
+      container.innerHTML = `
+        <div class="glass-card" style="text-align: center; color: var(--color-text-secondary); padding: 3rem 1.5rem; border-radius: 24px; border: 1px dashed rgba(109, 92, 255, 0.35);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🍿</div>
+          <h3 style="color: #FFFFFF; font-size: 1.1rem; margin-bottom: 0.35rem;">No hay películas en esta categoría</h3>
+          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">Usa el buscador de TMDb arriba para descubrir y añadir películas a la cartelera del grupo.</p>
+          <button type="button" class="btn-add-movie-purple" onclick="document.getElementById('movie-search-input')?.focus()">
+            <span>Buscar en TMDb</span> <span>🔍</span>
+          </button>
+        </div>
+      `;
+      this.initMovieFilters();
+      this.initMovieLiveSearch();
       return;
     }
 
-    const group = this.storage.getActiveGroup();
-    const members = (group && group.members) || [];
+    const memories = this.storage.getMemories() || [];
 
+    // 3. Renderizar cada tarjeta estilo streaming
     container.innerHTML = list.map(m => {
-      const ratingsObj = m.ratings || {};
-      const ratingEntries = Object.entries(ratingsObj).filter(([k, v]) => v !== null && v !== undefined && v !== '');
+      // Estado
+      const status = m.status || 'Por ver';
+      const statusClass = status === 'Favorita' ? 'favorite' : (status === 'Vista' ? 'watched' : 'pending');
+      const statusLabel = status === 'Favorita' ? '❤️ Favorita' : (status === 'Vista' ? '🍿 Vista' : '🌱 Por ver');
 
-      let ratingHtml = '';
-      if (ratingEntries.length > 0) {
-        const sum = ratingEntries.reduce((acc, [, val]) => acc + parseFloat(val), 0);
-        const avg = sum / ratingEntries.length;
-        const breakdown = ratingEntries.map(([uid, score]) => {
-          const mem = members.find(x => x.id === uid);
-          const name = mem ? mem.name.split(' ')[0] : 'U';
-          return `${name}: ${window.Utils.formatDecimalES(score, 1)}`;
-        }).join(' | ');
+      // Calificación del Grupo (Doble Nivel)
+      const ratings = m.groupRatings || [];
+      const sumRatings = ratings.reduce((acc, r) => acc + (parseFloat(r.score) || 0), 0);
+      const avgScore = ratings.length > 0 ? (sumRatings / ratings.length).toFixed(1) : (m.tmdbRating || '9.0');
 
-        ratingHtml = `<span>Promedio: <strong style="color: var(--color-gold);">${window.Utils.formatDecimalES(avg, 2)}/10</strong></span> <span>(${breakdown})</span>`;
-      } else {
-        ratingHtml = `<span style="color: var(--color-text-muted); font-size: 0.8rem;">Sin calificar</span>`;
-      }
-
-      const commentsObj = m.comments || {};
-      const commentsHtml = Object.entries(commentsObj).map(([uid, c]) => {
-        if (!c) return '';
-        const mem = members.find(x => x.id === uid);
-        const name = mem ? mem.name : 'Miembro';
-        return `<p class="movie-comment-quote">“${window.Utils.sanitizeHTML(c)}” — ${window.Utils.sanitizeHTML(name)}</p>`;
+      // Desglose de amigos (hasta 3 pills + badge si hay más)
+      const memberPillsHtml = ratings.slice(0, 3).map(r => {
+        const avatar = r.userAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80';
+        const name = r.userName || 'Kevin';
+        const score = typeof r.score === 'number' ? r.score.toFixed(1) : r.score;
+        return `
+          <div class="movie-member-score-pill">
+            <img src="${avatar}" class="movie-member-score-avatar" alt="${window.Utils.sanitizeHTML(name)}">
+            <span class="movie-member-score-name">${window.Utils.sanitizeHTML(name)}</span>
+            <span class="movie-member-score-num">${score}</span>
+          </div>
+        `;
       }).join('');
 
-      const statusClass = m.status === 'Favorita' ? 'Favorita' : m.status === 'Vista' ? 'Vista' : 'PorVer';
-      const statusLabel = m.status === 'Favorita' ? '❤️ Favorita' : m.status === 'Vista' ? '🍿 Vista' : '🌱 Por ver';
+      const morePillsCount = ratings.length > 3 ? `+${ratings.length - 3} más` : '';
+      const moreBadgeHtml = morePillsCount ? `<span class="movie-score-more-pill">${morePillsCount}</span>` : '';
+
+      // Propuesta por
+      const proposerName = (m.proposedBy && m.proposedBy.name) ? m.proposedBy.name : 'Laura';
+      const proposerAvatar = (m.proposedBy && m.proposedBy.avatar) ? m.proposedBy.avatar : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80';
+      const proposerDate = (m.proposedBy && m.proposedBy.date) ? m.proposedBy.date : '10 Sep 2025';
+
+      // Prioridad (5 estrellas para decidir qué ver primero)
+      const priorityCount = Math.min(5, Math.max(1, m.priority || 5));
+      const priorityStars = '★'.repeat(priorityCount) + '☆'.repeat(5 - priorityCount);
+
+      // Reseña destacada
+      const quoteText = m.review || m.overview || 'Una gran experiencia cinematográfica.';
+
+      // Recuerdos vinculados
+      const linkedMems = (m.linkedMemories || []).map(mid => memories.find(x => x.id === mid)).filter(Boolean);
+      let memoriesHtml = '';
+      if (linkedMems.length > 0) {
+        const thumbs = linkedMems.slice(0, 2).map(lm => {
+          const imgUrl = (lm.photos && lm.photos[0]) || 'assets/icon.png';
+          return `<img src="${imgUrl}" class="movie-memories-stack-thumb" alt="Memoria">`;
+        }).join('');
+        memoriesHtml = `
+          <div class="movie-footer-memories-pill" onclick="event.stopPropagation(); window.app.navigateToLinkedMemories('${m.linkedMemories.join(',')}')">
+            <span>Vinculada a ${linkedMems.length} recuerdo${linkedMems.length > 1 ? 's' : ''}</span>
+            <div class="movie-memories-stack">${thumbs}</div>
+            <span class="movie-mem-arrow">›</span>
+          </div>
+        `;
+      } else {
+        memoriesHtml = `
+          <div class="movie-footer-memories-pill" onclick="event.stopPropagation(); window.app.openMovieView('${m.id}')">
+            <span>Aún no vinculada a recuerdos</span>
+            <span class="movie-mem-arrow">›</span>
+          </div>
+        `;
+      }
+
+      // Comentarios
+      const commentsCount = m.commentsCount || (m.comments ? m.comments.length : 0);
 
       return `
-        <div class="movie-card" data-id="${m.id}">
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-              <span class="movie-badge-status ${statusClass}">${statusLabel}</span>
-              <span style="font-size: 0.75rem; color: var(--color-text-muted); font-family: var(--font-mono);">${'⭐'.repeat(m.priority || 5)}</span>
-            </div>
-            <h3 class="movie-title-heading">
-              ${window.Utils.sanitizeHTML(m.title)} <span style="font-size: 0.9rem; color: var(--color-text-secondary); font-family: var(--font-mono);">(${m.year || ''})</span>
-            </h3>
-            <p class="movie-meta-sub">Propuesta por: <strong>${window.Utils.sanitizeHTML(m.proposedBy || 'Miembro')}</strong> · Prioridad: ${m.priority || 5}/5 ⭐</p>
-            ${commentsHtml ? `<div class="movie-comments-list">${commentsHtml}</div>` : ''}
+        <div class="movie-collab-card" onclick="window.app.openMovieView('${m.id}')" data-id="${m.id}">
+          <!-- Póster con botón play -->
+          <div class="movie-poster-wrap">
+            <img src="${m.poster || 'assets/icon.png'}" class="movie-poster-img" alt="${window.Utils.sanitizeHTML(m.title)}" loading="lazy">
+            <button type="button" class="movie-poster-play-btn" onclick="event.stopPropagation(); window.app.openMovieView('${m.id}')" title="Ver detalles y tráiler">
+              ▶
+            </button>
           </div>
-          <div>
-            <div class="movie-rating-bar">${ratingHtml}</div>
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.85rem;">
-              <button type="button" class="btn-secondary" onclick="window.app.openEditMovieModal('${m.id}')" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
-                Editar
+
+          <!-- Información Principal -->
+          <div class="movie-card-main-info">
+            <div class="movie-card-header-row">
+              <h3 class="movie-card-title">${window.Utils.sanitizeHTML(m.title)}</h3>
+              <div class="movie-card-header-actions">
+                <span class="movie-status-pill ${statusClass}">${statusLabel}</span>
+                <button type="button" class="movie-dots-btn" onclick="event.stopPropagation(); window.app.openMovieContextMenu('${m.id}', event)" title="Opciones">⋮</button>
+              </div>
+            </div>
+
+            <!-- Metadatos -->
+            <div class="movie-meta-line">
+              ${m.year || ''} • ${m.duration || '2h'} • ${window.Utils.sanitizeHTML(m.genres || 'Cine')}
+            </div>
+
+            <!-- Badge TMDb -->
+            <div class="movie-tmdb-badge">
+              <span>⭐ ${m.tmdbRating || '8.5'}</span>
+            </div>
+
+            <!-- Calificación del Grupo (Doble Nivel) -->
+            <div class="movie-group-ratings-row">
+              <div class="movie-avg-score-box">
+                <span class="movie-avg-star">⭐</span>
+                <span class="movie-avg-number">${avgScore}</span>
+                <div class="movie-avg-label">
+                  <span>Promedio</span>
+                  <span>del grupo</span>
+                </div>
+              </div>
+              <div class="movie-members-scores-container">
+                ${memberPillsHtml}
+                ${moreBadgeHtml}
+              </div>
+            </div>
+
+            <!-- Quién Propuso y Prioridad -->
+            <div class="movie-proposer-priority-row">
+              <div class="movie-proposer-info">
+                <img src="${proposerAvatar}" class="movie-proposer-avatar" alt="${window.Utils.sanitizeHTML(proposerName)}">
+                <span>Propuesta por <strong>${window.Utils.sanitizeHTML(proposerName)}</strong> • ${proposerDate}</span>
+              </div>
+              <div class="movie-priority-stars" title="Prioridad de visionado: ${priorityCount}/5">
+                ${priorityStars}
+              </div>
+            </div>
+
+            <!-- Reseña del Parche -->
+            <p class="movie-quote-text">“${window.Utils.sanitizeHTML(quoteText)}”</p>
+
+            <!-- Fila Inferior: Comentarios y Recuerdos -->
+            <div class="movie-card-footer-row">
+              <button type="button" class="movie-footer-comments-btn" onclick="event.stopPropagation(); window.app.openMovieComments('${m.id}', event)">
+                <span>💬</span> <span>${commentsCount} comentarios</span>
               </button>
-              <button type="button" class="btn-secondary" onclick="window.app.deleteMovie('${m.id}')" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; color: var(--color-error);">
-                Eliminar
-              </button>
+              ${memoriesHtml}
             </div>
           </div>
         </div>
       `;
     }).join('');
 
-    document.getElementById('filter-movies-status')?.addEventListener('change', () => this.renderMovies());
+    this.initMovieFilters();
+    this.initMovieLiveSearch();
+  }
+
+  initMovieFilters() {
+    const chipsContainer = document.getElementById('movie-filter-chips');
+    if (!chipsContainer || chipsContainer.dataset.bound === 'true') return;
+    chipsContainer.dataset.bound = 'true';
+
+    chipsContainer.querySelectorAll('.movie-filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        chipsContainer.querySelectorAll('.movie-filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        this.activeMovieFilter = chip.dataset.filter;
+        this.renderMovies();
+      });
+    });
+  }
+
+  initMovieLiveSearch() {
+    const searchInput = document.getElementById('movie-search-input');
+    const resultsBox = document.getElementById('movie-live-search-results');
+    const clearBtn = document.getElementById('btn-clear-movie-search');
+    const btnAdd = document.getElementById('btn-open-add-movie');
+
+    if (btnAdd && !btnAdd.dataset.bound) {
+      btnAdd.dataset.bound = 'true';
+      btnAdd.onclick = () => {
+        if (searchInput) {
+          searchInput.focus();
+          window.Utils.showToast('Escribe el título de la película para buscar en TMDb 🍿', 'info');
+        }
+      };
+    }
+
+    if (!searchInput || searchInput.dataset.bound === 'true') return;
+    searchInput.dataset.bound = 'true';
+
+    let debounceTimer = null;
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      if (clearBtn) clearBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+      clearTimeout(debounceTimer);
+      if (query.length < 2) {
+        if (resultsBox) resultsBox.style.display = 'none';
+        return;
+      }
+
+      debounceTimer = setTimeout(async () => {
+        if (!resultsBox) return;
+        resultsBox.style.display = 'flex';
+        resultsBox.innerHTML = '<div style="color: var(--color-text-secondary); padding: 0.85rem; text-align: center;">Buscando en TMDb... 🍿</div>';
+
+        const movies = await window.MediaService.searchMovies(query);
+        if (movies.length === 0) {
+          resultsBox.innerHTML = '<div style="color: var(--color-text-muted); padding: 0.85rem; text-align: center;">No se encontraron resultados en TMDb.</div>';
+          return;
+        }
+
+        this.cachedTmdbSearch = movies;
+
+        resultsBox.innerHTML = movies.map((m, idx) => `
+          <div class="movie-live-result-item">
+            <img src="${m.poster || 'assets/icon.png'}" class="movie-live-poster" alt="poster">
+            <div class="movie-live-meta">
+              <div class="movie-live-title">${window.Utils.sanitizeHTML(m.title)}</div>
+              <div class="movie-live-sub">${m.year || ''} • ${window.Utils.sanitizeHTML(m.genres || 'Cine')}</div>
+              <div class="movie-live-rating">⭐ TMDb ${m.voteAverage || 'N/A'}</div>
+            </div>
+            <button type="button" class="btn-primary-purple" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="window.app.selectMovieFromSearch(${idx})">
+              + Añadir
+            </button>
+          </div>
+        `).join('');
+      }, 300);
+    });
+
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        if (resultsBox) resultsBox.style.display = 'none';
+      };
+    }
+
+    document.addEventListener('click', (e) => {
+      if (resultsBox && !resultsBox.contains(e.target) && e.target !== searchInput) {
+        resultsBox.style.display = 'none';
+      }
+    });
+  }
+
+  selectMovieFromSearch(index) {
+    if (!this.cachedTmdbSearch || !this.cachedTmdbSearch[index]) return;
+    const tmdbMovie = this.cachedTmdbSearch[index];
+    const resultsBox = document.getElementById('movie-live-search-results');
+    if (resultsBox) resultsBox.style.display = 'none';
+
+    this.openAddMovieModal(tmdbMovie);
+  }
+
+  async openAddMovieModal(tmdbMovie) {
+    this.currentAddingTmdbMovie = tmdbMovie;
+
+    const fullDetails = await window.MediaService.getMovieDetails(tmdbMovie.tmdbId || tmdbMovie.id);
+    const movieData = fullDetails || tmdbMovie;
+    this.currentAddingTmdbMovie = movieData;
+
+    const posterEl = document.getElementById('add-preview-poster');
+    const titleEl = document.getElementById('add-preview-title');
+    const metaEl = document.getElementById('add-preview-year-genres');
+    const ratingEl = document.getElementById('add-preview-rating');
+
+    if (posterEl) posterEl.src = movieData.poster || 'assets/icon.png';
+    if (titleEl) titleEl.textContent = movieData.title;
+    if (metaEl) metaEl.textContent = `${movieData.year || ''} • ${movieData.genres || 'Cine'}`;
+    if (ratingEl) ratingEl.textContent = `⭐ ${movieData.voteAverage || '8.5'} TMDb`;
+
+    let selectedStatus = 'Por ver';
+    const statusPicker = document.getElementById('add-movie-status-picker');
+    if (statusPicker) {
+      statusPicker.querySelectorAll('.status-option-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.status === 'Por ver');
+        btn.onclick = () => {
+          statusPicker.querySelectorAll('.status-option-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedStatus = btn.dataset.status;
+        };
+      });
+    }
+
+    let selectedPriority = 5;
+    const priorityPicker = document.getElementById('add-movie-priority-picker');
+    const priorityScore = document.getElementById('add-movie-priority-score');
+    if (priorityPicker) {
+      priorityPicker.querySelectorAll('.star-btn').forEach(btn => {
+        btn.onclick = () => {
+          selectedPriority = parseInt(btn.dataset.val, 10);
+          if (priorityScore) priorityScore.textContent = `${selectedPriority}/5`;
+          priorityPicker.querySelectorAll('.star-btn').forEach(b => {
+            b.classList.toggle('active', parseInt(b.dataset.val, 10) <= selectedPriority);
+          });
+        };
+      });
+    }
+
+    const ratingSlider = document.getElementById('input-add-movie-my-rating');
+    const ratingDisplay = document.getElementById('add-movie-rating-display');
+    if (ratingSlider && ratingDisplay) {
+      ratingSlider.value = '9.0';
+      ratingDisplay.textContent = '9.0 ⭐';
+      ratingSlider.oninput = () => {
+        ratingDisplay.textContent = `${parseFloat(ratingSlider.value).toFixed(1)} ⭐`;
+      };
+    }
+
+    const memoriesListEl = document.getElementById('add-movie-memories-checklist');
+    const memories = this.storage.getMemories() || [];
+    if (memoriesListEl) {
+      if (memories.length === 0) {
+        memoriesListEl.innerHTML = '<span style="font-size: 0.78rem; color: var(--color-text-muted);">No hay recuerdos creados en el grupo.</span>';
+      } else {
+        memoriesListEl.innerHTML = memories.map(mem => `
+          <label class="song-mem-check-item">
+            <input type="checkbox" name="movie_linked_mem" value="${mem.id}">
+            <img src="${(mem.photos && mem.photos[0]) || 'assets/icon.png'}" class="song-mem-check-thumb" alt="thumb">
+            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(mem.title)}</span>
+          </label>
+        `).join('');
+      }
+    }
+
+    const form = document.getElementById('form-add-movie-custom');
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const user = this.storage.getUserProfile() || {};
+        const reviewText = document.getElementById('input-add-movie-review')?.value.trim() || '';
+        const personalScore = parseFloat(ratingSlider?.value || '9.0');
+
+        const checkedBoxes = memoriesListEl ? memoriesListEl.querySelectorAll('input[type="checkbox"]:checked') : [];
+        const linkedMemories = Array.from(checkedBoxes).map(cb => cb.value);
+
+        const newMovie = {
+          id: 'mov_' + Date.now().toString(36),
+          tmdbId: movieData.tmdbId || movieData.id,
+          title: movieData.title,
+          originalTitle: movieData.originalTitle,
+          year: movieData.year,
+          duration: movieData.duration || '2h',
+          genres: movieData.genres,
+          poster: movieData.poster,
+          backdrop: movieData.backdrop,
+          tmdbRating: movieData.voteAverage,
+          status: selectedStatus,
+          priority: selectedPriority,
+          proposedBy: {
+            id: user.id || 'usr_me',
+            name: user.name || 'Kevin',
+            avatar: user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+            date: 'Hoy'
+          },
+          review: reviewText,
+          synopsis: movieData.overview || 'Sin sinopsis disponible.',
+          groupRatings: [
+            {
+              userId: user.id || 'usr_me',
+              userName: user.name || 'Kevin',
+              userAvatar: user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+              score: personalScore
+            }
+          ],
+          reviews: reviewText ? [
+            {
+              id: 'rev_' + Date.now().toString(36),
+              userId: user.id || 'usr_me',
+              userName: user.name || 'Kevin',
+              userAvatar: user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+              text: reviewText,
+              date: 'Hoy'
+            }
+          ] : [],
+          gallery: movieData.gallery || [],
+          trailerUrl: movieData.trailerUrl || '',
+          linkedMemories,
+          comments: [],
+          commentsCount: 0,
+          createdAt: new Date().toISOString()
+        };
+
+        this.storage.saveMovie(newMovie);
+        window.Utils.showToast(`¡"${newMovie.title}" añadida a la cartelera! 🍿`, 'success');
+        this.closeModal('modal-movie-add');
+        this.renderMovies();
+        this.renderInicio();
+      };
+    }
+
+    this.openModal('modal-movie-add');
+  }
+
+  async openMovieView(movieId) {
+    const movie = this.storage.getMovie(movieId);
+    if (!movie) return;
+
+    this.activeViewMovieId = movieId;
+
+    if ((!movie.gallery || movie.gallery.length === 0 || !movie.trailerUrl) && movie.tmdbId) {
+      window.MediaService.getMovieDetails(movie.tmdbId).then(details => {
+        if (details) {
+          if (details.gallery && (!movie.gallery || movie.gallery.length === 0)) movie.gallery = details.gallery;
+          if (details.trailerUrl && !movie.trailerUrl) movie.trailerUrl = details.trailerUrl;
+          if (details.duration && !movie.duration) movie.duration = details.duration;
+          this.storage.saveMovie(movie);
+        }
+      });
+    }
+
+    const backdropEl = document.getElementById('movie-view-backdrop');
+    const posterEl = document.getElementById('movie-view-poster');
+    const titleEl = document.getElementById('movie-view-title');
+    const yearEl = document.getElementById('movie-view-year');
+    const durEl = document.getElementById('movie-view-duration');
+    const genEl = document.getElementById('movie-view-genres');
+    const statusPill = document.getElementById('movie-view-status-pill');
+    const tmdbPill = document.getElementById('movie-view-tmdb-score');
+    const propAvatar = document.getElementById('movie-view-proposer-avatar');
+    const propName = document.getElementById('movie-view-proposer-name');
+    const propDate = document.getElementById('movie-view-date');
+    const trailerBtn = document.getElementById('movie-view-trailer-btn');
+
+    if (backdropEl) backdropEl.style.backgroundImage = `url('${movie.backdrop || movie.poster || 'assets/icon.png'}')`;
+    if (posterEl) posterEl.src = movie.poster || 'assets/icon.png';
+    if (titleEl) titleEl.textContent = movie.title;
+    if (yearEl) yearEl.textContent = movie.year || '';
+    if (durEl) durEl.textContent = movie.duration || '2h';
+    if (genEl) genEl.textContent = movie.genres || 'Cine';
+
+    const status = movie.status || 'Por ver';
+    const statusClass = status === 'Favorita' ? 'favorite' : (status === 'Vista' ? 'watched' : 'pending');
+    const statusLabel = status === 'Favorita' ? '❤️ Favorita' : (status === 'Vista' ? '🍿 Vista' : '🌱 Por ver');
+    if (statusPill) {
+      statusPill.className = `movie-status-pill ${statusClass}`;
+      statusPill.textContent = statusLabel;
+    }
+    if (tmdbPill) tmdbPill.textContent = `⭐ ${movie.tmdbRating || '8.5'} TMDb`;
+
+    if (propName) propName.textContent = movie.proposedBy?.name || 'Laura';
+    if (propAvatar) propAvatar.src = movie.proposedBy?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80';
+    if (propDate) propDate.textContent = movie.proposedBy?.date || '10 Sep 2025';
+
+    if (trailerBtn) {
+      trailerBtn.onclick = () => {
+        if (movie.trailerUrl) {
+          window.open(movie.trailerUrl, '_blank');
+        } else {
+          window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + ' trailer official')}`, '_blank');
+        }
+      };
+    }
+
+    const synEl = document.getElementById('movie-view-synopsis');
+    const toggleBtn = document.getElementById('btn-toggle-synopsis');
+    if (synEl) {
+      synEl.textContent = movie.synopsis || 'Sin sinopsis registrada.';
+      synEl.classList.add('clamped');
+      if (toggleBtn) {
+        toggleBtn.style.display = (movie.synopsis && movie.synopsis.length > 200) ? 'inline-block' : 'none';
+        toggleBtn.textContent = 'Leer más';
+        toggleBtn.onclick = () => {
+          const isClamped = synEl.classList.toggle('clamped');
+          toggleBtn.textContent = isClamped ? 'Leer más' : 'Leer menos';
+        };
+      }
+    }
+
+    const avgValEl = document.getElementById('movie-view-group-avg');
+    const ratingsListEl = document.getElementById('movie-view-ratings-list');
+    const ratings = movie.groupRatings || [];
+    const sumRatings = ratings.reduce((acc, r) => acc + (parseFloat(r.score) || 0), 0);
+    const avgScore = ratings.length > 0 ? (sumRatings / ratings.length).toFixed(1) : (movie.tmdbRating || '9.0');
+    if (avgValEl) avgValEl.textContent = avgScore;
+
+    if (ratingsListEl) {
+      ratingsListEl.innerHTML = ratings.map(r => `
+        <div class="movie-view-member-row">
+          <div class="movie-view-member-left">
+            <img src="${r.userAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}" alt="${window.Utils.sanitizeHTML(r.userName)}">
+            <span class="movie-view-member-name">${window.Utils.sanitizeHTML(r.userName)}</span>
+          </div>
+          <span class="movie-view-member-score">${typeof r.score === 'number' ? r.score.toFixed(1) : r.score} / 10 ⭐</span>
+        </div>
+      `).join('');
+    }
+
+    const user = this.storage.getUserProfile() || {};
+    const myRating = ratings.find(r => r.userId === user.id || r.userName === user.name);
+    const slider = document.getElementById('movie-rate-slider');
+    const sliderVal = document.getElementById('movie-rate-slider-val');
+    const btnSaveRating = document.getElementById('btn-save-user-movie-rating');
+
+    if (slider && sliderVal) {
+      slider.value = myRating ? myRating.score : 9.0;
+      sliderVal.textContent = `${parseFloat(slider.value).toFixed(1)} ⭐`;
+      slider.oninput = () => {
+        sliderVal.textContent = `${parseFloat(slider.value).toFixed(1)} ⭐`;
+      };
+    }
+    if (btnSaveRating) {
+      btnSaveRating.onclick = () => {
+        const val = parseFloat(slider?.value || '9.0');
+        this.storage.rateMovieScore(movieId, val);
+        window.Utils.showToast(`¡Calificación de ${val}⭐ guardada!`, 'success');
+        this.openMovieView(movieId);
+        this.renderMovies();
+      };
+    }
+
+    const reviewsListEl = document.getElementById('movie-view-reviews-list');
+    const reviews = movie.reviews || [];
+    if (reviewsListEl) {
+      if (reviews.length === 0) {
+        reviewsListEl.innerHTML = '<span style="font-size: 0.8rem; color: var(--color-text-muted);">Aún no hay reseñas escritas para esta película.</span>';
+      } else {
+        reviewsListEl.innerHTML = reviews.map(rev => `
+          <div class="movie-review-quote-card">
+            <p class="movie-review-quote-text">“${window.Utils.sanitizeHTML(rev.text)}”</p>
+            <div class="movie-review-quote-author">— ${window.Utils.sanitizeHTML(rev.userName)} (${rev.date || 'Reciente'})</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    const btnShowWrite = document.getElementById('btn-show-write-review');
+    const formWrite = document.getElementById('form-movie-write-review');
+    const btnCancelWrite = document.getElementById('btn-cancel-write-review');
+    const inputReview = document.getElementById('input-movie-user-review');
+
+    if (btnShowWrite && formWrite) {
+      btnShowWrite.onclick = () => {
+        formWrite.style.display = 'block';
+        if (inputReview) inputReview.focus();
+      };
+    }
+    if (btnCancelWrite && formWrite) {
+      btnCancelWrite.onclick = () => {
+        formWrite.style.display = 'none';
+      };
+    }
+    if (formWrite) {
+      formWrite.onsubmit = (e) => {
+        e.preventDefault();
+        const text = inputReview?.value.trim() || '';
+        if (text) {
+          this.storage.addMovieReview(movieId, text);
+          window.Utils.showToast('¡Reseña publicada en la cartelera! ✍️🍿', 'success');
+          formWrite.style.display = 'none';
+          if (inputReview) inputReview.value = '';
+          this.openMovieView(movieId);
+          this.renderMovies();
+        }
+      };
+    }
+
+    const galleryScrollEl = document.getElementById('movie-view-gallery-scroll');
+    const gallerySection = document.getElementById('movie-view-gallery-section');
+    const gallery = movie.gallery || [];
+    if (gallery.length > 0 && galleryScrollEl) {
+      if (gallerySection) gallerySection.style.display = 'block';
+      galleryScrollEl.innerHTML = gallery.map(imgUrl => `
+        <img src="${imgUrl}" class="movie-gallery-item" alt="Fotograma" loading="lazy">
+      `).join('');
+    } else if (gallerySection) {
+      gallerySection.style.display = 'none';
+    }
+
+    const memsListEl = document.getElementById('movie-view-linked-memories');
+    const allMemories = this.storage.getMemories() || [];
+    const linked = (movie.linkedMemories || []).map(id => allMemories.find(m => m.id === id)).filter(Boolean);
+
+    if (memsListEl) {
+      if (linked.length === 0) {
+        memsListEl.innerHTML = '<span style="font-size: 0.8rem; color: var(--color-text-muted);">Esta película no está vinculada a ningún recuerdo todavía.</span>';
+      } else {
+        memsListEl.innerHTML = linked.map(lm => `
+          <div class="movie-member-score-pill" style="cursor: pointer; padding: 0.35rem 0.75rem;" onclick="window.app.closeModal('modal-movie-view'); window.location.hash = '#recuerdos';">
+            <img src="${(lm.photos && lm.photos[0]) || 'assets/icon.png'}" class="movie-member-score-avatar" style="border-radius: 4px;" alt="thumb">
+            <span style="font-weight: 700; color: #FFFFFF;">${window.Utils.sanitizeHTML(lm.title)}</span>
+            <span style="color: #A78BFA;">›</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    this.openModal('modal-movie-view');
+  }
+
+  openMovieComments(movieId, event) {
+    if (event) event.stopPropagation();
+    const movie = this.storage.getMovie(movieId);
+    if (!movie) return;
+
+    this.activeCommentsMovieId = movieId;
+
+    const artEl = document.getElementById('movie-comments-header-art');
+    const titleEl = document.getElementById('movie-comments-header-title');
+    const chatListEl = document.getElementById('movie-comments-chat-list');
+
+    if (artEl) artEl.src = movie.poster || 'assets/icon.png';
+    if (titleEl) titleEl.textContent = movie.title;
+
+    const renderChat = () => {
+      const currentMovie = this.storage.getMovie(movieId);
+      const comments = (currentMovie && currentMovie.comments) || [];
+      if (comments.length === 0) {
+        chatListEl.innerHTML = '<div style="color: var(--color-text-muted); font-size: 0.85rem; text-align: center; padding: 2rem 0;">No hay conversaciones todavía. ¡Sé el primero en comentar sobre esta película! 🍿</div>';
+        return;
+      }
+      chatListEl.innerHTML = comments.map(c => `
+        <div class="movie-chat-msg">
+          <img src="${c.authorAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}" class="movie-chat-avatar" alt="Avatar">
+          <div class="movie-chat-bubble">
+            <div class="movie-chat-author-line">
+              <span class="movie-chat-author">${window.Utils.sanitizeHTML(c.authorName || 'Kevin')}</span>
+              <span class="movie-chat-time">${c.time || 'Reciente'}</span>
+            </div>
+            <p class="movie-chat-text">${window.Utils.sanitizeHTML(c.text)}</p>
+            <div class="movie-chat-reactions-row">
+              ${Object.entries(c.reactions || {}).map(([emoji, count]) => `
+                <span class="movie-reaction-bubble" onclick="window.app.reactMovieComment('${movieId}', '${c.id}', '${emoji}')">${emoji} ${count}</span>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      chatListEl.scrollTop = chatListEl.scrollHeight;
+    };
+
+    renderChat();
+
+    document.querySelectorAll('.movie-quick-react').forEach(btn => {
+      btn.onclick = () => {
+        const emoji = btn.dataset.emoji;
+        const textInput = document.getElementById('input-movie-comment-text');
+        if (textInput) {
+          textInput.value = (textInput.value + ' ' + emoji).trim();
+          textInput.focus();
+        }
+      };
+    });
+
+    const form = document.getElementById('form-add-movie-comment');
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const input = document.getElementById('input-movie-comment-text');
+        const text = input?.value.trim() || '';
+        if (text) {
+          this.storage.addMovieComment(movieId, text);
+          if (input) input.value = '';
+          renderChat();
+          this.renderMovies();
+        }
+      };
+    }
+
+    this.openModal('modal-movie-comments');
+  }
+
+  reactMovieComment(movieId, commentId, emoji) {
+    this.storage.reactMovieComment(movieId, commentId, emoji);
+    this.openMovieComments(movieId);
+  }
+
+  openMovieContextMenu(movieId, event) {
+    if (event) event.stopPropagation();
+    const movie = this.storage.getMovie(movieId);
+    if (!movie) return;
+
+    this.activeContextMenuMovieId = movieId;
+
+    const artEl = document.getElementById('movie-actions-art');
+    const titleEl = document.getElementById('movie-actions-title');
+    const subEl = document.getElementById('movie-actions-subtitle');
+    const btnView = document.getElementById('btn-movie-act-view');
+    const btnComments = document.getElementById('btn-movie-act-comments');
+    const btnTrailer = document.getElementById('btn-movie-act-trailer');
+    const btnDelete = document.getElementById('btn-movie-act-delete');
+
+    if (artEl) artEl.src = movie.poster || 'assets/icon.png';
+    if (titleEl) titleEl.textContent = movie.title;
+    if (subEl) subEl.textContent = `${movie.year || ''} • ${movie.genres || 'Cine'}`;
+
+    if (btnView) {
+      btnView.onclick = () => {
+        this.closeModal('modal-movie-actions');
+        this.openMovieView(movieId);
+      };
+    }
+    if (btnComments) {
+      btnComments.onclick = () => {
+        this.closeModal('modal-movie-actions');
+        this.openMovieComments(movieId);
+      };
+    }
+    if (btnTrailer) {
+      const trailerUrl = movie.trailerUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + ' trailer official')}`;
+      btnTrailer.href = trailerUrl;
+    }
+    if (btnDelete) {
+      btnDelete.onclick = () => {
+        this.closeModal('modal-movie-actions');
+        this.deleteMovie(movieId);
+      };
+    }
+
+    this.openModal('modal-movie-actions');
+  }
+
+  deleteMovie(movieId) {
+    if (confirm('¿Eliminar esta película de la cartelera del grupo?')) {
+      this.storage.deleteMovie(movieId);
+      window.Utils.showToast('Película eliminada de la cartelera 🍿', 'info');
+      this.renderMovies();
+      this.renderInicio();
+    }
   }
 
   openEditMovieModal(movieId) {
@@ -4305,20 +4985,7 @@ class LumaApp {
   addMovieFromSearch(index) {
     if (this.lastMovieSearch && this.lastMovieSearch[index]) {
       const m = this.lastMovieSearch[index];
-      this.storage.saveMovie({
-        title: m.title,
-        year: m.year,
-        poster: m.poster,
-        overview: m.overview,
-        tmdbRating: m.tmdbRating,
-        proposedBy: this.storage.getUserProfile()?.name || 'Miembro',
-        status: 'Por ver'
-      });
-      document.getElementById('movie-search-results').innerHTML = '';
-      document.getElementById('movie-search-input').value = '';
-      window.Utils.showToast(`"${m.title}" añadida a Cine 🍿`, 'success');
-      this.renderMovies();
-      this.renderInicio();
+      this.openAddMovieModal(m);
     }
   }
 
