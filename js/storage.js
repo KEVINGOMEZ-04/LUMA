@@ -677,9 +677,17 @@
       return data.driveFolder || '';
     }
 
-    saveDriveFolder(url) {
+    getDriveWebhook() {
+      const data = this.getGroupData();
+      return data.driveWebhook || '';
+    }
+
+    saveDriveFolder(url, webhookUrl = null) {
       const data = this.getGroupData();
       data.driveFolder = url ? url.trim() : '';
+      if (webhookUrl !== null) {
+        data.driveWebhook = webhookUrl ? webhookUrl.trim() : '';
+      }
       this.saveGroupData(null, data);
       return data.driveFolder;
     }
