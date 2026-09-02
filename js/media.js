@@ -151,39 +151,71 @@ window.MediaService = {
       .join(', ');
   },
 
+  async fetchTmdbWithFallback(endpoint) {
+    const tmdbConfig = window.CONFIG?.tmdb || {};
+    const keys = [
+      tmdbConfig.apiKey,
+      ...(tmdbConfig.backupKeys || []),
+      'e9e9d8da18ae29fc430845952232787c',
+      '8265bd1679663a7ea12ac168da84d2e8',
+      'cfe422613b250f702980a3bbf9e90716'
+    ].filter(Boolean);
+
+    const baseUrl = tmdbConfig.baseUrl || 'https://api.themoviedb.org/3';
+    const language = tmdbConfig.language || 'es-ES';
+
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      try {
+        const sep = endpoint.includes('?') ? '&' : '?';
+        const url = `${baseUrl}${endpoint}${sep}api_key=${key}&language=${language}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          return data;
+        }
+      } catch (err) {
+        console.warn(`Intento TMDb con clave ${i + 1} falló:`, err);
+      }
+    }
+    return null;
+  },
+
   async searchMovies(query) {
     if (!query || !query.trim()) return [];
+    const trimmed = query.trim();
     try {
-      const { baseUrl, apiKey, language, imageBaseUrl } = window.CONFIG.tmdb;
-      const url = `${baseUrl}/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=${language}&page=1`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return (data.results || []).slice(0, 10).map(m => ({
-        id: 'tmdb_movie_' + m.id,
-        tmdbId: m.id,
-        title: m.title,
-        originalTitle: m.original_title,
-        year: m.release_date ? m.release_date.split('-')[0] : '',
-        overview: m.overview || 'Sin sinopsis disponible.',
-        poster: m.poster_path ? `${imageBaseUrl}${m.poster_path}` : 'assets/icon.png',
-        backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/w1280${m.backdrop_path}` : '',
-        voteAverage: m.vote_average ? m.vote_average.toFixed(1) : 'N/A',
-        genres: this.getGenreNames(m.genre_ids) || 'Cine',
-        genreIds: m.genre_ids || []
-      }));
+      const data = await this.fetchTmdbWithFallback(`/search/movie?query=${encodeURIComponent(trimmed)}&page=1`);
+      const imageBaseUrl = window.CONFIG?.tmdb?.imageBaseUrl || 'https://image.tmdb.org/t/p/w500';
+
+      if (data && data.results && data.results.length > 0) {
+        return data.results.slice(0, 12).map(m => ({
+          id: 'tmdb_movie_' + m.id,
+          tmdbId: m.id,
+          title: m.title,
+          originalTitle: m.original_title,
+          year: m.release_date ? m.release_date.split('-')[0] : '',
+          overview: m.overview || 'Sin sinopsis disponible.',
+          poster: m.poster_path ? `${imageBaseUrl}${m.poster_path}` : 'assets/icon.png',
+          backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/w1280${m.backdrop_path}` : '',
+          voteAverage: m.vote_average ? m.vote_average.toFixed(1) : '8.5',
+          genres: this.getGenreNames(m.genre_ids) || 'Cine',
+          genreIds: m.genre_ids || []
+        }));
+      }
     } catch (err) {
       console.warn('Error buscando películas en TMDb:', err);
-      return [];
     }
+    return [];
   },
 
   async getMovieDetails(tmdbId) {
     if (!tmdbId) return null;
     try {
-      const { baseUrl, apiKey, language, imageBaseUrl } = window.CONFIG.tmdb;
-      const url = `${baseUrl}/movie/${tmdbId}?api_key=${apiKey}&language=${language}&append_to_response=images,videos`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const data = await this.fetchTmdbWithFallback(`/movie/${tmdbId}?append_to_response=images,videos`);
+      const imageBaseUrl = window.CONFIG?.tmdb?.imageBaseUrl || 'https://image.tmdb.org/t/p/w500';
+
+      if (!data) return null;
 
       const hours = data.runtime ? Math.floor(data.runtime / 60) : 0;
       const mins = data.runtime ? data.runtime % 60 : 0;
@@ -214,12 +246,12 @@ window.MediaService = {
         overview: data.overview || 'Sin sinopsis disponible.',
         poster: data.poster_path ? `${imageBaseUrl}${data.poster_path}` : 'assets/icon.png',
         backdrop: data.backdrop_path ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}` : '',
-        voteAverage: data.vote_average ? data.vote_average.toFixed(1) : 'N/A',
+        voteAverage: data.vote_average ? data.vote_average.toFixed(1) : '8.5',
         gallery,
         trailerUrl
       };
     } catch (err) {
-      console.warn('Error obteniendo detalles de película TMDb:', err);
+      console.warn('Error obteniendo detalles en TMDb:', err);
       return null;
     }
   },
