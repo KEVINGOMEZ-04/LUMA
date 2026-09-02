@@ -3371,15 +3371,53 @@ class LumaApp {
     const searchInput = document.getElementById('movie-search-input');
     const resultsBox = document.getElementById('movie-live-search-results');
     const clearBtn = document.getElementById('btn-clear-movie-search');
-    const btnAdd = document.getElementById('btn-open-add-movie');
+    const btnSearch = document.getElementById('btn-search-movie') || document.getElementById('btn-open-add-movie');
 
-    if (btnAdd && !btnAdd.dataset.bound) {
-      btnAdd.dataset.bound = 'true';
-      btnAdd.onclick = () => {
-        if (searchInput) {
-          searchInput.focus();
-          window.Utils.showToast('Escribe el título de la película para buscar en TMDb 🍿', 'info');
-        }
+    const executeSearch = async (forcedQuery) => {
+      const query = (typeof forcedQuery === 'string' ? forcedQuery : (searchInput ? searchInput.value : '')).trim();
+      if (!resultsBox) return;
+
+      if (!query) {
+        if (searchInput) searchInput.focus();
+        window.Utils.showToast('Escribe el título de una película para buscar en TMDb 🍿', 'info');
+        resultsBox.style.display = 'none';
+        return;
+      }
+
+      resultsBox.style.display = 'flex';
+      resultsBox.innerHTML = '<div style="color: var(--color-text-secondary); padding: 0.85rem; text-align: center;">Buscando películas en TMDb... 🍿</div>';
+
+      const movies = await window.MediaService.searchMovies(query);
+      if (movies.length === 0) {
+        resultsBox.innerHTML = `
+          <div style="color: var(--color-text-muted); padding: 0.85rem; text-align: center;">
+            No se encontraron películas en TMDb para "<strong>${window.Utils.sanitizeHTML(query)}</strong>".
+          </div>
+        `;
+        return;
+      }
+
+      this.cachedTmdbSearch = movies;
+
+      resultsBox.innerHTML = movies.map((m, idx) => `
+        <div class="movie-live-result-item">
+          <img src="${m.poster || 'assets/icon.png'}" class="movie-live-poster" alt="poster">
+          <div class="movie-live-meta">
+            <div class="movie-live-title">${window.Utils.sanitizeHTML(m.title)}</div>
+            <div class="movie-live-sub">${m.year || ''} • ${window.Utils.sanitizeHTML(m.genres || 'Cine')}</div>
+            <div class="movie-live-rating">⭐ TMDb ${m.voteAverage || '8.5'}</div>
+          </div>
+          <button type="button" class="btn-primary-purple" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="window.app.selectMovieFromSearch(${idx})">
+            + Añadir
+          </button>
+        </div>
+      `).join('');
+    };
+
+    if (btnSearch && !btnSearch.dataset.bound) {
+      btnSearch.dataset.bound = 'true';
+      btnSearch.onclick = () => {
+        executeSearch();
       };
     }
 
@@ -3387,6 +3425,14 @@ class LumaApp {
     searchInput.dataset.bound = 'true';
 
     let debounceTimer = null;
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        clearTimeout(debounceTimer);
+        executeSearch();
+      }
+    });
 
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.trim();
@@ -3398,33 +3444,9 @@ class LumaApp {
         return;
       }
 
-      debounceTimer = setTimeout(async () => {
-        if (!resultsBox) return;
-        resultsBox.style.display = 'flex';
-        resultsBox.innerHTML = '<div style="color: var(--color-text-secondary); padding: 0.85rem; text-align: center;">Buscando en TMDb... 🍿</div>';
-
-        const movies = await window.MediaService.searchMovies(query);
-        if (movies.length === 0) {
-          resultsBox.innerHTML = '<div style="color: var(--color-text-muted); padding: 0.85rem; text-align: center;">No se encontraron resultados en TMDb.</div>';
-          return;
-        }
-
-        this.cachedTmdbSearch = movies;
-
-        resultsBox.innerHTML = movies.map((m, idx) => `
-          <div class="movie-live-result-item">
-            <img src="${m.poster || 'assets/icon.png'}" class="movie-live-poster" alt="poster">
-            <div class="movie-live-meta">
-              <div class="movie-live-title">${window.Utils.sanitizeHTML(m.title)}</div>
-              <div class="movie-live-sub">${m.year || ''} • ${window.Utils.sanitizeHTML(m.genres || 'Cine')}</div>
-              <div class="movie-live-rating">⭐ TMDb ${m.voteAverage || 'N/A'}</div>
-            </div>
-            <button type="button" class="btn-primary-purple" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="window.app.selectMovieFromSearch(${idx})">
-              + Añadir
-            </button>
-          </div>
-        `).join('');
-      }, 300);
+      debounceTimer = setTimeout(() => {
+        executeSearch(query);
+      }, 350);
     });
 
     if (clearBtn) {
@@ -3432,11 +3454,12 @@ class LumaApp {
         searchInput.value = '';
         clearBtn.style.display = 'none';
         if (resultsBox) resultsBox.style.display = 'none';
+        searchInput.focus();
       };
     }
 
     document.addEventListener('click', (e) => {
-      if (resultsBox && !resultsBox.contains(e.target) && e.target !== searchInput) {
+      if (resultsBox && !resultsBox.contains(e.target) && e.target !== searchInput && (!btnSearch || !btnSearch.contains(e.target))) {
         resultsBox.style.display = 'none';
       }
     });
