@@ -304,8 +304,8 @@
       <section id="section-recuerdos" class="luma-section" role="tabpanel">
         
         <!-- Header de Recuerdos -->
-        <div class="memories-emotional-hero">
-          <h2 class="memories-hero-title">Recuerdos</h2>
+        <div class="luma-section-header">
+          <h2 class="luma-section-title"><span>📸</span> Recuerdos</h2>
         </div>
 
         <!-- Calendario Mensual Completo Interactivo (Con todos los días, festivos y acción para añadir recuerdo) -->
@@ -421,9 +421,8 @@
 
       <!-- 3. SECCIÓN MÚSICA -->
       <section id="section-musica" class="luma-section" role="tabpanel">
-        <div class="section-header">
-          <h2 class="section-title"><span>🎵</span> Música del Grupo</h2>
-          <p class="section-subtitle">Canciones recomendadas, bandas sonoras de recuerdos y letras.</p>
+        <div class="luma-section-header">
+          <h2 class="luma-section-title"><span>🎵</span> Música</h2>
         </div>
 
         <div class="trail-controls">
@@ -442,9 +441,8 @@
 
       <!-- 4. SECCIÓN CINE (PELÍCULAS) -->
       <section id="section-cine" class="luma-section" role="tabpanel">
-        <div class="section-header">
-          <h2 class="section-title"><span>🎬</span> Cine & Películas</h2>
-          <p class="section-subtitle">Películas recomendadas con valoraciones individuales y promedio grupal.</p>
+        <div class="luma-section-header">
+          <h2 class="luma-section-title"><span>🎬</span> Cine & Películas</h2>
         </div>
 
         <div class="trail-controls">
@@ -468,9 +466,8 @@
 
       <!-- 5. SECCIÓN SERIES -->
       <section id="section-series" class="luma-section" role="tabpanel">
-        <div class="section-header">
-          <h2 class="section-title"><span>📺</span> Series & Maratones</h2>
-          <p class="section-subtitle">Seguimiento de temporadas y capítulos por cada integrante y en grupo.</p>
+        <div class="luma-section-header">
+          <h2 class="luma-section-title"><span>📺</span> Series</h2>
         </div>
 
         <div class="trail-controls">
@@ -495,9 +492,8 @@
 
       <!-- 6. SECCIÓN NOTAS COLABORATIVAS -->
       <section id="section-notas" class="luma-section" role="tabpanel">
-        <div class="section-header">
-          <h2 class="section-title"><span>📝</span> Tablero Colaborativo</h2>
-          <p class="section-subtitle">Notas, ideas, recordatorios y cartas compartidas con fotos.</p>
+        <div class="luma-section-header">
+          <h2 class="luma-section-title"><span>📝</span> Tablero</h2>
         </div>
 
         <div class="trail-controls">
@@ -518,10 +514,8 @@
 
       <!-- 7. SECCIÓN OBJETIVOS COMPARTIDOS -->
       <section id="section-objetivos" class="luma-section" role="tabpanel">
-        <div class="section-header-block">
-          <span class="section-tag-badge">METAS DEL GRUPO</span>
-          <h2 class="section-main-title">🎯 Objetivos Compartidos</h2>
-          <p class="section-quote-subtitle">«Metas, viajes, eventos y proyectos comunes que florecerán a su debido tiempo.»</p>
+        <div class="luma-section-header">
+          <h2 class="luma-section-title"><span>🎯</span> Objetivos Compartidos</h2>
         </div>
 
         <!-- 4-Card Stats Banner de ATRIA -->
@@ -1163,6 +1157,67 @@
             <span class="bloom-icon">✨</span>
             <span>Guardar Recuerdo</span>
           </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8.05 MODAL: CREAR / EDITAR PLAN A FUTURO O CITA -->
+  <div id="modal-plan" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-plan">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="modal-title-plan" class="modal-title"><span>🗓️</span> Agendar Plan a Futuro / Cita</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-plan" aria-label="Cerrar">✕</button>
+      </div>
+
+      <form id="form-plan" class="modal-form">
+        <input type="hidden" id="plan-id">
+
+        <div class="form-group">
+          <label class="form-label" for="plan-title-input">Título del Plan o Cita *</label>
+          <input type="text" id="plan-title-input" class="form-control form-control-lg" placeholder="Ej: Cena romántica, Viaje a la playa, Cine..." required maxlength="60">
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label" for="plan-date-input">Fecha Programada *</label>
+            <input type="date" id="plan-date-input" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="plan-time-input">Hora (Opcional)</label>
+            <input type="time" id="plan-time-input" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="plan-category-select">Tipo de Plan</label>
+          <select id="plan-category-select" class="form-control">
+            <option value="🍽️ Cena / Comida">🍽️ Cena / Comida</option>
+            <option value="✈️ Viaje / Escapada">✈️ Viaje / Escapada</option>
+            <option value="🎬 Cine / Película">🎬 Cine / Película</option>
+            <option value="🎉 Evento / Fiesta">🎉 Evento / Fiesta</option>
+            <option value="🎂 Aniversario / Cumpleaños">🎂 Aniversario / Cumpleaños</option>
+            <option value="🎁 Sorpresa">🎁 Sorpresa</option>
+            <option value="✨ Otro Plan">✨ Otro Plan</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="plan-location-input">Lugar o Ubicación</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">📍</span>
+            <input type="text" id="plan-location-input" class="form-control" placeholder="Ej: Restaurante, Playa, Casa...">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="plan-desc-input">Detalles / Notas del Plan</label>
+          <textarea id="plan-desc-input" class="form-control" rows="3" placeholder="Detalles, qué llevar, ideas, preparativos..."></textarea>
+        </div>
+
+        <div class="modal-footer" style="padding-top: 0.5rem; display: flex; gap: 0.5rem;">
+          <button type="button" class="btn-secondary" data-close-modal="modal-plan" style="flex: 1;">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-submit-plan" style="flex: 1.5;">✨ Guardar Plan</button>
         </div>
       </form>
     </div>
