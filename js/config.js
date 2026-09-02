@@ -31,7 +31,7 @@ window.CONFIG = {
 
   // Google Drive Master Cloud Bridge
   googleDrive: {
-    defaultBridgeUrl: ''
+    defaultBridgeUrl: 'https://script.google.com/macros/s/AKfycbx3nWf8YgIzkq1Kna1yfB9rv0d3gjr9xvV1yiE-qb5qwzaV6rFujoacsFjOgMkRrbOFiQ/exec'
   },
 
   // Módulos / Secciones del Menú (Insights integrado en Inicio)
