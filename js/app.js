@@ -1480,7 +1480,30 @@ class LumaApp {
     if (dateInput) {
       dateInput.value = dateStr;
     }
+    this.initPlanTimePresets();
     this.openModal('modal-plan');
+  }
+
+  initPlanTimePresets() {
+    const presets = document.querySelectorAll('.time-preset-pill');
+    const timeInput = document.getElementById('plan-time-input');
+
+    presets.forEach(btn => {
+      btn.classList.remove('active');
+      btn.onclick = () => {
+        presets.forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        if (timeInput) timeInput.value = btn.dataset.time || '';
+      };
+    });
+
+    if (timeInput) {
+      timeInput.oninput = () => {
+        presets.forEach(p => p.classList.remove('active'));
+        const match = Array.from(presets).find(p => p.dataset.time === timeInput.value);
+        if (match) match.classList.add('active');
+      };
+    }
   }
 
   // --- BUSCADOR Y FILTROS EN TIEMPO REAL ---
@@ -1524,6 +1547,29 @@ class LumaApp {
         window.Utils.showToast('Todos los recuerdos están sincronizados y respaldados en la nube ✅', 'success');
       };
     }
+
+    const btnDrive = document.getElementById('btn-header-gdrive');
+    if (btnDrive && !btnDrive.dataset.bound) {
+      btnDrive.dataset.bound = 'true';
+      btnDrive.onclick = () => this.openDriveSyncModal();
+    }
+  }
+
+  // --- MODAL: VINCULAR CARPETA DE GOOGLE DRIVE ---
+  openDriveSyncModal() {
+    const currentFolder = this.storage.getDriveFolder();
+    const input = document.getElementById('drive-folder-url-input');
+    const preview = document.getElementById('drive-sync-status-preview');
+    const text = document.getElementById('drive-current-folder-text');
+
+    if (input) input.value = currentFolder;
+    if (currentFolder && preview && text) {
+      preview.style.display = 'block';
+      text.textContent = currentFolder;
+    } else if (preview) {
+      preview.style.display = 'none';
+    }
+    this.openModal('modal-drive-sync');
   }
 
   // --- MODAL: CREAR / EDITAR RECUERDO (DIARIO EMOCIONAL) ---
@@ -1533,6 +1579,9 @@ class LumaApp {
     const authorName = document.getElementById('creator-author-name');
     if (authorAvatar) authorAvatar.textContent = (profile.name || 'U').charAt(0).toUpperCase();
     if (authorName) authorName.textContent = profile.name || 'Tú';
+
+    this.selectedMemoryCover = null;
+    this.selectedMemoryGallery = [];
 
     // Reset fields
     document.getElementById('memory-edit-id').value = memId || '';
@@ -1551,13 +1600,67 @@ class LumaApp {
 
     // Cover picker setup
     const coverPreview = document.getElementById('memory-cover-preview-img');
+    const coverVideo = document.getElementById('memory-cover-preview-video');
     const placeholder = document.getElementById('memory-cover-placeholder');
     const btnCover = document.getElementById('btn-trigger-cover-file');
     const fileInput = document.getElementById('memory-cover-file');
+    const coverBox = document.getElementById('memory-cover-picker-box');
 
     if (coverPreview) { coverPreview.src = ''; coverPreview.style.display = 'none'; }
+    if (coverVideo) { coverVideo.src = ''; coverVideo.style.display = 'none'; }
     if (placeholder) placeholder.style.display = 'flex';
     if (btnCover) btnCover.style.display = 'none';
+
+    // Click handler para abrir selector de portada
+    if (coverBox && fileInput) {
+      coverBox.onclick = () => fileInput.click();
+      fileInput.onchange = async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        const isVideo = file.type.startsWith('video');
+        const dataUrl = await window.Utils.fileToBase64(file);
+        this.selectedMemoryCover = { isVideo, dataUrl, name: file.name, file };
+
+        if (placeholder) placeholder.style.display = 'none';
+        if (btnCover) btnCover.style.display = 'block';
+
+        if (isVideo) {
+          if (coverPreview) coverPreview.style.display = 'none';
+          if (coverVideo) {
+            coverVideo.src = dataUrl;
+            coverVideo.style.display = 'block';
+          }
+        } else {
+          if (coverVideo) coverVideo.style.display = 'none';
+          if (coverPreview) {
+            coverPreview.src = dataUrl;
+            coverPreview.style.display = 'block';
+          }
+        }
+      };
+    }
+
+    // Galería múltiple de fotos y videos
+    const galleryInput = document.getElementById('memory-photos-file');
+    if (galleryInput) {
+      galleryInput.onchange = async () => {
+        const files = Array.from(galleryInput.files || []);
+        for (const file of files) {
+          const isVideo = file.type.startsWith('video');
+          const dataUrl = await window.Utils.fileToBase64(file);
+          this.selectedMemoryGallery.push({
+            id: 'g_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4),
+            isVideo,
+            dataUrl,
+            name: file.name,
+            file
+          });
+        }
+        galleryInput.value = '';
+        this.renderMemoryGalleryPreviews();
+      };
+    }
+    this.renderMemoryGalleryPreviews();
 
     // Aura Color Selectors
     document.querySelectorAll('.aura-color-pill').forEach(pill => {
@@ -1627,6 +1730,16 @@ class LumaApp {
           coverPreview.style.display = 'block';
           if (placeholder) placeholder.style.display = 'none';
           if (btnCover) btnCover.style.display = 'block';
+          this.selectedMemoryCover = { isVideo: Boolean(mem.isVideo), dataUrl: mem.coverImage, name: 'Portada.jpg' };
+        }
+        if (mem.photos && mem.photos.length > 0) {
+          this.selectedMemoryGallery = mem.photos.map((p, idx) => ({
+            id: 'g_' + idx,
+            isVideo: typeof p === 'string' && (p.includes('.mp4') || p.includes('video')),
+            dataUrl: p,
+            name: `Foto ${idx + 1}.jpg`
+          }));
+          this.renderMemoryGalleryPreviews();
         }
       }
     }
@@ -1634,6 +1747,30 @@ class LumaApp {
     this.bindVoiceRecorderInteractions();
     this.bindSoundtrackPickerInteractions();
     this.openModal('modal-memory');
+  }
+
+  renderMemoryGalleryPreviews() {
+    const container = document.getElementById('memory-gallery-previews');
+    const badge = document.getElementById('gallery-count-badge');
+    if (badge) badge.textContent = `${this.selectedMemoryGallery.length} seleccionado(s)`;
+    if (!container) return;
+
+    container.innerHTML = this.selectedMemoryGallery.map((item, idx) => `
+      <div class="gallery-thumb-item">
+        ${item.isVideo 
+          ? `<video src="${item.dataUrl}" class="gallery-thumb-img"></video>` 
+          : `<img src="${item.dataUrl}" class="gallery-thumb-img" alt="foto ${idx + 1}">`
+        }
+        <button type="button" class="btn-remove-gallery-item" onclick="event.stopPropagation(); window.app.removeGalleryItem(${idx})" title="Eliminar">✕</button>
+      </div>
+    `).join('');
+  }
+
+  removeGalleryItem(idx) {
+    if (idx >= 0 && idx < this.selectedMemoryGallery.length) {
+      this.selectedMemoryGallery.splice(idx, 1);
+      this.renderMemoryGalleryPreviews();
+    }
   }
 
   // --- INTERACCIÓN DE GRABACIÓN DE VOZ ---
@@ -2711,7 +2848,7 @@ class LumaApp {
       };
     }
 
-    // 5. Formulario Recuerdo (NÚCLEO EMOCIONAL & DIARIO)
+    // 5. Formulario Recuerdo (NÚCLEO EMOCIONAL & DIARIO CON SUBIDA A GOOGLE DRIVE)
     const formMemory = document.getElementById('form-memory');
     if (formMemory) {
       formMemory.onsubmit = async (e) => {
@@ -2731,22 +2868,29 @@ class LumaApp {
           try { songObj = JSON.parse(songDataRaw); } catch (_) {}
         }
 
-        const coverFile = document.getElementById('memory-cover-file')?.files?.[0];
-        const photosFiles = document.getElementById('memory-photos-file')?.files || [];
-
+        // Portada
         let coverImage = '';
-        if (coverFile) {
-          coverImage = await window.Utils.fileToBase64(coverFile);
+        let isCoverVideo = false;
+
+        if (this.selectedMemoryCover && this.selectedMemoryCover.dataUrl) {
+          coverImage = this.selectedMemoryCover.dataUrl;
+          isCoverVideo = Boolean(this.selectedMemoryCover.isVideo);
         } else if (id) {
           const existing = this.storage.getMemories().find(m => m.id === id);
-          if (existing) coverImage = existing.coverImage || '';
+          if (existing) {
+            coverImage = existing.coverImage || '';
+            isCoverVideo = Boolean(existing.isVideo);
+          }
         } else {
           coverImage = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
         }
 
+        // Galería
         let photos = [];
-        for (let i = 0; i < photosFiles.length; i++) {
-          photos.push(await window.Utils.fileToBase64(photosFiles[i]));
+        if (this.selectedMemoryGallery && this.selectedMemoryGallery.length > 0) {
+          photos = this.selectedMemoryGallery.map(item => item.dataUrl);
+        } else if (coverImage) {
+          photos = [coverImage];
         }
 
         const profile = this.storage.getUserProfile() || {};
@@ -2757,6 +2901,47 @@ class LumaApp {
           avatar: profile.avatar || ''
         };
 
+        // --- ESTRUCTURA AUTOMÁTICA DE GOOGLE DRIVE ---
+        const driveFolderUrl = this.storage.getDriveFolder();
+        let driveUploadInfo = null;
+
+        if (driveFolderUrl) {
+          const safeTitle = title || 'Recuerdo';
+          const safeDate = date || new Date().toISOString().split('T')[0];
+          const subfolderName = `${safeTitle} - ${safeDate}`;
+
+          let photoCounter = 1;
+          let videoCounter = 1;
+          const organizedFiles = [];
+
+          // 1. Portada
+          if (this.selectedMemoryCover) {
+            const ext = this.selectedMemoryCover.name?.split('.').pop() || (isCoverVideo ? 'mp4' : 'jpg');
+            organizedFiles.push({
+              name: isCoverVideo ? `Video_Portada.${ext}` : `Portada.${ext}`,
+              type: isCoverVideo ? 'video' : 'photo'
+            });
+          }
+
+          // 2. Galería cuadrada (Foto 1, Foto 2, Video 1...)
+          this.selectedMemoryGallery.forEach(item => {
+            const ext = item.name?.split('.').pop() || (item.isVideo ? 'mp4' : 'jpg');
+            if (item.isVideo) {
+              organizedFiles.push({ name: `Video ${videoCounter++}.${ext}`, type: 'video' });
+            } else {
+              organizedFiles.push({ name: `Foto ${photoCounter++}.${ext}`, type: 'photo' });
+            }
+          });
+
+          driveUploadInfo = {
+            folderUrl: driveFolderUrl,
+            subfolderName: subfolderName,
+            filesCount: organizedFiles.length,
+            files: organizedFiles,
+            uploadedAt: new Date().toISOString()
+          };
+        }
+
         const memoryObj = {
           id,
           title,
@@ -2766,19 +2951,39 @@ class LumaApp {
           auraColor,
           isFeatured,
           coverImage,
-          photos: photos.length > 0 ? photos : (coverImage ? [coverImage] : []),
-          photosCount: photos.length > 0 ? photos.length : 1,
+          isVideo: isCoverVideo,
+          photos: photos,
+          photosCount: photos.length,
           author,
           song: songObj,
           audioNote: audioData ? { duration: '0:45', audioUrl: audioData } : null,
+          driveUpload: driveUploadInfo,
           createdAt: new Date().toISOString()
         };
 
         this.storage.saveMemory(memoryObj);
         this.closeModal('modal-memory');
-        window.Utils.showToast('¡Recuerdo guardado con éxito! ✨', 'success');
+
+        if (driveUploadInfo) {
+          window.Utils.showToast(`📁 Organizado en Google Drive: "${driveUploadInfo.subfolderName}" (${driveUploadInfo.filesCount} archivos) ☁️✨`, 'success');
+        } else {
+          window.Utils.showToast('¡Recuerdo inmortalizado con éxito! ✨', 'success');
+        }
+
         this.renderMemories();
         this.renderInicio();
+      };
+    }
+
+    // 5.04 Formulario Vincular Carpeta de Google Drive
+    const formDrive = document.getElementById('form-drive-sync');
+    if (formDrive) {
+      formDrive.onsubmit = (e) => {
+        e.preventDefault();
+        const url = document.getElementById('drive-folder-url-input').value.trim();
+        this.storage.saveDriveFolder(url);
+        this.closeModal('modal-drive-sync');
+        window.Utils.showToast('📁 Carpeta de Google Drive vinculada con éxito al grupo ☁️✨', 'success');
       };
     }
 
