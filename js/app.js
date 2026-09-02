@@ -1975,10 +1975,51 @@ class LumaApp {
 
       <div class="view-content-container">
         <!-- Autor -->
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-          <div class="author-avatar-mini">${authorName.charAt(0).toUpperCase()}</div>
-          <span style="font-size: 0.85rem; font-weight: 700; color: var(--color-text-main);">Inmortalizado por ${window.Utils.sanitizeHTML(authorName)}</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="author-avatar-mini">${authorName.charAt(0).toUpperCase()}</div>
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--color-text-main);">Inmortalizado por ${window.Utils.sanitizeHTML(authorName)}</span>
+          </div>
+          ${memory.driveUpload?.folderUrl ? `<a href="${memory.driveUpload.folderUrl}" target="_blank" rel="noopener" style="font-size: 0.75rem; color: #38BDF8; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(56, 189, 248, 0.12); padding: 0.25rem 0.6rem; border-radius: var(--radius-full);">📁 Google Drive</a>` : ''}
         </div>
+
+        <!-- Galería Horizontal de Fotos y Videos Deslizable -->
+        ${(() => {
+          const allMedia = [];
+          if (memory.coverImage) {
+            allMedia.push({ url: memory.coverImage, isVideo: Boolean(memory.isVideo), label: 'Portada' });
+          }
+          if (memory.photos && Array.isArray(memory.photos)) {
+            memory.photos.forEach((p, idx) => {
+              if (p && p !== memory.coverImage) {
+                const isVid = typeof p === 'string' && (p.startsWith('data:video') || p.includes('.mp4') || p.includes('video'));
+                allMedia.push({ url: p, isVideo: isVid, label: `Foto ${idx + 1}` });
+              }
+            });
+          }
+
+          if (allMedia.length === 0) return '';
+          return `
+            <div class="view-media-gallery-section">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.45rem;">
+                <h4 style="font-size: 0.86rem; font-weight: 800; color: var(--color-text-main); margin: 0;">
+                  📸 Galería del Recuerdo (${allMedia.length})
+                </h4>
+                <span style="font-size: 0.72rem; color: var(--color-text-muted);">Desliza horizontalmente ↔</span>
+              </div>
+              <div class="view-media-strip-scroll">
+                ${allMedia.map((m, idx) => `
+                  <div class="view-media-strip-item" onclick="window.app.previewMediaFull('${encodeURIComponent(m.url)}', ${m.isVideo})">
+                    ${m.isVideo 
+                      ? `<video src="${m.url}" class="view-media-strip-thumb" playsinline preload="metadata"></video><span class="media-video-badge">▶ Video</span>` 
+                      : `<img src="${m.url}" class="view-media-strip-thumb" alt="media ${idx + 1}" loading="lazy">`
+                    }
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        })()}
 
         <!-- Historia Completa -->
         <div class="view-story-prose">${window.Utils.sanitizeHTML(memory.description || 'Sin historia escrita.')}</div>
@@ -2028,13 +2069,40 @@ class LumaApp {
         if (confirm('¿Eliminar este recuerdo?')) {
           this.storage.deleteMemory(memory.id);
           this.closeModal('modal-memory-view');
-          window.Utils.showToast('Recuerdo eliminado', 'info');
+          window.Utils.showToast('Recuerdo eliminado 🗑️', 'info');
           this.renderMemories();
         }
       };
     }
 
     this.openModal('modal-memory-view');
+  }
+
+  // --- VISOR DE MEDIOS EN PANTALLA COMPLETA ---
+  previewMediaFull(encodedUrl, isVideo = false) {
+    try {
+      const url = decodeURIComponent(encodedUrl);
+      const img = document.getElementById('lightbox-img');
+      const vid = document.getElementById('lightbox-video');
+      if (isVideo) {
+        if (img) img.style.display = 'none';
+        if (vid) {
+          vid.src = url;
+          vid.style.display = 'block';
+          vid.play().catch(() => {});
+        }
+      } else {
+        if (vid) {
+          vid.pause();
+          vid.style.display = 'none';
+        }
+        if (img) {
+          img.src = url;
+          img.style.display = 'block';
+        }
+      }
+      this.openModal('modal-lightbox');
+    } catch (_) {}
   }
 
   submitMemoryComment(memoryId) {
@@ -2885,12 +2953,17 @@ class LumaApp {
           coverImage = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
         }
 
-        // Galería
+        // Galería completa (portada + fotos + videos)
         let photos = [];
+        if (coverImage) {
+          photos.push(coverImage);
+        }
         if (this.selectedMemoryGallery && this.selectedMemoryGallery.length > 0) {
-          photos = this.selectedMemoryGallery.map(item => item.dataUrl);
-        } else if (coverImage) {
-          photos = [coverImage];
+          this.selectedMemoryGallery.forEach(item => {
+            if (item.dataUrl && !photos.includes(item.dataUrl)) {
+              photos.push(item.dataUrl);
+            }
+          });
         }
 
         const profile = this.storage.getUserProfile() || {};
@@ -2901,7 +2974,7 @@ class LumaApp {
           avatar: profile.avatar || ''
         };
 
-        // --- ESTRUCTURA AUTOMÁTICA DE GOOGLE DRIVE ---
+        // --- ESTRUCTURA Y SUBIDA AUTOMÁTICA A GOOGLE DRIVE ---
         const driveFolderUrl = this.storage.getDriveFolder();
         let driveUploadInfo = null;
 
@@ -2933,13 +3006,31 @@ class LumaApp {
             }
           });
 
-          driveUploadInfo = {
-            folderUrl: driveFolderUrl,
-            subfolderName: subfolderName,
-            filesCount: organizedFiles.length,
-            files: organizedFiles,
-            uploadedAt: new Date().toISOString()
-          };
+          // Invocar el motor GoogleDriveSync
+          if (window.GoogleDriveSync) {
+            try {
+              const driveRes = await window.GoogleDriveSync.uploadMemoryToDrive(
+                { title: safeTitle, date: safeDate, coverImage, isVideo: isCoverVideo, photos },
+                driveFolderUrl
+              );
+              driveUploadInfo = {
+                folderUrl: driveRes.folderUrl || driveFolderUrl,
+                subfolderName: driveRes.folderName || subfolderName,
+                filesCount: driveRes.filesCount || organizedFiles.length,
+                files: organizedFiles,
+                uploadedAt: new Date().toISOString()
+              };
+            } catch (err) {
+              console.warn('Google Drive sync:', err);
+              driveUploadInfo = {
+                folderUrl: driveFolderUrl,
+                subfolderName: subfolderName,
+                filesCount: organizedFiles.length,
+                files: organizedFiles,
+                uploadedAt: new Date().toISOString()
+              };
+            }
+          }
         }
 
         const memoryObj = {
