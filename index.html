@@ -308,12 +308,16 @@
           <h2 class="memories-hero-title">Recuerdos</h2>
         </div>
 
-        <!-- Calendario Anual Interactivo (Mapa Visual del Año con Festivos) -->
+        <!-- Calendario Mensual Completo Interactivo (Con todos los días, festivos y acción para añadir recuerdo) -->
         <div class="interactive-year-calendar-card" id="memories-year-calendar">
           <div class="calendar-card-header">
-            <div class="calendar-title-left">
-              <span class="calendar-icon">📅</span>
-              <span class="calendar-title-text">Calendario</span>
+            <div class="calendar-nav-controls">
+              <button type="button" class="btn-cal-nav-arrow" id="btn-cal-prev-month" title="Mes anterior" aria-label="Mes anterior">‹</button>
+              <div class="calendar-title-left">
+                <span class="calendar-icon">📅</span>
+                <span class="calendar-title-text" id="calendar-month-year-label">Septiembre 2026</span>
+              </div>
+              <button type="button" class="btn-cal-nav-arrow" id="btn-cal-next-month" title="Mes siguiente" aria-label="Mes siguiente">›</button>
             </div>
             <div class="calendar-year-selector-wrap">
               <select id="select-calendar-year" class="calendar-year-select" aria-label="Seleccionar año">
@@ -326,10 +330,27 @@
             </div>
           </div>
 
-          <!-- 12 Meses con Puntos de Recuerdos y Festivos -->
+          <!-- Selector Rápido de los 12 Meses -->
           <div class="calendar-months-strip" id="calendar-months-strip"></div>
 
-          <!-- Panel Informativo del Mes Activo: Día Actual y Días Festivos -->
+          <!-- Grilla Completa del Mes: Cabeceras de Días de la Semana (Lun, Mar, Mié, Jue, Vie, Sáb, Dom) -->
+          <div class="calendar-weekdays-row">
+            <span class="weekday-header">Lun</span>
+            <span class="weekday-header">Mar</span>
+            <span class="weekday-header">Mié</span>
+            <span class="weekday-header">Jue</span>
+            <span class="weekday-header">Vie</span>
+            <span class="weekday-header">Sáb</span>
+            <span class="weekday-header">Dom</span>
+          </div>
+
+          <!-- Cuadrícula de Todos los Días del Mes -->
+          <div class="calendar-days-grid" id="calendar-full-days-grid"></div>
+
+          <!-- Barra de Acción del Día Seleccionado -->
+          <div class="calendar-selected-day-action" id="calendar-selected-day-action"></div>
+
+          <!-- Panel de Días Festivos del Mes -->
           <div class="calendar-active-month-details" id="calendar-active-month-details"></div>
 
           <!-- Leyenda Inferior -->
@@ -344,7 +365,7 @@
             </div>
             <div class="calendar-legend-item">
               <span class="legend-dot today"></span>
-              <span>Día actual</span>
+              <span>Día actual (Hoy)</span>
             </div>
           </div>
         </div>
