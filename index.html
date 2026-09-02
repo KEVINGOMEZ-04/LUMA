@@ -300,28 +300,97 @@
         <div class="activity-feed-grid" id="activity-feed-container"></div>
       </section>
 
-      <!-- 2. SECCIÓN RECUERDOS (CAMINO / TIMELINE TRAIL) -->
+      <!-- 2. SECCIÓN RECUERDOS (NÚCLEO EMOCIONAL & LÍNEA TEMPORAL VIVA) -->
       <section id="section-recuerdos" class="luma-section" role="tabpanel">
-        <div class="section-header-block">
-          <span class="section-tag-badge">LÍNEA TEMPORAL</span>
-          <h2 class="section-main-title">📸 Campo de Recuerdos</h2>
-          <p class="section-quote-subtitle">«Cada recuerdo florece como una estrella en nuestro camino compartido.»</p>
+        
+        <!-- Hero Emocional -->
+        <div class="memories-emotional-hero">
+          <h2 class="memories-hero-title">📸 Campo de Recuerdos 🌻</h2>
+          <p class="memories-hero-quote">«Cada recuerdo florece como una estrella en nuestro camino compartido.»</p>
         </div>
 
-        <div class="trail-controls">
-          <button type="button" class="btn-primary" id="btn-new-memory"><span>+ Nuevo Recuerdo</span> 🌟</button>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <label for="select-sort-memories" style="font-size: 0.85rem; color: var(--color-text-secondary);">Orden:</label>
-            <select id="select-sort-memories" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-              <option value="desc">Más recientes primero</option>
-              <option value="asc">Cronológico (antiguos primero)</option>
-            </select>
+        <!-- Calendario Anual Interactivo (Mapa Visual del Año) -->
+        <div class="interactive-year-calendar-card" id="memories-year-calendar">
+          <div class="calendar-card-header">
+            <div class="calendar-title-left">
+              <span class="calendar-icon">📅</span>
+              <span class="calendar-title-text">Calendario</span>
+            </div>
+            <div class="calendar-year-selector-wrap">
+              <select id="select-calendar-year" class="calendar-year-select" aria-label="Seleccionar año">
+                <option value="2024">2024</option>
+                <option value="2025" selected>2025</option>
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 12 Meses con Puntos Luminosos de Recuerdos -->
+          <div class="calendar-months-strip" id="calendar-months-strip"></div>
+
+          <!-- Leyenda Inferior -->
+          <div class="calendar-legend-row">
+            <div class="calendar-legend-item">
+              <span class="legend-dot purple"></span>
+              <span>Con recuerdos</span>
+            </div>
+            <div class="calendar-legend-item">
+              <span class="legend-dot muted"></span>
+              <span>Sin recuerdos</span>
+            </div>
           </div>
         </div>
 
-        <div class="trail-container" id="memories-trail-container">
-          <div class="trail-line"></div>
-          <div id="memories-grid-list"></div>
+        <!-- Barra de Búsqueda y Filtros -->
+        <div class="memories-search-filter-row">
+          <div class="filter-dropdown-wrap">
+            <span class="filter-dropdown-icon">⏱️</span>
+            <select id="select-memories-filter" class="filter-dropdown-select" aria-label="Filtrar recuerdos">
+              <option value="recent">Más recientes primero</option>
+              <option value="oldest">Cronológico (antiguos)</option>
+              <option value="featured">Solo destacados ⭐</option>
+              <option value="photos">Con fotos 📷</option>
+              <option value="videos">Con videos ▶</option>
+              <option value="songs">Con canciones 🎵</option>
+              <option value="audios">Con notas de voz 🎙️</option>
+            </select>
+          </div>
+          <div class="search-input-wrap">
+            <span class="search-input-icon">🔍</span>
+            <input type="text" id="input-search-memories" class="search-input-field" placeholder="Buscar recuerdos...">
+            <button type="button" id="btn-clear-memories-search" class="btn-clear-search" style="display: none;">✕</button>
+          </div>
+        </div>
+
+        <!-- Botón Ancho Nuevo Recuerdo -->
+        <button type="button" class="btn-wide-new-memory" id="btn-new-memory">
+          <div class="btn-wide-icon-circle">+</div>
+          <div class="btn-wide-text-col">
+            <div class="btn-wide-title">Nuevo recuerdo 🌻</div>
+            <div class="btn-wide-subtext">Crea un nuevo momento para recordar</div>
+          </div>
+          <div class="btn-wide-arrow">➔</div>
+        </button>
+
+        <!-- Línea Temporal de Recuerdos -->
+        <div class="emotional-timeline-wrapper" id="memories-trail-container">
+          <div class="emotional-timeline-track"></div>
+          <div class="emotional-timeline-list" id="memories-grid-list"></div>
+        </div>
+
+        <!-- Estado de Sincronización en la Nube -->
+        <div class="cloud-sync-card-bottom">
+          <div class="cloud-sync-left">
+            <div class="cloud-sync-icon-box">☁️</div>
+            <div class="cloud-sync-text">
+              <div class="cloud-sync-title">Sincronizado y respaldado <span class="sync-check">✔</span></div>
+              <div class="cloud-sync-desc">Tus recuerdos están seguros en la nube y disponibles para ambos.</div>
+            </div>
+          </div>
+          <button type="button" class="btn-cloud-backup" id="btn-cloud-backup-view">
+            <span>📁</span> Ver respaldo
+          </button>
         </div>
       </section>
 
@@ -898,54 +967,198 @@
     </div>
   </div>
 
-  <!-- 8. MODAL NUEVO RECUERDO -->
-  <div id="modal-memory" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-memory">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modal-title-memory" class="modal-title"><span>📸</span> Añadir Recuerdo</h3>
-        <button type="button" class="btn-modal-close" data-close-modal="modal-memory">✕</button>
+  <!-- 8. MODAL FULLSCREEN: CREAR / EDITAR RECUERDO (PÁGINA DE DIARIO) -->
+  <div id="modal-memory" class="modal-overlay modal-fullscreen-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-memory">
+    <div class="modal-content modal-fullscreen-content memory-creator-sheet">
+      <div class="modal-header sticky-header">
+        <button type="button" class="btn-modal-close" data-close-modal="modal-memory" aria-label="Cerrar">✕</button>
+        <h3 id="modal-title-memory" class="modal-title"><span>🌻</span> Nuevo Recuerdo Diario</h3>
+        <div style="width: 32px;"></div>
       </div>
-      <form id="form-memory" class="modal-form">
+
+      <form id="form-memory" class="modal-form memory-creator-form">
         <input type="hidden" id="memory-edit-id">
+        <input type="hidden" id="memory-aura-color" value="#F59E0B">
+        <input type="hidden" id="memory-is-featured" value="false">
+        <input type="hidden" id="memory-audio-data">
+        <input type="hidden" id="memory-song-data">
+
+        <!-- 1. Portada 16:9 (Foto o Video) -->
         <div class="form-group">
-          <label class="form-label" for="memory-title-input">Título del Momento *</label>
-          <input type="text" id="memory-title-input" class="form-control" placeholder="Ej: Concierto épico, Escapada a la playa..." required>
+          <label class="form-label">Portada del Momento (16:9)</label>
+          <div class="memory-cover-picker-box" id="memory-cover-picker-box">
+            <img src="" id="memory-cover-preview-img" class="memory-cover-preview-img" style="display: none;" alt="Portada">
+            <div class="memory-cover-picker-placeholder" id="memory-cover-placeholder">
+              <span style="font-size: 2rem;">📷</span>
+              <span style="font-size: 0.88rem; font-weight: 700; color: var(--color-text-main); margin-top: 0.35rem;">Elegir Foto o Video de Portada</span>
+              <span style="font-size: 0.74rem; color: var(--color-text-muted);">Formato horizontal 16:9 recomendado</span>
+            </div>
+            <input type="file" id="memory-cover-file" class="cover-file-hidden" accept="image/*,video/*">
+            <button type="button" class="btn-change-cover-pill" id="btn-trigger-cover-file" style="display: none;">📷 Cambiar Portada</button>
+          </div>
         </div>
-        <div class="form-row-2">
+
+        <!-- 2. Fecha con Accesos Rápidos -->
+        <div class="form-group">
+          <label class="form-label" for="memory-date-input">Fecha del Recuerdo *</label>
+          <div class="date-quick-presets-row">
+            <button type="button" class="date-preset-pill active" id="btn-date-today">Hoy</button>
+            <button type="button" class="date-preset-pill" id="btn-date-yesterday">Ayer</button>
+            <button type="button" class="date-preset-pill" id="btn-date-custom">📅 Elegir fecha</button>
+          </div>
+          <input type="date" id="memory-date-input" class="form-control date-input-hidden" required>
+        </div>
+
+        <!-- 3. Título & Ubicación -->
+        <div class="form-group">
+          <label class="form-label" for="memory-title-input">Título del Recuerdo *</label>
+          <input type="text" id="memory-title-input" class="form-control form-control-lg" placeholder="Ej: «Nuestra primera escapada», «Atardecer en la playa»" required maxlength="60">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="memory-location-input">Lugar o Ciudad</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">📍</span>
+            <input type="text" id="memory-location-input" class="form-control" placeholder="Ej: Guatapé, Antioquia · Mirador del Valle">
+          </div>
+        </div>
+
+        <!-- 4. Historia / Diario Emocional -->
+        <div class="form-group">
+          <label class="form-label" for="memory-desc-input">Historia & Diario del Día</label>
+          <textarea id="memory-desc-input" class="form-control memory-story-textarea" rows="4" placeholder="Escribe qué ocurrió, cómo se sintieron, qué hizo especial este día... (Permite emojis ✨🌻)"></textarea>
+        </div>
+
+        <!-- 5. Color del Recuerdo (Paleta de Auras) -->
+        <div class="form-group">
+          <label class="form-label">Aura Emocional del Momento</label>
+          <div class="aura-colors-grid" id="aura-colors-selector">
+            <button type="button" class="aura-color-pill active" data-aura="#F59E0B" style="--aura-c: #F59E0B;">
+              <span class="aura-dot" style="background: #F59E0B;"></span>
+              <span>🌻 Girasol</span>
+            </button>
+            <button type="button" class="aura-color-pill" data-aura="#A855F7" style="--aura-c: #A855F7;">
+              <span class="aura-dot" style="background: #A855F7;"></span>
+              <span>💜 Lila</span>
+            </button>
+            <button type="button" class="aura-color-pill" data-aura="#F43F5E" style="--aura-c: #F43F5E;">
+              <span class="aura-dot" style="background: #F43F5E;"></span>
+              <span>🌸 Rosa</span>
+            </button>
+            <button type="button" class="aura-color-pill" data-aura="#38BDF8" style="--aura-c: #38BDF8;">
+              <span class="aura-dot" style="background: #38BDF8;"></span>
+              <span>🌊 Azul</span>
+            </button>
+            <button type="button" class="aura-color-pill" data-aura="#10B981" style="--aura-c: #10B981;">
+              <span class="aura-dot" style="background: #10B981;"></span>
+              <span>🌿 Verde</span>
+            </button>
+            <button type="button" class="aura-color-pill" data-aura="#6366F1" style="--aura-c: #6366F1;">
+              <span class="aura-dot" style="background: #6366F1;"></span>
+              <span>🌙 Índigo</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 6. Galería Múltiple (Fotos y Videos) -->
+        <div class="form-group">
+          <label class="form-label">Galería de Fotos & Videos</label>
+          <div class="gallery-upload-container">
+            <div class="gallery-thumbnails-strip" id="memory-gallery-previews"></div>
+            <label class="gallery-add-tile" for="memory-photos-file">
+              <span style="font-size: 1.4rem;">+</span>
+              <span style="font-size: 0.72rem; font-weight: 700;">Añadir</span>
+            </label>
+            <input type="file" id="memory-photos-file" class="cover-file-hidden" accept="image/*,video/*" multiple>
+          </div>
+        </div>
+
+        <!-- 7. Banda Sonora (Canción Principal) -->
+        <div class="form-group">
+          <label class="form-label">Banda Sonora del Recuerdo</label>
+          <div class="soundtrack-selector-card" id="soundtrack-selector-card">
+            <div id="soundtrack-selected-view" style="display: none; align-items: center; justify-content: space-between; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <img src="" id="soundtrack-preview-artwork" class="soundtrack-thumb" alt="art">
+                <div>
+                  <div id="soundtrack-preview-title" style="font-weight: 700; font-size: 0.88rem; color: var(--color-text-main);">Canción</div>
+                  <div id="soundtrack-preview-artist" style="font-size: 0.75rem; color: var(--color-text-muted);">Artista</div>
+                </div>
+              </div>
+              <button type="button" class="btn-ghost-remove" id="btn-remove-soundtrack" title="Quitar canción">✕</button>
+            </div>
+            <div id="soundtrack-empty-view" style="display: flex; gap: 0.5rem; width: 100%;">
+              <input type="text" id="input-soundtrack-search" class="form-control" placeholder="Buscar canción en iTunes (ej: Golden Hour)...">
+              <button type="button" class="btn-secondary" id="btn-search-soundtrack">Buscar</button>
+            </div>
+          </div>
+          <div id="soundtrack-search-results" class="soundtrack-results-dropdown" style="display: none;"></div>
+        </div>
+
+        <!-- 8. Nota de Voz Grabada -->
+        <div class="form-group">
+          <label class="form-label">Nota de Voz del Momento</label>
+          <div class="voice-recorder-card" id="voice-recorder-card">
+            <div class="voice-recorder-controls">
+              <button type="button" class="btn-record-voice" id="btn-toggle-voice-record">
+                <span class="record-mic-icon">🎙️</span>
+                <span id="voice-record-btn-text">Grabar recuerdo</span>
+              </button>
+              <span id="voice-record-timer" class="voice-timer" style="display: none;">00:00</span>
+            </div>
+            <div class="voice-waveform-preview" id="voice-waveform-preview" style="display: none;">
+              <div class="waveform-bars-live" id="live-waveform-bars"></div>
+              <audio id="recorded-audio-element" controls style="width: 100%; margin-top: 0.5rem; display: none;"></audio>
+            </div>
+          </div>
+        </div>
+
+        <!-- 9. Estado y Autor -->
+        <div class="form-row-2" style="margin-top: 0.5rem;">
           <div class="form-group">
-            <label class="form-label" for="memory-date-input">Fecha *</label>
-            <input type="date" id="memory-date-input" class="form-control" required>
+            <label class="form-label">Estado del Recuerdo</label>
+            <div class="featured-toggle-row">
+              <button type="button" class="btn-status-pill active" id="btn-status-saved">🌱 Guardado</button>
+              <button type="button" class="btn-status-pill" id="btn-status-featured">⭐ Destacado</button>
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="memory-location-input">Ubicación (Opcional)</label>
-            <input type="text" id="memory-location-input" class="form-control" placeholder="📍 Ciudad, Lugar...">
+            <label class="form-label">Autor</label>
+            <div class="author-display-pill" id="memory-creator-author-display">
+              <span class="author-avatar-mini" id="creator-author-avatar">U</span>
+              <strong id="creator-author-name">Tú</strong>
+              <span class="user-role-badge self">Autor</span>
+            </div>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="memory-desc-input">Historia o Descripción</label>
-          <textarea id="memory-desc-input" class="form-control" rows="3" placeholder="¿Qué pasó? ¿Por qué fue especial?"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Foto de Portada</label>
-          <input type="file" id="memory-cover-file" class="form-control" accept="image/*">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Fotos adicionales (Galería múltiple)</label>
-          <input type="file" id="memory-photos-file" class="form-control" accept="image/*" multiple>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Banda Sonora del Momento (Canción)</label>
-          <div class="form-row-2">
-            <input type="text" id="memory-song-title" class="form-control" placeholder="Título de la canción...">
-            <input type="text" id="memory-song-artist" class="form-control" placeholder="Artista...">
-          </div>
-          <input type="hidden" id="memory-song-preview">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" data-close-modal="modal-memory">Cancelar</button>
-          <button type="submit" class="btn-primary"><span>Guardar Recuerdo</span> 📸</button>
+
+        <!-- Botón Guardar Flotante Inferior -->
+        <div class="memory-creator-footer">
+          <button type="submit" class="btn-primary btn-bloom-save" id="btn-submit-memory">
+            <span class="bloom-icon">✨</span>
+            <span>Inmortalizar Recuerdo 🌻</span>
+          </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- 8.1 MODAL FULLSCREEN: VISTA COMPLETA DEL RECUERDO (ÁLBUM EMOCIONAL) -->
+  <div id="modal-memory-view" class="modal-overlay modal-fullscreen-overlay" role="dialog" aria-modal="true">
+    <div class="modal-content modal-fullscreen-content memory-viewer-sheet">
+      <!-- Barra Superior Transparente -->
+      <div class="memory-view-top-bar">
+        <button type="button" class="btn-view-circle-back" data-close-modal="modal-memory-view" aria-label="Volver">✕</button>
+        <div class="memory-view-top-actions">
+          <button type="button" class="btn-view-circle-action" id="btn-view-edit-memory" title="Editar">✏️</button>
+          <button type="button" class="btn-view-circle-action" id="btn-view-share-memory" title="Compartir">🔗</button>
+          <button type="button" class="btn-view-circle-action danger" id="btn-view-delete-memory" title="Eliminar">🗑️</button>
+        </div>
+      </div>
+
+      <div class="memory-view-body" id="memory-view-body-content">
+        <!-- Generado dinámicamente: Hero Parallax, Historia, Galería, Banda Sonora, Nota de Voz y Comentarios de Pareja -->
+      </div>
     </div>
   </div>
 
