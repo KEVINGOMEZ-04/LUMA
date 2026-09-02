@@ -1588,22 +1588,54 @@ class LumaApp {
     }
 
     const scriptCodeText = `function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(30000);
+
   try {
+    if (!e || !e.postData || !e.postData.contents) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'No data received' })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     var data = JSON.parse(e.postData.contents);
     var parentFolderId = data.parentFolderId;
-    var subfolderName = data.subfolderName;
+    var subfolderName = data.subfolderName || 'Recuerdo LUMA';
     var files = data.files || [];
 
     var parentFolder = DriveApp.getFolderById(parentFolderId);
-    var targetFolder = parentFolder.createFolder(subfolderName);
+
+    // Evitar crear carpetas duplicadas: Buscar si ya existe la carpeta
+    var existingFolders = parentFolder.getFoldersByName(subfolderName);
+    var targetFolder;
+    if (existingFolders.hasNext()) {
+      targetFolder = existingFolders.next();
+    } else {
+      targetFolder = parentFolder.createFolder(subfolderName);
+    }
 
     var uploadedFiles = [];
     for (var i = 0; i < files.length; i++) {
       var f = files[i];
-      var contentType = f.type || 'image/jpeg';
+      if (!f.base64) continue;
+
+      var mimeType = f.type || 'image/jpeg';
+      var fileName = f.name || ('Archivo_' + (i + 1) + '.jpg');
+
+      // Evitar subir archivos duplicados con el mismo nombre
+      var existingFiles = targetFolder.getFilesByName(fileName);
+      if (existingFiles.hasNext()) {
+        var existingFile = existingFiles.next();
+        uploadedFiles.push({
+          name: existingFile.getName(),
+          id: existingFile.getId(),
+          url: existingFile.getUrl()
+        });
+        continue;
+      }
+
       var decodedBytes = Utilities.base64Decode(f.base64);
-      var blob = Utilities.newBlob(decodedBytes, contentType, f.name);
+      var blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
       var driveFile = targetFolder.createFile(blob);
+
       uploadedFiles.push({
         name: driveFile.getName(),
         id: driveFile.getId(),
@@ -1616,13 +1648,17 @@ class LumaApp {
       folderId: targetFolder.getId(),
       folderName: targetFolder.getName(),
       folderUrl: targetFolder.getUrl(),
-      filesCount: uploadedFiles.length
+      filesCount: uploadedFiles.length,
+      files: uploadedFiles
     })).setMimeType(ContentService.MimeType.JSON);
+
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
     })).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
   }
 }`;
 
@@ -3021,150 +3057,173 @@ class LumaApp {
     if (formMemory) {
       formMemory.onsubmit = async (e) => {
         e.preventDefault();
-        const id = document.getElementById('memory-edit-id').value || null;
-        const title = document.getElementById('memory-title-input').value.trim();
-        const date = document.getElementById('memory-date-input').value;
-        const location = document.getElementById('memory-location-input').value.trim();
-        const description = document.getElementById('memory-desc-input').value.trim();
-        const auraColor = document.getElementById('memory-aura-color').value || '#F59E0B';
-        const isFeatured = document.getElementById('memory-is-featured').value === 'true';
-        const audioData = document.getElementById('memory-audio-data').value;
-        const songDataRaw = document.getElementById('memory-song-data').value;
 
-        let songObj = null;
-        if (songDataRaw) {
-          try { songObj = JSON.parse(songDataRaw); } catch (_) {}
+        // Mutex para evitar envíos múltiples o duplicados
+        if (this.isSubmittingMemory) return;
+        this.isSubmittingMemory = true;
+
+        const btnSubmit = formMemory.querySelector('button[type="submit"]');
+        const origBtnHtml = btnSubmit ? btnSubmit.innerHTML : '';
+        if (btnSubmit) {
+          btnSubmit.disabled = true;
+          btnSubmit.innerHTML = '<span>⏳</span><span>Guardando y subiendo a Drive...</span>';
         }
 
-        // Portada
-        let coverImage = '';
-        let isCoverVideo = false;
+        try {
+          const id = document.getElementById('memory-edit-id').value || null;
+          const title = document.getElementById('memory-title-input').value.trim();
+          const date = document.getElementById('memory-date-input').value;
+          const location = document.getElementById('memory-location-input').value.trim();
+          const description = document.getElementById('memory-desc-input').value.trim();
+          const auraColor = document.getElementById('memory-aura-color').value || '#F59E0B';
+          const isFeatured = document.getElementById('memory-is-featured').value === 'true';
+          const audioData = document.getElementById('memory-audio-data').value;
+          const songDataRaw = document.getElementById('memory-song-data').value;
 
-        if (this.selectedMemoryCover && this.selectedMemoryCover.dataUrl) {
-          coverImage = this.selectedMemoryCover.dataUrl;
-          isCoverVideo = Boolean(this.selectedMemoryCover.isVideo);
-        } else if (id) {
-          const existing = this.storage.getMemories().find(m => m.id === id);
-          if (existing) {
-            coverImage = existing.coverImage || '';
-            isCoverVideo = Boolean(existing.isVideo);
+          let songObj = null;
+          if (songDataRaw) {
+            try { songObj = JSON.parse(songDataRaw); } catch (_) {}
           }
-        } else {
-          coverImage = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
-        }
 
-        // Galería completa (portada + fotos + videos)
-        let photos = [];
-        if (coverImage) {
-          photos.push(coverImage);
-        }
-        if (this.selectedMemoryGallery && this.selectedMemoryGallery.length > 0) {
-          this.selectedMemoryGallery.forEach(item => {
-            if (item.dataUrl && !photos.includes(item.dataUrl)) {
-              photos.push(item.dataUrl);
+          // Portada
+          let coverImage = '';
+          let isCoverVideo = false;
+
+          if (this.selectedMemoryCover && this.selectedMemoryCover.dataUrl) {
+            coverImage = this.selectedMemoryCover.dataUrl;
+            isCoverVideo = Boolean(this.selectedMemoryCover.isVideo);
+          } else if (id) {
+            const existing = this.storage.getMemories().find(m => m.id === id);
+            if (existing) {
+              coverImage = existing.coverImage || '';
+              isCoverVideo = Boolean(existing.isVideo);
             }
-          });
-        }
+          } else {
+            coverImage = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80';
+          }
 
-        const profile = this.storage.getUserProfile() || {};
-        const author = {
-          id: profile.id,
-          name: profile.name || 'Kevin',
-          color: profile.favoriteColor || '#6366F1',
-          avatar: profile.avatar || ''
-        };
-
-        // --- ESTRUCTURA Y SUBIDA AUTOMÁTICA A GOOGLE DRIVE ---
-        const driveFolderUrl = this.storage.getDriveFolder();
-        let driveUploadInfo = null;
-
-        if (driveFolderUrl) {
-          const safeTitle = title || 'Recuerdo';
-          const safeDate = date || new Date().toISOString().split('T')[0];
-          const subfolderName = `${safeTitle} - ${safeDate}`;
-
-          let photoCounter = 1;
-          let videoCounter = 1;
-          const organizedFiles = [];
-
-          // 1. Portada
-          if (this.selectedMemoryCover) {
-            const ext = this.selectedMemoryCover.name?.split('.').pop() || (isCoverVideo ? 'mp4' : 'jpg');
-            organizedFiles.push({
-              name: isCoverVideo ? `Video_Portada.${ext}` : `Portada.${ext}`,
-              type: isCoverVideo ? 'video' : 'photo'
+          // Galería completa (portada + fotos + videos)
+          let photos = [];
+          if (coverImage) {
+            photos.push(coverImage);
+          }
+          if (this.selectedMemoryGallery && this.selectedMemoryGallery.length > 0) {
+            this.selectedMemoryGallery.forEach(item => {
+              if (item.dataUrl && !photos.includes(item.dataUrl)) {
+                photos.push(item.dataUrl);
+              }
             });
           }
 
-          // 2. Galería cuadrada (Foto 1, Foto 2, Video 1...)
-          this.selectedMemoryGallery.forEach(item => {
-            const ext = item.name?.split('.').pop() || (item.isVideo ? 'mp4' : 'jpg');
-            if (item.isVideo) {
-              organizedFiles.push({ name: `Video ${videoCounter++}.${ext}`, type: 'video' });
-            } else {
-              organizedFiles.push({ name: `Foto ${photoCounter++}.${ext}`, type: 'photo' });
-            }
-          });
+          const profile = this.storage.getUserProfile() || {};
+          const author = {
+            id: profile.id,
+            name: profile.name || 'Kevin',
+            color: profile.favoriteColor || '#6366F1',
+            avatar: profile.avatar || ''
+          };
 
-          // Invocar el motor GoogleDriveSync
-          if (window.GoogleDriveSync) {
-            try {
-              const webhookUrl = this.storage.getDriveWebhook ? this.storage.getDriveWebhook() : '';
-              const driveRes = await window.GoogleDriveSync.uploadMemoryToDrive(
-                { title: safeTitle, date: safeDate, coverImage, isVideo: isCoverVideo, photos },
-                driveFolderUrl,
-                webhookUrl
-              );
-              driveUploadInfo = {
-                folderUrl: driveRes.folderUrl || driveFolderUrl,
-                subfolderName: driveRes.folderName || subfolderName,
-                filesCount: driveRes.filesCount || organizedFiles.length,
-                files: organizedFiles,
-                uploadedAt: new Date().toISOString()
-              };
-            } catch (err) {
-              console.warn('Google Drive sync:', err);
-              driveUploadInfo = {
-                folderUrl: driveFolderUrl,
-                subfolderName: subfolderName,
-                filesCount: organizedFiles.length,
-                files: organizedFiles,
-                uploadedAt: new Date().toISOString()
-              };
+          // --- ESTRUCTURA Y SUBIDA AUTOMÁTICA A GOOGLE DRIVE ---
+          const driveFolderUrl = this.storage.getDriveFolder();
+          let driveUploadInfo = null;
+
+          if (driveFolderUrl) {
+            const safeTitle = title || 'Recuerdo';
+            const safeDate = date || new Date().toISOString().split('T')[0];
+            const subfolderName = `${safeTitle} - ${safeDate}`;
+
+            let photoCounter = 1;
+            let videoCounter = 1;
+            const organizedFiles = [];
+
+            // 1. Portada
+            if (this.selectedMemoryCover) {
+              const ext = this.selectedMemoryCover.name?.split('.').pop() || (isCoverVideo ? 'mp4' : 'jpg');
+              organizedFiles.push({
+                name: isCoverVideo ? `Video_Portada.${ext}` : `Portada.${ext}`,
+                type: isCoverVideo ? 'video' : 'photo'
+              });
+            }
+
+            // 2. Galería cuadrada (Foto 1, Foto 2, Video 1...)
+            this.selectedMemoryGallery.forEach(item => {
+              const ext = item.name?.split('.').pop() || (item.isVideo ? 'mp4' : 'jpg');
+              if (item.isVideo) {
+                organizedFiles.push({ name: `Video ${videoCounter++}.${ext}`, type: 'video' });
+              } else {
+                organizedFiles.push({ name: `Foto ${photoCounter++}.${ext}`, type: 'photo' });
+              }
+            });
+
+            // Invocar el motor GoogleDriveSync
+            if (window.GoogleDriveSync) {
+              try {
+                const webhookUrl = this.storage.getDriveWebhook ? this.storage.getDriveWebhook() : '';
+                const driveRes = await window.GoogleDriveSync.uploadMemoryToDrive(
+                  { title: safeTitle, date: safeDate, coverImage, isVideo: isCoverVideo, photos },
+                  driveFolderUrl,
+                  webhookUrl
+                );
+                driveUploadInfo = {
+                  folderUrl: driveRes.folderUrl || driveFolderUrl,
+                  subfolderName: driveRes.folderName || subfolderName,
+                  filesCount: driveRes.filesCount || organizedFiles.length,
+                  files: organizedFiles,
+                  uploadedAt: new Date().toISOString()
+                };
+              } catch (err) {
+                console.warn('Google Drive sync:', err);
+                driveUploadInfo = {
+                  folderUrl: driveFolderUrl,
+                  subfolderName: subfolderName,
+                  filesCount: organizedFiles.length,
+                  files: organizedFiles,
+                  uploadedAt: new Date().toISOString()
+                };
+              }
             }
           }
+
+          const memoryObj = {
+            id,
+            title,
+            date,
+            location,
+            description,
+            auraColor,
+            isFeatured,
+            coverImage,
+            isVideo: isCoverVideo,
+            photos: photos,
+            photosCount: photos.length,
+            author,
+            song: songObj,
+            audioNote: audioData ? { duration: '0:45', audioUrl: audioData } : null,
+            driveUpload: driveUploadInfo,
+            createdAt: new Date().toISOString()
+          };
+
+          this.storage.saveMemory(memoryObj);
+          this.closeModal('modal-memory');
+
+          if (driveUploadInfo) {
+            window.Utils.showToast(`📁 Organizado en Google Drive: "${driveUploadInfo.subfolderName}" (${driveUploadInfo.filesCount} archivos) ☁️✨`, 'success');
+          } else {
+            window.Utils.showToast('¡Recuerdo inmortalizado con éxito! ✨', 'success');
+          }
+
+          this.renderMemories();
+          this.renderInicio();
+        } catch (submitErr) {
+          console.error('Error saving memory:', submitErr);
+          window.Utils.showToast('Ocurrió un problema al guardar el recuerdo', 'error');
+        } finally {
+          this.isSubmittingMemory = false;
+          if (btnSubmit) {
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = origBtnHtml || '<span class="bloom-icon">✨</span><span>Inmortalizar Recuerdo</span>';
+          }
         }
-
-        const memoryObj = {
-          id,
-          title,
-          date,
-          location,
-          description,
-          auraColor,
-          isFeatured,
-          coverImage,
-          isVideo: isCoverVideo,
-          photos: photos,
-          photosCount: photos.length,
-          author,
-          song: songObj,
-          audioNote: audioData ? { duration: '0:45', audioUrl: audioData } : null,
-          driveUpload: driveUploadInfo,
-          createdAt: new Date().toISOString()
-        };
-
-        this.storage.saveMemory(memoryObj);
-        this.closeModal('modal-memory');
-
-        if (driveUploadInfo) {
-          window.Utils.showToast(`📁 Organizado en Google Drive: "${driveUploadInfo.subfolderName}" (${driveUploadInfo.filesCount} archivos) ☁️✨`, 'success');
-        } else {
-          window.Utils.showToast('¡Recuerdo inmortalizado con éxito! ✨', 'success');
-        }
-
-        this.renderMemories();
-        this.renderInicio();
       };
     }
 
