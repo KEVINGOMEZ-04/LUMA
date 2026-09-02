@@ -487,29 +487,69 @@
         <div class="music-collab-feed" id="songs-grid-list"></div>
       </section>
 
-      <!-- 4. SECCIÓN CINE (PELÍCULAS) -->
+      <!-- 4. SECCIÓN CINE (CARTELERA COLABORATIVA DEL GRUPO) -->
       <section id="section-cine" class="luma-section" role="tabpanel">
-        <div class="luma-section-header">
-          <h2 class="luma-section-title"><span>🎬</span> Cine & Películas</h2>
-        </div>
-
-        <div class="trail-controls">
-          <button type="button" class="btn-primary" id="btn-new-movie"><span>+ Añadir Película</span> 🍿</button>
-          <form id="movie-search-form" class="media-search">
-            <input id="movie-search-input" class="form-control" placeholder="Buscar en TMDb (ej. Interstellar, Inception)..." required>
-            <button type="submit" class="btn-secondary">Buscar</button>
-          </form>
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-            <select id="filter-movies-status" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-              <option value="all">Todas las películas</option>
-              <option value="Vista">🍿 Vistas</option>
-              <option value="Por ver">🌱 Por ver</option>
-            </select>
+        <!-- Hero de la Sección Cine -->
+        <div class="movie-collab-hero">
+          <div class="movie-hero-left">
+            <div class="movie-hero-icon-box">
+              <span class="movie-hero-symbol">🎬</span>
+              <span class="movie-hero-glow-dot"></span>
+            </div>
+            <div class="movie-hero-titles">
+              <span class="movie-hero-tag">🎬 CARTELERA DEL GRUPO</span>
+              <h2 class="movie-hero-title">Cine & Películas</h2>
+              <p class="movie-hero-subtitle">Las mejores noches empiezan con una buena película.</p>
+              <div class="movie-hero-underline-bar"></div>
+            </div>
+          </div>
+          <div class="movie-hero-stats-card">
+            <div class="movie-stat-col">
+              <span class="movie-stat-top-icon purple">🎞️</span>
+              <span class="movie-stat-val" id="stat-movies-count">84</span>
+              <span class="movie-stat-lbl">Películas</span>
+            </div>
+            <div class="movie-stat-divider"></div>
+            <div class="movie-stat-col">
+              <span class="movie-stat-top-icon blue">🍿</span>
+              <span class="movie-stat-val" id="stat-movies-watched">52</span>
+              <span class="movie-stat-lbl">Vistas</span>
+            </div>
+            <div class="movie-stat-divider"></div>
+            <div class="movie-stat-col">
+              <span class="movie-stat-top-icon rose">🔖</span>
+              <span class="movie-stat-val pink-highlight" id="stat-movies-pending">32</span>
+              <span class="movie-stat-lbl">Pendientes</span>
+            </div>
           </div>
         </div>
 
-        <div id="movie-search-results" style="margin-bottom: 1.5rem;"></div>
-        <div class="movies-grid" id="movies-grid-list"></div>
+        <!-- Buscador TMDb + Botón Añadir Película -->
+        <div class="movie-search-action-row">
+          <div class="movie-search-bar-wrap">
+            <span class="movie-search-input-icon">🔍</span>
+            <input type="text" id="movie-search-input" class="movie-search-input-field" placeholder="Buscar película en TMDb..." autocomplete="off">
+            <button type="button" id="btn-clear-movie-search" class="btn-clear-movie-input" style="display: none;">✕</button>
+          </div>
+          <button type="button" id="btn-open-add-movie" class="btn-add-movie-purple">
+            <span>+ Añadir película</span> <span>🍿</span>
+          </button>
+        </div>
+
+        <!-- Resultados en Vivo de TMDb (Dropdown) -->
+        <div id="movie-live-search-results" class="movie-live-results-dropdown" style="display: none;"></div>
+
+        <!-- Filtros Rápidos (Chips con Scroll Horizontal) -->
+        <div class="movie-filter-chips-scroll" id="movie-filter-chips">
+          <button type="button" class="movie-filter-chip active" data-filter="all">Todas</button>
+          <button type="button" class="movie-filter-chip" data-filter="Vista">🍿 Vistas</button>
+          <button type="button" class="movie-filter-chip" data-filter="Por ver">🌱 Por ver</button>
+          <button type="button" class="movie-filter-chip" data-filter="Favorita">❤️ Favoritas</button>
+          <button type="button" class="movie-filter-chip" data-filter="my-proposals">Propuestas por mí</button>
+        </div>
+
+        <!-- Lista de Tarjetas de Películas (Cartelera) -->
+        <div class="movie-collab-feed" id="movies-collab-feed"></div>
       </section>
 
       <!-- 5. SECCIÓN SERIES -->
@@ -1567,63 +1607,255 @@
     <audio id="global-audio-element" preload="none"></audio>
   </div>
 
-  <!-- 10. MODAL PELÍCULA (ATRIA FULL PARITY) -->
-  <div id="modal-movie" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-movie-title">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modal-movie-title" class="modal-title"><span>🎬</span> Película</h3>
-        <button type="button" class="btn-modal-close" data-close-modal="modal-movie">✕</button>
+  <!-- 10. MODAL: PÁGINA COMPLETA DE LA PELÍCULA (DEDICATED VIEW) -->
+  <div id="modal-movie-view" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="movie-view-title">
+    <div class="modal-content movie-view-modal-content">
+      <!-- Botón flotante cerrar -->
+      <button type="button" class="btn-modal-close movie-view-close-btn" data-close-modal="modal-movie-view">✕</button>
+
+      <!-- Hero con Backdrop desenfocado -->
+      <div class="movie-view-hero-wrap">
+        <div class="movie-view-backdrop-img" id="movie-view-backdrop"></div>
+        <div class="movie-view-hero-overlay"></div>
+        <div class="movie-view-hero-body">
+          <div class="movie-view-poster-container">
+            <img id="movie-view-poster" src="" alt="Poster" class="movie-view-poster-img">
+            <button type="button" id="movie-view-trailer-btn" class="movie-view-trailer-fab" title="Ver tráiler oficial">
+              <span>▶</span>
+            </button>
+          </div>
+          <div class="movie-view-hero-meta">
+            <div class="movie-view-status-badge-wrap">
+              <span id="movie-view-status-pill" class="movie-status-pill">🍿 Vista</span>
+              <span id="movie-view-tmdb-score" class="movie-tmdb-pill">⭐ 8.6 TMDb</span>
+            </div>
+            <h2 id="movie-view-title" class="movie-view-title-text">Interstellar</h2>
+            <div class="movie-view-meta-row" id="movie-view-meta-row">
+              <span id="movie-view-year">2014</span> • 
+              <span id="movie-view-duration">2h 49m</span> • 
+              <span id="movie-view-genres">Aventura, Drama, Ciencia ficción</span>
+            </div>
+            <div class="movie-view-proposer-line" id="movie-view-proposer">
+              <img id="movie-view-proposer-avatar" src="" class="movie-author-mini-avatar" alt="Avatar">
+              <span>Propuesta por <strong id="movie-view-proposer-name">Laura</strong> • <span id="movie-view-date">10 Sep 2025</span></span>
+            </div>
+          </div>
+        </div>
       </div>
-      <form id="form-movie" class="modal-form">
-        <input type="hidden" id="movie-id">
+
+      <div class="movie-view-scroll-body">
+        <!-- Sinopsis -->
+        <div class="movie-view-section">
+          <h4 class="movie-view-sec-title">📖 Sinopsis</h4>
+          <p id="movie-view-synopsis" class="movie-view-synopsis-text"></p>
+          <button type="button" id="btn-toggle-synopsis" class="btn-read-more" style="display: none;">Leer más</button>
+        </div>
+
+        <!-- Valoraciones del Grupo (Doble Nivel) -->
+        <div class="movie-view-section">
+          <div class="movie-view-ratings-header">
+            <div>
+              <h4 class="movie-view-sec-title" style="margin-bottom: 0.15rem;">⭐ Valoraciones del Grupo</h4>
+              <p class="movie-view-sec-subtitle">Promedio de las notas individuales del parche</p>
+            </div>
+            <div class="movie-view-big-avg-box">
+              <span class="big-avg-star">⭐</span>
+              <span class="big-avg-val" id="movie-view-group-avg">9.4</span>
+              <span class="big-avg-max">/10</span>
+            </div>
+          </div>
+
+          <!-- Slider / Selector para que el usuario califique -->
+          <div class="movie-user-rate-box">
+            <span class="user-rate-prompt">Tu calificación personal:</span>
+            <div class="user-rate-slider-row">
+              <input type="range" id="movie-rate-slider" min="1" max="10" step="0.5" value="9.5" class="custom-slider">
+              <span class="user-rate-value-pill" id="movie-rate-slider-val">9.5 ⭐</span>
+              <button type="button" class="btn-primary-purple" id="btn-save-user-movie-rating" style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">Guardar</button>
+            </div>
+          </div>
+
+          <!-- Lista de integrantes y notas -->
+          <div class="movie-view-ratings-list" id="movie-view-ratings-list"></div>
+        </div>
+
+        <!-- Reseñas del Parche -->
+        <div class="movie-view-section">
+          <div class="movie-view-section-between">
+            <h4 class="movie-view-sec-title">💬 Reseñas del Grupo</h4>
+            <button type="button" class="btn-inline-action" id="btn-show-write-review">+ Escribir reseña</button>
+          </div>
+          <!-- Caja para escribir reseña -->
+          <form id="form-movie-write-review" class="movie-write-review-form" style="display: none;">
+            <textarea id="input-movie-user-review" class="form-control" rows="2" placeholder="Escribe tu reseña o qué te pareció..." required></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.4rem;">
+              <button type="button" class="btn-secondary" id="btn-cancel-write-review" style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">Cancelar</button>
+              <button type="submit" class="btn-primary-purple" style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">Publicar reseña</button>
+            </div>
+          </form>
+          <!-- Lista de reseñas con formato cita -->
+          <div class="movie-view-reviews-list" id="movie-view-reviews-list"></div>
+        </div>
+
+        <!-- Galería Oficial (Stills de TMDb) -->
+        <div class="movie-view-section" id="movie-view-gallery-section">
+          <h4 class="movie-view-sec-title">🖼️ Galería Oficial</h4>
+          <div class="movie-view-gallery-scroll" id="movie-view-gallery-scroll"></div>
+        </div>
+
+        <!-- Recuerdos Relacionados -->
+        <div class="movie-view-section">
+          <h4 class="movie-view-sec-title">🌻 Recuerdos Vinculados</h4>
+          <div class="movie-view-linked-memories" id="movie-view-linked-memories"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10.1 MODAL: CREAR / CONFIGURAR PELÍCULA DESDE TMDB -->
+  <div id="modal-movie-add" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-movie-add-title">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="modal-movie-add-title" class="modal-title"><span>🍿</span> Añadir a la Cartelera</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-movie-add">✕</button>
+      </div>
+      <form id="form-add-movie-custom" class="modal-form">
+        <!-- Previsualización importada de TMDb -->
+        <div class="movie-add-preview-card">
+          <img id="add-preview-poster" src="" class="movie-add-preview-art" alt="Poster">
+          <div class="movie-add-preview-info">
+            <h4 id="add-preview-title" class="movie-add-preview-title">Título</h4>
+            <div id="add-preview-year-genres" class="movie-add-preview-meta">2026 • Géneros</div>
+            <div id="add-preview-rating" class="movie-add-preview-tmdb">⭐ 8.5 TMDb</div>
+          </div>
+        </div>
+
+        <!-- Campos de Configuración del Parche -->
         <div class="form-group">
-          <label class="form-label" for="movie-title-input">Título de la película *</label>
-          <input type="text" id="movie-title-input" class="form-control" required placeholder="Ej. Interstellar">
-        </div>
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label" for="movie-year-input">Año (4 dígitos) *</label>
-            <input type="number" id="movie-year-input" class="form-control" min="1900" max="2099" required value="2026">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="movie-proposed-select">Propuesta por *</label>
-            <select id="movie-proposed-select" class="form-control" required></select>
+          <label class="form-label">Estado en la cartelera *</label>
+          <div class="movie-status-pill-picker" id="add-movie-status-picker">
+            <button type="button" class="status-option-btn active" data-status="Por ver">🌱 Por ver</button>
+            <button type="button" class="status-option-btn" data-status="Vista">🍿 Vista</button>
+            <button type="button" class="status-option-btn" data-status="Favorita">❤️ Favorita</button>
           </div>
         </div>
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label" for="movie-priority-select">Prioridad (1 a 5 ⭐) *</label>
-            <select id="movie-priority-select" class="form-control" required>
-              <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
-              <option value="4">⭐⭐⭐⭐ (4/5)</option>
-              <option value="3">⭐⭐⭐ (3/5)</option>
-              <option value="2">⭐⭐ (2/5)</option>
-              <option value="1">⭐ (1/5)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="movie-status-select">Estado *</label>
-            <select id="movie-status-select" class="form-control" required>
-              <option value="Por ver">🌱 Por ver</option>
-              <option value="Vista">🍿 Vista</option>
-              <option value="Favorita">❤️ Favorita</option>
-            </select>
-          </div>
-        </div>
+
         <div class="form-group">
-          <label class="form-label" for="movie-rating-input">Tu Calificación (0 a 10 ⭐):</label>
-          <input type="number" id="movie-rating-input" class="form-control" min="0" max="10" step="0.1" placeholder="Ej. 9.5">
+          <label class="form-label">Prioridad (Para decidir qué ver primero) *</label>
+          <div class="star-rating-interactive" id="add-movie-priority-picker">
+            <button type="button" class="star-btn active" data-val="1">⭐</button>
+            <button type="button" class="star-btn active" data-val="2">⭐</button>
+            <button type="button" class="star-btn active" data-val="3">⭐</button>
+            <button type="button" class="star-btn active" data-val="4">⭐</button>
+            <button type="button" class="star-btn active" data-val="5">⭐</button>
+            <span class="star-rating-number" id="add-movie-priority-score">5/5</span>
+          </div>
         </div>
+
         <div class="form-group">
-          <label class="form-label" for="movie-comment-input">Tu Reseña / Comentario:</label>
-          <input type="text" id="movie-comment-input" class="form-control" placeholder="¿Qué te pareció esta película?">
+          <label class="form-label" for="input-add-movie-my-rating">Tu Nota Inicial (1 a 10 ⭐):</label>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <input type="range" id="input-add-movie-my-rating" min="1" max="10" step="0.5" value="9.0" class="custom-slider" style="flex: 1;">
+            <span id="add-movie-rating-display" class="user-rate-value-pill">9.0 ⭐</span>
+          </div>
         </div>
-        <input type="hidden" id="movie-poster-url">
+
+        <div class="form-group">
+          <label class="form-label" for="input-add-movie-review">¿Qué te pareció o por qué la recomiendas?</label>
+          <textarea id="input-add-movie-review" class="form-control" rows="2" placeholder="¿Qué te pareció o por qué la recomiendas?"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Vincular a recuerdos del grupo (Opcional):</label>
+          <div class="memories-check-list" id="add-movie-memories-checklist"></div>
+        </div>
+
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" data-close-modal="modal-movie">Cancelar</button>
-          <button type="submit" class="btn-primary"><span>Guardar Película</span> 🎬</button>
+          <button type="button" class="btn-secondary" data-close-modal="modal-movie-add">Cancelar</button>
+          <button type="submit" class="btn-primary-purple"><span>Guardar en la cartelera del grupo</span> 🍿</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- 10.2 MODAL: COMENTARIOS Y CONVERSACIONES DE LA PELÍCULA (DISCORD STYLE) -->
+  <div id="modal-movie-comments" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-movie-comments-title">
+    <div class="modal-content modal-comments-sheet" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="comments-header-movie-info">
+          <img id="movie-comments-header-art" src="" class="comments-header-art" alt="Poster">
+          <div>
+            <h3 id="modal-movie-comments-title" class="modal-title" style="font-size: 1rem;">Comentarios</h3>
+            <p id="movie-comments-header-title" class="comments-header-subtitle">Título Película</p>
+          </div>
+        </div>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-movie-comments">✕</button>
+      </div>
+
+      <!-- Lista de Mensajes estilo Discord -->
+      <div class="movie-comments-chat-list" id="movie-comments-chat-list"></div>
+
+      <!-- Reacciones Rápidas -->
+      <div class="quick-emoji-reactions-bar">
+        <button type="button" class="btn-quick-emoji movie-quick-react" data-emoji="🍿">🍿 Cine</button>
+        <button type="button" class="btn-quick-emoji movie-quick-react" data-emoji="🔥">🔥 Épica</button>
+        <button type="button" class="btn-quick-emoji movie-quick-react" data-emoji="❤️">❤️ Favorita</button>
+        <button type="button" class="btn-quick-emoji movie-quick-react" data-emoji="😂">😂 Risas</button>
+      </div>
+
+      <!-- Formulario para Enviar Comentario -->
+      <form id="form-add-movie-comment" class="song-comment-input-form">
+        <input type="text" id="input-movie-comment-text" class="form-control" placeholder="Comenta o debate sobre esta película..." required>
+        <button type="submit" class="btn-primary-purple" style="padding: 0.6rem 1rem;">Enviar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 10.3 MODAL: MENÚ CONTEXTUAL DE PELÍCULA -->
+  <div id="modal-movie-actions" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="movie-actions-title">
+    <div class="modal-content modal-action-sheet" style="max-width: 420px; border-radius: 26px;">
+      <div class="action-sheet-header">
+        <img id="movie-actions-art" src="" class="action-sheet-art" alt="Poster">
+        <div class="action-sheet-titles">
+          <h3 id="movie-actions-title" class="action-sheet-title">Título Película</h3>
+          <p id="movie-actions-subtitle" class="action-sheet-subtitle">2026 • Géneros</p>
+        </div>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-movie-actions">✕</button>
+      </div>
+
+      <div class="action-sheet-menu-list">
+        <button type="button" class="action-sheet-btn" id="btn-movie-act-view">
+          <span class="sheet-btn-icon">🎬</span>
+          <div class="sheet-btn-info">
+            <strong>Ver detalles y valoraciones</strong>
+            <small>Sinopsis, galería, calificaciones del grupo</small>
+          </div>
+        </button>
+
+        <button type="button" class="action-sheet-btn" id="btn-movie-act-comments">
+          <span class="sheet-btn-icon">💬</span>
+          <div class="sheet-btn-info">
+            <strong>Ver conversaciones</strong>
+            <small>Hilo de chat y comentarios del parche</small>
+          </div>
+        </button>
+
+        <a href="#" target="_blank" rel="noopener noreferrer" class="action-sheet-btn" id="btn-movie-act-trailer">
+          <span class="sheet-btn-icon">▶</span>
+          <div class="sheet-btn-info">
+            <strong>Ver tráiler en YouTube</strong>
+            <small>Adelanto oficial de la película</small>
+          </div>
+        </a>
+
+        <button type="button" class="action-sheet-btn danger" id="btn-movie-act-delete">
+          <span class="sheet-btn-icon">🗑️</span>
+          <div class="sheet-btn-info">
+            <strong style="color: #EF4444;">Eliminar de la cartelera</strong>
+            <small>Quitar este título de la lista del grupo</small>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 
