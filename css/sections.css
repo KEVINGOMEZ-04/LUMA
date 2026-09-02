@@ -545,26 +545,28 @@
 /* =========================================
    2. RECUERDOS (NÚCLEO EMOCIONAL & LÍNEA TEMPORAL VIVA)
    ========================================= */
-.memories-emotional-hero {
-  text-align: center;
-  margin-bottom: 1.25rem;
+.luma-section-header, .memories-emotional-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+  padding: 0 0.15rem;
 }
 
-.memories-hero-title {
+.luma-section-title, .memories-hero-title {
   font-family: var(--font-heading);
-  font-size: 1.45rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--color-text-main);
   letter-spacing: -0.02em;
-  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
 }
 
 .memories-hero-quote {
-  font-size: 0.82rem;
-  color: var(--color-text-secondary);
-  font-style: italic;
-  max-width: 380px;
-  margin: 0 auto;
+  display: none;
 }
 
 /* CALENDARIO ANUAL INTERACTIVO (MAPA VISUAL DEL AÑO) */
@@ -806,8 +808,9 @@
 
 .day-mini-dot.memory { background: #A855F7; box-shadow: 0 0 4px #A855F7; }
 .day-mini-dot.holiday { background: #10B981; box-shadow: 0 0 4px #10B981; }
+.day-mini-dot.plan { background: #38BDF8; box-shadow: 0 0 4px #38BDF8; }
 
-/* BARRA DE ACCIÓN PARA AÑADIR RECUERDO AL DÍA SELECCIONADO */
+/* BARRA DE ACCIÓN PARA AÑADIR RECUERDO / PLAN AL DÍA SELECCIONADO */
 .calendar-selected-day-action {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
   border: 1px solid rgba(99, 102, 241, 0.3);
@@ -860,6 +863,28 @@
 .btn-add-memory-day:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.6);
+}
+
+.btn-add-plan-day {
+  background: linear-gradient(135deg, #0284C7 0%, #38BDF8 100%);
+  border: none;
+  color: #FFFFFF;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+  transition: all var(--transition-fast);
+}
+
+.btn-add-plan-day:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.6);
 }
 
 .month-dots-grid {
