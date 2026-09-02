@@ -29,6 +29,11 @@ window.CONFIG = {
     }
   },
 
+  // Google Drive Master Cloud Bridge
+  googleDrive: {
+    defaultBridgeUrl: ''
+  },
+
   // Módulos / Secciones del Menú (Insights integrado en Inicio)
   sections: [
     { id: 'inicio', label: 'Inicio', icon: '🏠' },
