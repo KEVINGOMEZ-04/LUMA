@@ -2229,6 +2229,31 @@ class LumaApp {
     });
     if (statMembers) statMembers.textContent = Math.max(authorNames.size, 1);
     
+    // 1. Calcular duración total sumando la duración exacta de cada canción
+    const totalSeconds = songs.reduce((acc, s) => {
+      if (s.trackTimeMillis && typeof s.trackTimeMillis === 'number') {
+        return acc + Math.round(s.trackTimeMillis / 1000);
+      }
+      if (s.duration && typeof s.duration === 'number') {
+        return acc + s.duration;
+      }
+      return acc + 210; // Default ~3:30 min
+    }, 0);
+
+    const totalHours = Math.floor(totalSeconds / 3600);
+    const totalMins = Math.floor((totalSeconds % 3600) / 60);
+    const totalSecs = totalSeconds % 60;
+
+    let durationText = '0m';
+    if (totalHours > 0) {
+      durationText = totalMins > 0 ? `${totalHours}h ${totalMins}m` : `${totalHours}h`;
+    } else if (totalMins > 0) {
+      durationText = totalSecs > 0 ? `${totalMins}m ${totalSecs}s` : `${totalMins}m`;
+    } else if (totalSecs > 0) {
+      durationText = `${totalSecs}s`;
+    }
+    if (statHours) statHours.textContent = durationText;
+
     // 2. Llenar Menú Desplegable Personalizado de Integrantes
     const dropdownMenu = document.getElementById('music-member-dropdown-menu');
     if (dropdownMenu) {
@@ -2337,6 +2362,9 @@ class LumaApp {
         }
       }
 
+      const spotifySearchUrl = window.MediaService ? window.MediaService.spotifyUrl(song.title, song.artist) : `https://open.spotify.com/search/${encodeURIComponent(song.title + ' ' + song.artist)}`;
+      const youtubeSearchUrl = window.MediaService ? window.MediaService.youtubeUrl(song.title, song.artist) : `https://www.youtube.com/results?search_query=${encodeURIComponent(song.title + ' ' + song.artist)}`;
+
       card.innerHTML = `
         <!-- Columna Izquierda: Carátula 88x88 con Botón Play Flotante -->
         <div class="song-art-square-wrap">
@@ -2346,7 +2374,7 @@ class LumaApp {
           </button>
         </div>
 
-        <!-- Columna Derecha: Detalles, Calificación, Autor, Reseña y Recuerdos -->
+        <!-- Columna Derecha: Detalles, Calificación, Autor, Reseña, Recuerdos y Plataformas -->
         <div class="song-collab-details">
           <div class="song-collab-header-row">
             <div style="min-width: 0;">
@@ -2378,6 +2406,16 @@ class LumaApp {
 
           <!-- Píldora de Recuerdos Vinculados -->
           ${linkedMemoriesHtml}
+
+          <!-- Botones de Redirección a Spotify y YouTube -->
+          <div class="song-platform-links-row">
+            <a href="${spotifySearchUrl}" target="_blank" rel="noopener noreferrer" class="song-platform-pill spotify" title="Abrir en Spotify">
+              <span class="platform-icon">🟢</span> <span>Spotify</span>
+            </a>
+            <a href="${youtubeSearchUrl}" target="_blank" rel="noopener noreferrer" class="song-platform-pill youtube" title="Buscar en YouTube">
+              <span class="platform-icon">🔴</span> <span>YouTube</span>
+            </a>
+          </div>
         </div>
       `;
 
@@ -2573,6 +2611,7 @@ class LumaApp {
     const hiddenAlbum = document.getElementById('modal-song-album-hidden');
     const hiddenArtwork = document.getElementById('modal-song-artwork-hidden');
     const hiddenPreview = document.getElementById('modal-song-preview-hidden');
+    const hiddenDuration = document.getElementById('modal-song-duration-hidden');
     const memoriesContainer = document.getElementById('song-memory-links-container');
 
     const title = prefill?.title || 'Canción Personalizada';
@@ -2580,6 +2619,7 @@ class LumaApp {
     const album = prefill?.album || 'Álbum del Parche';
     const artwork = prefill?.artwork || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80';
     const previewUrl = prefill?.previewUrl || '';
+    const duration = prefill?.trackTimeMillis || 210000;
 
     if (titlePreview) titlePreview.textContent = title;
     if (artistPreview) artistPreview.textContent = artist;
@@ -2592,6 +2632,7 @@ class LumaApp {
     if (hiddenAlbum) hiddenAlbum.value = album;
     if (hiddenArtwork) hiddenArtwork.value = artwork;
     if (hiddenPreview) hiddenPreview.value = previewUrl;
+    if (hiddenDuration) hiddenDuration.value = duration;
 
     if (reviewInput) {
       reviewInput.value = '';
@@ -2674,6 +2715,7 @@ class LumaApp {
         const album = document.getElementById('modal-song-album-hidden')?.value || '';
         const artwork = document.getElementById('modal-song-artwork-hidden')?.value || 'assets/icon.png';
         const previewUrl = document.getElementById('modal-song-preview-hidden')?.value || '';
+        const trackTimeMillis = parseInt(document.getElementById('modal-song-duration-hidden')?.value || '210000', 10);
         const rating = parseFloat(document.getElementById('modal-song-rating-val')?.value || '5');
         const review = document.getElementById('modal-song-review-input')?.value.trim() || '';
 
@@ -2688,6 +2730,7 @@ class LumaApp {
           album,
           artwork,
           previewUrl,
+          trackTimeMillis,
           rating,
           ratingCount: 1,
           author: {
