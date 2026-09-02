@@ -473,15 +473,15 @@
         <div class="music-filter-chips-scroll" id="music-filter-chips">
           <button type="button" class="music-filter-chip active" data-filter="all">Más recientes</button>
           <button type="button" class="music-filter-chip" data-filter="top-rated">Mejor valoradas</button>
-          <div class="music-filter-dropdown-wrap" id="music-member-filter-wrap">
-            <button type="button" class="music-filter-chip" id="btn-filter-member" data-filter="by-member">
-              <span id="btn-filter-member-text">Por integrante</span> <span class="chevron">⌄</span>
-            </button>
-            <div class="music-custom-dropdown-menu" id="music-member-dropdown-menu" style="display: none;"></div>
-          </div>
+          <button type="button" class="music-filter-chip" id="btn-filter-member" data-filter="by-member">
+            <span id="btn-filter-member-text">Por integrante</span> <span class="chevron">⌄</span>
+          </button>
           <button type="button" class="music-filter-chip" data-filter="with-memories">Vinculadas a recuerdos</button>
           <button type="button" class="music-filter-chip" data-filter="my-songs">Mis añadidas</button>
         </div>
+
+        <!-- Menú Desplegable Flotante (Fuera del contenedor con scroll para evitar recortes) -->
+        <div class="music-custom-dropdown-menu" id="music-member-dropdown-menu" style="display: none;"></div>
 
         <!-- Lista de Tarjetas Musicales Colaborativas -->
         <div class="music-collab-feed" id="songs-grid-list"></div>
