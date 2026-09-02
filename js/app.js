@@ -1555,136 +1555,35 @@ class LumaApp {
     }
   }
 
-  // --- MODAL: VINCULAR CARPETA Y WEBHOOK DE GOOGLE DRIVE ---
+  // --- MODAL: VINCULAR CARPETA DE GOOGLE DRIVE ---
   openDriveSyncModal() {
     const currentFolder = this.storage.getDriveFolder();
-    const currentWebhook = this.storage.getDriveWebhook ? this.storage.getDriveWebhook() : '';
     const inputFolder = document.getElementById('drive-folder-url-input');
-    const inputWebhook = document.getElementById('drive-webhook-url-input');
     const preview = document.getElementById('drive-sync-status-preview');
     const text = document.getElementById('drive-current-folder-text');
-    const btnToggleGuide = document.getElementById('btn-toggle-script-guide');
-    const guideBox = document.getElementById('drive-script-guide-box');
-    const btnCopyCode = document.getElementById('btn-copy-script-code');
     const btnTest = document.getElementById('btn-test-drive-connection');
 
     if (inputFolder) inputFolder.value = currentFolder;
-    if (inputWebhook) inputWebhook.value = currentWebhook;
 
     if (currentFolder && preview && text) {
       preview.style.display = 'block';
-      text.textContent = `Carpeta: ${currentFolder}` + (currentWebhook ? ` • Webhook Activo ✅` : '');
+      text.textContent = currentFolder;
     } else if (preview) {
       preview.style.display = 'none';
-    }
-
-    if (btnToggleGuide && !btnToggleGuide.dataset.bound) {
-      btnToggleGuide.dataset.bound = 'true';
-      btnToggleGuide.onclick = () => {
-        if (guideBox) {
-          guideBox.style.display = guideBox.style.display === 'none' ? 'block' : 'none';
-        }
-      };
-    }
-
-    const scriptCodeText = `function doPost(e) {
-  var lock = LockService.getScriptLock();
-  lock.tryLock(30000);
-
-  try {
-    if (!e || !e.postData || !e.postData.contents) {
-      return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'No data received' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    var data = JSON.parse(e.postData.contents);
-    var parentFolderId = data.parentFolderId;
-    var subfolderName = data.subfolderName || 'Recuerdo LUMA';
-    var files = data.files || [];
-
-    var parentFolder = DriveApp.getFolderById(parentFolderId);
-
-    // Evitar crear carpetas duplicadas: Buscar si ya existe la carpeta
-    var existingFolders = parentFolder.getFoldersByName(subfolderName);
-    var targetFolder;
-    if (existingFolders.hasNext()) {
-      targetFolder = existingFolders.next();
-    } else {
-      targetFolder = parentFolder.createFolder(subfolderName);
-    }
-
-    var uploadedFiles = [];
-    for (var i = 0; i < files.length; i++) {
-      var f = files[i];
-      if (!f.base64) continue;
-
-      var mimeType = f.type || 'image/jpeg';
-      var fileName = f.name || ('Archivo_' + (i + 1) + '.jpg');
-
-      // Evitar subir archivos duplicados con el mismo nombre
-      var existingFiles = targetFolder.getFilesByName(fileName);
-      if (existingFiles.hasNext()) {
-        var existingFile = existingFiles.next();
-        uploadedFiles.push({
-          name: existingFile.getName(),
-          id: existingFile.getId(),
-          url: existingFile.getUrl()
-        });
-        continue;
-      }
-
-      var decodedBytes = Utilities.base64Decode(f.base64);
-      var blob = Utilities.newBlob(decodedBytes, mimeType, fileName);
-      var driveFile = targetFolder.createFile(blob);
-
-      uploadedFiles.push({
-        name: driveFile.getName(),
-        id: driveFile.getId(),
-        url: driveFile.getUrl()
-      });
-    }
-
-    return ContentService.createTextOutput(JSON.stringify({
-      success: true,
-      folderId: targetFolder.getId(),
-      folderName: targetFolder.getName(),
-      folderUrl: targetFolder.getUrl(),
-      filesCount: uploadedFiles.length,
-      files: uploadedFiles
-    })).setMimeType(ContentService.MimeType.JSON);
-
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      success: false,
-      error: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
-  }
-}`;
-
-    if (btnCopyCode && !btnCopyCode.dataset.bound) {
-      btnCopyCode.dataset.bound = 'true';
-      btnCopyCode.onclick = () => {
-        window.Utils.copyToClipboard(scriptCodeText, '¡Código de Google Apps Script copiado! 📋');
-      };
     }
 
     if (btnTest && !btnTest.dataset.bound) {
       btnTest.dataset.bound = 'true';
       btnTest.onclick = async () => {
         const folderUrl = inputFolder?.value.trim();
-        const webhookUrl = inputWebhook?.value.trim();
         if (!folderUrl) {
-          window.Utils.showToast('Ingresa primero el enlace de tu carpeta de Drive', 'error');
-          return;
-        }
-        if (!webhookUrl) {
-          window.Utils.showToast('Para crear carpetas reales automáticamente, añade la URL de tu Webhook', 'info');
+          window.Utils.showToast('Pega primero el enlace de tu carpeta de Google Drive', 'error');
           return;
         }
         btnTest.disabled = true;
         btnTest.textContent = '⏳ Probando...';
         try {
+          const webhookUrl = this.storage.getDriveWebhook ? this.storage.getDriveWebhook() : '';
           const testMem = {
             title: 'Prueba de Conexión LUMA',
             date: new Date().toISOString().split('T')[0],
@@ -1692,12 +1591,12 @@ class LumaApp {
           };
           const res = await window.GoogleDriveSync.uploadMemoryToDrive(testMem, folderUrl, webhookUrl);
           if (res && res.success) {
-            window.Utils.showToast('🎉 ¡Conexión con Google Drive Exitosa! Carpeta de prueba creada.', 'success');
+            window.Utils.showToast('🎉 ¡Conexión Exitosa! Tu carpeta de Google Drive está lista para recibir fotos y videos.', 'success');
           } else {
-            window.Utils.showToast('Error en la respuesta del Webhook: ' + (res?.error || 'Verifica permisos'), 'error');
+            window.Utils.showToast('Verifica que la carpeta tenga permisos de Editor para «Cualquier persona con el enlace»', 'error');
           }
         } catch (err) {
-          window.Utils.showToast('Error al conectar con el Webhook: ' + err.message, 'error');
+          window.Utils.showToast('Error al conectar: ' + err.message, 'error');
         } finally {
           btnTest.disabled = false;
           btnTest.textContent = '🚀 Probar Conexión';
