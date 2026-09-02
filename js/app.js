@@ -2229,21 +2229,33 @@ class LumaApp {
     });
     if (statMembers) statMembers.textContent = Math.max(authorNames.size, 1);
     
-    // Tiempo total estimado (ej. ~3.5 min por canción o personalizado)
-    const totalMinutes = songs.length * 3.5;
-    const hours = Math.floor(totalMinutes / 60);
-    const mins = Math.round(totalMinutes % 60);
-    if (statHours) statHours.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    // 2. Llenar Menú Desplegable Personalizado de Integrantes
+    const dropdownMenu = document.getElementById('music-member-dropdown-menu');
+    if (dropdownMenu) {
+      let menuHtml = `
+        <button type="button" class="music-dropdown-item ${!this.activeMemberFilter ? 'active' : ''}" onclick="window.app.selectMemberFilter('')">
+          <div class="music-dropdown-left">
+            <span style="font-size: 1rem;">👥</span>
+            <span>Todos los integrantes</span>
+          </div>
+          ${!this.activeMemberFilter ? '<span class="music-dropdown-check">✓</span>' : ''}
+        </button>
+      `;
 
-    // 2. Llenar Select de Integrantes para el Filtro
-    const selectMember = document.getElementById('select-filter-member');
-    if (selectMember) {
-      const currentSelected = selectMember.value;
-      let memberOptions = '<option value="">Todos los integrantes</option>';
       authorNames.forEach(author => {
-        memberOptions += `<option value="${window.Utils.sanitizeHTML(author)}" ${currentSelected === author ? 'selected' : ''}>👤 ${window.Utils.sanitizeHTML(author)}</option>`;
+        const isSelected = (this.activeMemberFilter === author);
+        menuHtml += `
+          <button type="button" class="music-dropdown-item ${isSelected ? 'active' : ''}" onclick="window.app.selectMemberFilter('${window.Utils.sanitizeHTML(author)}')">
+            <div class="music-dropdown-left">
+              <span style="font-size: 0.95rem;">👤</span>
+              <span>${window.Utils.sanitizeHTML(author)}</span>
+            </div>
+            ${isSelected ? '<span class="music-dropdown-check">✓</span>' : ''}
+          </button>
+        `;
       });
-      selectMember.innerHTML = memberOptions;
+
+      dropdownMenu.innerHTML = menuHtml;
     }
 
     // 3. Filtrado de Canciones
@@ -2482,16 +2494,27 @@ class LumaApp {
   // --- FILTROS DE MÚSICA ---
   initMusicFilters() {
     const chipsContainer = document.getElementById('music-filter-chips');
-    const selectMember = document.getElementById('select-filter-member');
+    const dropdownMenu = document.getElementById('music-member-dropdown-menu');
 
     if (chipsContainer) {
       chipsContainer.querySelectorAll('.music-filter-chip').forEach(chip => {
         chip.addEventListener('click', (e) => {
           const filter = chip.dataset.filter;
-          if (filter === 'by-member') return; // Handled by select
+          if (filter === 'by-member') {
+            e.stopPropagation();
+            if (dropdownMenu) {
+              dropdownMenu.style.display = (dropdownMenu.style.display === 'none' || !dropdownMenu.style.display) ? 'flex' : 'none';
+            }
+            return;
+          }
+
+          if (dropdownMenu) dropdownMenu.style.display = 'none';
 
           chipsContainer.querySelectorAll('.music-filter-chip').forEach(c => c.classList.remove('active'));
           chip.classList.add('active');
+
+          const label = document.getElementById('btn-filter-member-text');
+          if (label) label.textContent = 'Por integrante';
 
           this.activeMusicFilter = filter;
           this.activeMemberFilter = '';
@@ -2500,35 +2523,40 @@ class LumaApp {
       });
     }
 
-    if (selectMember) {
-      selectMember.addEventListener('change', (e) => {
-        const member = e.target.value;
-        const btnMember = document.getElementById('btn-filter-member');
+    // Cerrar menú si se hace clic fuera
+    document.addEventListener('click', (e) => {
+      const wrap = document.getElementById('music-member-filter-wrap');
+      if (wrap && !wrap.contains(e.target) && dropdownMenu) {
+        dropdownMenu.style.display = 'none';
+      }
+    });
+  }
 
-        if (chipsContainer) {
-          chipsContainer.querySelectorAll('.music-filter-chip').forEach(c => c.classList.remove('active'));
-        }
+  selectMemberFilter(member) {
+    const dropdownMenu = document.getElementById('music-member-dropdown-menu');
+    const chipsContainer = document.getElementById('music-filter-chips');
+    const btnMember = document.getElementById('btn-filter-member');
+    const label = document.getElementById('btn-filter-member-text');
 
-        if (member) {
-          if (btnMember) {
-            btnMember.classList.add('active');
-            btnMember.querySelector('span').textContent = `👤 ${member}`;
-          }
-          this.activeMusicFilter = 'by-member';
-          this.activeMemberFilter = member;
-        } else {
-          if (btnMember) {
-            btnMember.classList.remove('active');
-            btnMember.querySelector('span').textContent = 'Por integrante';
-          }
-          this.activeMusicFilter = 'all';
-          this.activeMemberFilter = '';
-          chipsContainer?.querySelector('[data-filter="all"]')?.classList.add('active');
-        }
+    if (dropdownMenu) dropdownMenu.style.display = 'none';
 
-        this.renderMusic();
-      });
+    if (chipsContainer) {
+      chipsContainer.querySelectorAll('.music-filter-chip').forEach(c => c.classList.remove('active'));
     }
+
+    if (member) {
+      if (btnMember) btnMember.classList.add('active');
+      if (label) label.textContent = `👤 ${member}`;
+      this.activeMusicFilter = 'by-member';
+      this.activeMemberFilter = member;
+    } else {
+      if (label) label.textContent = 'Por integrante';
+      this.activeMusicFilter = 'all';
+      this.activeMemberFilter = '';
+      chipsContainer?.querySelector('[data-filter="all"]')?.classList.add('active');
+    }
+
+    this.renderMusic();
   }
 
   // --- MODAL: AÑADIR CANCIÓN AL PLAYLIST COLABORATIVO ---
@@ -2787,6 +2815,22 @@ class LumaApp {
   }
 
   // --- REPRODUCTOR FLOTANTE GLOBAL (CON ANIMACIÓN DE ONDAS Y CONTROLES) ---
+  updateSongPlayIcons() {
+    const cards = document.querySelectorAll('.song-collab-card');
+    cards.forEach(card => {
+      const songId = card.dataset.songId;
+      const btn = card.querySelector('.song-floating-play-btn');
+      if (!btn) return;
+      if (songId === this.currentPlayingSongId && this.isGlobalPlaying) {
+        btn.classList.add('playing');
+        btn.textContent = '⏸';
+      } else {
+        btn.classList.remove('playing');
+        btn.textContent = '▶';
+      }
+    });
+  }
+
   playSongTrack(songId) {
     const song = (this.storage.getSongs() || []).find(s => s.id === songId);
     if (!song) return;
@@ -2823,7 +2867,7 @@ class LumaApp {
         playerEl.style.display = 'flex';
         playerEl.classList.add('playing');
         if (playBtn) playBtn.textContent = '⏸';
-        this.renderMusic();
+        this.updateSongPlayIcons();
       }).catch(() => {
         window.Utils.showToast('No se pudo reproducir el preview de audio', 'warning');
       });
@@ -2833,7 +2877,7 @@ class LumaApp {
       this.isGlobalPlaying = true;
       playerEl.classList.add('playing');
       if (playBtn) playBtn.textContent = '⏸';
-      this.renderMusic();
+      this.updateSongPlayIcons();
     }
   }
 
@@ -2856,7 +2900,7 @@ class LumaApp {
       if (playBtn) playBtn.textContent = '⏸';
     }
 
-    this.renderMusic();
+    this.updateSongPlayIcons();
   }
 
   playNextTrack() {
@@ -2877,9 +2921,15 @@ class LumaApp {
     this.playTrackAudioDirectly(songs[prevIdx]);
   }
 
-  closeGlobalPlayer() {
+  closeGlobalPlayer(e) {
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
     const audioEl = document.getElementById('global-audio-element');
     const playerEl = document.getElementById('global-music-player');
+    const playBtn = document.getElementById('btn-player-play-toggle');
 
     if (audioEl) {
       audioEl.pause();
@@ -2889,10 +2939,13 @@ class LumaApp {
       playerEl.style.display = 'none';
       playerEl.classList.remove('playing');
     }
+    if (playBtn) {
+      playBtn.textContent = '▶';
+    }
 
     this.isGlobalPlaying = false;
     this.currentPlayingSongId = null;
-    this.renderMusic();
+    this.updateSongPlayIcons();
   }
 
   initGlobalPlayerControls() {
