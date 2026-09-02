@@ -19,8 +19,8 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Background Stars Canvas */
-#stars-canvas {
+/* Background Stars and Effects Canvas */
+#stars-canvas, #effects-canvas {
   position: fixed;
   top: 0;
   left: 0;
