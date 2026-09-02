@@ -1,9 +1,9 @@
 {
-  "appId": "com.luma.app",
+  "appId": "com.kevin.luma",
   "appName": "LUMA",
   "webDir": "www",
   "android": {
-    "backgroundColor": "#0F172A",
+    "backgroundColor": "#080C16",
     "allowMixedContent": true
   }
 }
