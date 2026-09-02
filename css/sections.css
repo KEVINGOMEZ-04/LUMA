@@ -5384,18 +5384,122 @@
   }
 }
 
-/* Modo Claro para Cine & Películas */
-[data-theme="light"] .movie-collab-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-}
-
-[data-theme="light"] .movie-card-title {
+/* Modo Claro para Cine & Películas (Cohesivo con el Sistema de Diseño) */
+[data-theme="light"] .movie-hero-title {
   color: #0F172A;
 }
 
-[data-theme="light"] .movie-avg-number {
+[data-theme="light"] .movie-hero-tag {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .movie-hero-subtitle {
+  color: #64748B;
+}
+
+[data-theme="light"] .movie-hero-icon-box {
+  background: #EDE9FE;
+  border: 1px solid rgba(109, 92, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.12);
+}
+
+[data-theme="light"] .movie-hero-stats-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .movie-stat-val {
+  color: #0F172A;
+}
+
+[data-theme="light"] .movie-stat-lbl {
+  color: #64748B;
+}
+
+[data-theme="light"] .movie-stat-divider {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Buscador TMDb en Modo Claro */
+[data-theme="light"] .movie-search-input-field {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #0F172A;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .movie-search-input-field::placeholder {
+  color: #94A3B8;
+}
+
+[data-theme="light"] .movie-search-input-icon {
+  color: #64748B;
+}
+
+[data-theme="light"] .btn-clear-movie-input {
+  color: #64748B;
+}
+
+[data-theme="light"] .movie-filter-chip {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #475569;
+}
+
+[data-theme="light"] .movie-filter-chip:hover {
+  border-color: #6D5CFF;
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .movie-filter-chip.active {
+  background: #6D5CFF;
+  color: #FFFFFF;
+  border-color: #6D5CFF;
+}
+
+/* Resultados Flotantes en Modo Claro */
+[data-theme="light"] .movie-live-results-dropdown {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .movie-live-result-item {
+  background: #F8FAFC;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .movie-live-result-item:hover {
+  background: #F1F5F9;
+  border-color: rgba(109, 92, 255, 0.3);
+}
+
+[data-theme="light"] .movie-live-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .movie-live-sub {
+  color: #64748B;
+}
+
+[data-theme="light"] .movie-live-rating {
+  color: #B45309;
+}
+
+/* Tarjetas de Streaming en Modo Claro */
+[data-theme="light"] .movie-collab-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .movie-collab-card:hover {
+  box-shadow: 0 8px 24px rgba(109, 92, 255, 0.12);
+  border-color: rgba(109, 92, 255, 0.3);
+}
+
+[data-theme="light"] .movie-card-title {
   color: #0F172A;
 }
 
@@ -5403,65 +5507,108 @@
   color: #64748B;
 }
 
+[data-theme="light"] .movie-tmdb-badge {
+  background: #FEF3C7;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #B45309;
+}
+
+[data-theme="light"] .movie-avg-number {
+  color: #0F172A;
+}
+
+[data-theme="light"] .movie-avg-label {
+  color: #64748B;
+}
+
 [data-theme="light"] .movie-member-score-pill {
-  background: #F8FAFC;
-  border-color: rgba(0, 0, 0, 0.08);
+  background: #F1F5F9;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .movie-member-score-name {
+  color: #334155;
+}
+
+[data-theme="light"] .movie-member-score-num {
+  color: #2563EB;
+}
+
+[data-theme="light"] .movie-score-more-pill {
+  background: #F1F5F9;
+  color: #64748B;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .movie-proposer-priority-row {
+  color: #64748B;
+}
+
+[data-theme="light"] .movie-proposer-info strong {
+  color: #0F172A;
 }
 
 [data-theme="light"] .movie-quote-text {
   color: #334155;
 }
 
-[data-theme="light"] .movie-footer-comments-btn,
+[data-theme="light"] .movie-dots-btn {
+  color: #94A3B8;
+}
+
+[data-theme="light"] .movie-dots-btn:hover {
+  color: #0F172A;
+}
+
+[data-theme="light"] .movie-footer-comments-btn {
+  background: #F1F5F9;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .movie-footer-comments-btn:hover {
+  background: #EDE9FE;
+  border-color: #6D5CFF;
+}
+
 [data-theme="light"] .movie-footer-memories-pill {
-  background: #F8FAFC;
-  border-color: rgba(0, 0, 0, 0.08);
+  background: #F1F5F9;
+  border: 1px solid rgba(0, 0, 0, 0.06);
   color: #475569;
 }
 
-[data-theme="light"] .movie-hero-stats-card {
-  background: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-}
-
-[data-theme="light"] .movie-stat-val {
-  color: #0F172A;
-}
-
-[data-theme="light"] .movie-stat-divider {
-  background: rgba(0, 0, 0, 0.08);
-}
-
-[data-theme="light"] .movie-search-input-field {
-  background: #FFFFFF;
-  border-color: rgba(0, 0, 0, 0.12);
-  color: #0F172A;
-}
-
-[data-theme="light"] .movie-filter-chip {
-  background: #FFFFFF;
-  border-color: rgba(0, 0, 0, 0.1);
-  color: #475569;
-}
-
-[data-theme="light"] .movie-filter-chip.active {
-  background: #6D5CFF;
-  color: #FFFFFF;
-}
-
+/* Modales de Películas en Modo Claro */
 [data-theme="light"] .movie-view-modal-content {
   background: #FFFFFF;
-  border-color: rgba(109, 92, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .movie-view-hero-overlay {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.96) 100%);
+}
+
+[data-theme="light"] .movie-view-close-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #0F172A;
 }
 
 [data-theme="light"] .movie-view-title-text {
   color: #0F172A;
 }
 
+[data-theme="light"] .movie-view-meta-row {
+  color: #64748B;
+}
+
+[data-theme="light"] .movie-view-proposer-line {
+  color: #475569;
+}
+
 [data-theme="light"] .movie-view-section {
   background: #F8FAFC;
-  border-color: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 [data-theme="light"] .movie-view-sec-title {
@@ -5472,27 +5619,116 @@
   color: #334155;
 }
 
+[data-theme="light"] .movie-view-big-avg-box {
+  background: #FEF3C7;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="light"] .big-avg-val {
+  color: #B45309;
+}
+
+[data-theme="light"] .movie-user-rate-box {
+  background: #EEF2FF;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="light"] .user-rate-prompt {
+  color: #1E1B4B;
+}
+
+[data-theme="light"] .user-rate-value-pill {
+  background: #FFFFFF;
+  color: #B45309;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 [data-theme="light"] .movie-view-member-row {
   background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 [data-theme="light"] .movie-view-member-name {
   color: #0F172A;
 }
 
+[data-theme="light"] .movie-view-member-score {
+  color: #2563EB;
+}
+
 [data-theme="light"] .movie-review-quote-card {
   background: #FFFFFF;
+  border-left: 3px solid #6D5CFF;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
 }
 
 [data-theme="light"] .movie-review-quote-text {
-  color: #334155;
+  color: #1E293B;
 }
 
-[data-theme="light"] .movie-live-results-dropdown {
-  background: #FFFFFF;
-  border-color: rgba(0, 0, 0, 0.12);
+[data-theme="light"] .movie-review-quote-author {
+  color: #6D5CFF;
 }
 
-[data-theme="light"] .movie-live-title {
+[data-theme="light"] .btn-inline-action {
+  border-color: rgba(109, 92, 255, 0.3);
+  color: #6D5CFF;
+}
+
+/* Chat de Comentarios en Modo Claro */
+[data-theme="light"] .movie-chat-bubble {
+  background: #F1F5F9;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .movie-chat-author {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .movie-chat-time {
+  color: #94A3B8;
+}
+
+[data-theme="light"] .movie-chat-text {
   color: #0F172A;
+}
+
+[data-theme="light"] .movie-reaction-bubble {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #0F172A;
+}
+
+[data-theme="light"] .comments-header-subtitle {
+  color: #64748B;
+}
+
+/* Modal Añadir en Modo Claro */
+[data-theme="light"] .movie-add-preview-card {
+  background: #F8FAFC;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .movie-add-preview-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .movie-add-preview-meta {
+  color: #64748B;
+}
+
+[data-theme="light"] .movie-add-preview-tmdb {
+  color: #B45309;
+}
+
+[data-theme="light"] .status-option-btn {
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #475569;
+}
+
+[data-theme="light"] .status-option-btn.active {
+  background: #6D5CFF;
+  color: #FFFFFF;
+  border-color: #6D5CFF;
 }
