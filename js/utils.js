@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LUMA 🌟 - Utilidades y Helpers
  */
 
@@ -102,6 +102,22 @@ window.Utils = {
       this.showToast('No se pudo copiar automáticamente', 'error');
     }
     document.body.removeChild(input);
+  },
+
+  async fileToBase64(file) {
+    if (!file) return '';
+    if (file.type && file.type.startsWith('image/')) {
+      try {
+        const compressed = await this.compressImage(file);
+        if (compressed) return compressed;
+      } catch (_) {}
+    }
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result || '');
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
   },
 
   async compressImage(file, maxDimension = 1200, quality = 0.8) {
