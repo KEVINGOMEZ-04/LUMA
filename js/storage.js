@@ -150,12 +150,94 @@
         id: 'song_1',
         title: 'Viva La Vida',
         artist: 'Coldplay',
-        rating: 5,
-        addedBy: 'Sam',
-        review: 'Un himno que nunca pasa de moda en nuestras reuniones.',
+        album: 'Viva la Vida or Death and All His Friends',
+        rating: 4.8,
+        ratingCount: 24,
+        author: {
+          id: 'usr_kevin',
+          name: 'Kevin',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+          color: '#6366F1'
+        },
+        review: 'La canción que sonó todo el viaje a Guatapé 🚙',
         previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/05/cf/48/05cf4867-b5bf-734f-0131-bb96dafead21/mzaf_12411036066270632599.plus.aac.p.m4a',
         artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/bf/d4/0b/bfd40b3c-dc09-8473-b3c0-038827943c2c/0094639534658.jpg/600x600bb.jpg',
-        createdAt: '2026-02-15T18:00:00Z'
+        linkedMemories: ['mem_1', 'mem_3'],
+        comments: [
+          { id: 'sc_1', authorName: 'Wendy', authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80', text: '¡Ese viaje cantando esto a todo pulmón en el carro fue increíble! 🚗💨', time: 'Hace 2 días', reactions: { heart: 5, fire: 3 } },
+          { id: 'sc_2', authorName: 'Andrés', authorAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80', text: 'Temazo histórico del parche.', time: 'Hace 1 día', reactions: { fire: 4 } }
+        ],
+        commentsCount: 8,
+        createdAt: '2025-09-21T18:00:00Z'
+      },
+      {
+        id: 'song_2',
+        title: 'Golden Hour',
+        artist: 'JVKE',
+        album: 'this is what ____ feels like',
+        rating: 4.6,
+        ratingCount: 18,
+        author: {
+          id: 'usr_laura',
+          name: 'Laura',
+          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
+          color: '#EC4899'
+        },
+        review: 'Atardecer épico en el mirador, imposible olvidarlo.',
+        previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/4a/12/32/4a123281-2244-12ea-98eb-6cb405391c13/mzaf_16382103417757962879.plus.aac.p.m4a',
+        artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/91/3d/8c/913d8cb8-726d-2234-4537-586718cf27bf/197187123961.jpg/600x600bb.jpg',
+        linkedMemories: ['mem_1'],
+        comments: [
+          { id: 'sc_3', authorName: 'Kevin', authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', text: 'El piano en vivo fue magia pura ✨', time: 'Hace 3 días', reactions: { heart: 4 } }
+        ],
+        commentsCount: 5,
+        createdAt: '2025-09-18T19:30:00Z'
+      },
+      {
+        id: 'song_3',
+        title: 'The Nights',
+        artist: 'Avicii',
+        album: 'The Days / Nights EP',
+        rating: 4.7,
+        ratingCount: 30,
+        author: {
+          id: 'usr_andres',
+          name: 'Andrés',
+          avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+          color: '#3B82F6'
+        },
+        review: 'Himno de las madrugadas del grupo.',
+        previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/3d/df/6b/3ddf6be5-39d1-3375-728b-fa3b9b4f913d/mzaf_10619225792131971932.plus.aac.p.m4a',
+        artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5a/8f/3e/5a8f3e28-3e5e-6539-780c-c67d8f33160a/14UMGIM56475.rgb.jpg/600x600bb.jpg',
+        linkedMemories: ['mem_1', 'mem_2', 'mem_3'],
+        comments: [
+          { id: 'sc_4', authorName: 'Valeria', authorAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80', text: '«Live a life you will remember» ❤️🔥', time: 'Hace 4 días', reactions: { fire: 8, heart: 6 } }
+        ],
+        commentsCount: 12,
+        createdAt: '2025-09-12T22:00:00Z'
+      },
+      {
+        id: 'song_4',
+        title: 'Counting Stars',
+        artist: 'OneRepublic',
+        album: 'Native',
+        rating: 4.5,
+        ratingCount: 16,
+        author: {
+          id: 'usr_valeria',
+          name: 'Valeria',
+          avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80',
+          color: '#10B981'
+        },
+        review: 'Clásico que nunca puede faltar en nuestras salidas.',
+        previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/a4/09/2f/a4092f69-d655-b062-811c-22ebc2e71bdf/mzaf_17711202868285514781.plus.aac.p.m4a',
+        artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e5/28/77/e52877a5-c33b-8514-d533-3d0cf3b63228/13UMGIM13426.rgb.jpg/600x600bb.jpg',
+        linkedMemories: [],
+        comments: [
+          { id: 'sc_5', authorName: 'Kevin', authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80', text: 'Inolvidable en la fogata 🔥', time: 'Hace 5 días', reactions: { heart: 3 } }
+        ],
+        commentsCount: 3,
+        createdAt: '2025-09-08T16:00:00Z'
       }
     ],
 
@@ -611,11 +693,65 @@
     saveSong(song) {
       const data = this.getGroupData();
       if (!data.songs) data.songs = [];
-      if (!song.id) song.id = window.Utils.generateId();
+      if (!song.id) song.id = 'song_' + window.Utils.generateId();
       if (!song.createdAt) song.createdAt = new Date().toISOString();
-      data.songs.unshift(song);
+      const idx = data.songs.findIndex(s => s.id === song.id);
+      if (idx >= 0) data.songs[idx] = song;
+      else data.songs.unshift(song);
       this.saveGroupData(null, data);
       return song;
+    }
+    deleteSong(id) {
+      const data = this.getGroupData();
+      data.songs = (data.songs || []).filter(s => s.id !== id);
+      this.saveGroupData(null, data);
+    }
+    rateSong(songId, rating) {
+      const data = this.getGroupData();
+      const song = (data.songs || []).find(s => s.id === songId);
+      if (song) {
+        if (!song.ratingCount) song.ratingCount = 1;
+        const currentTotal = (song.rating || 5) * song.ratingCount;
+        song.ratingCount += 1;
+        song.rating = Number(((currentTotal + rating) / song.ratingCount).toFixed(1));
+        this.saveGroupData(null, data);
+      }
+      return song;
+    }
+    addSongComment(songId, text) {
+      const data = this.getGroupData();
+      const song = (data.songs || []).find(s => s.id === songId);
+      const user = this.getUserProfile();
+      if (song) {
+        if (!song.comments) song.comments = [];
+        const newC = {
+          id: 'sc_' + Date.now().toString(36),
+          authorName: user.name || 'Kevin',
+          authorAvatar: user.avatar || '',
+          text: text.trim(),
+          time: 'Hace un momento',
+          reactions: {}
+        };
+        song.comments.push(newC);
+        song.commentsCount = song.comments.length;
+        this.saveGroupData(null, data);
+        return newC;
+      }
+      return null;
+    }
+    reactSongComment(songId, commentId, emoji) {
+      const data = this.getGroupData();
+      const song = (data.songs || []).find(s => s.id === songId);
+      if (song && song.comments) {
+        const c = song.comments.find(item => item.id === commentId);
+        if (c) {
+          if (!c.reactions) c.reactions = {};
+          c.reactions[emoji] = (c.reactions[emoji] || 0) + 1;
+          this.saveGroupData(null, data);
+          return c;
+        }
+      }
+      return null;
     }
 
     getMovies() { return this.getGroupData().movies || []; }
