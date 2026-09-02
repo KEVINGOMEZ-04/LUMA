@@ -1034,29 +1034,23 @@ class LumaApp {
           <!-- Pin Conector Luminoso -->
           <div class="node-pin-dot" style="background: ${auraColor}; box-shadow: 0 0 12px ${auraColor};"></div>
 
-          <!-- Tarjeta del Recuerdo -->
+          <!-- Tarjeta del Recuerdo (Diseño Vertical Story Card) -->
           <div class="emotional-memory-card" style="--card-aura: ${auraColor};" onclick="window.app.openMemoryView('${mem.id}')">
-            <!-- Portada Izquierda 4:5 -->
+            <!-- Portada Superior -->
             <div class="card-media-side">
               <img src="${coverSrc}" class="card-media-img" alt="${window.Utils.sanitizeHTML(mem.title)}" loading="lazy" />
               <div class="card-media-badge">${mediaBadge}</div>
+              ${isFeatured ? '<div class="card-featured-badge">⭐ Destacado</div>' : ''}
             </div>
 
-            <!-- Información Derecha -->
+            <!-- Información Completa -->
             <div class="card-info-side">
               <div>
-                <div class="card-title-row">
-                  <h3 class="card-memory-title">
-                    <span>${window.Utils.sanitizeHTML(mem.title)}</span>
-                    ${isFeatured ? '<span class="card-featured-star" title="Destacado">⭐</span>' : ''}
-                  </h3>
-                  ${isFeatured ? '<span class="card-featured-star" style="font-size: 0.85rem;">⭐</span>' : ''}
-                </div>
+                <h3 class="card-memory-title">${window.Utils.sanitizeHTML(mem.title)}</h3>
 
                 <div class="card-author-meta">
                   <span>👤 ${window.Utils.sanitizeHTML(authorName)}</span>
-                  <span>•</span>
-                  <span>📅 ${dayNum} ${monthShort} ${yearNum}</span>
+                  ${mem.location ? `<span>• 📍 ${window.Utils.sanitizeHTML(mem.location)}</span>` : ''}
                 </div>
 
                 ${mem.description ? `<p class="card-story-preview">${window.Utils.sanitizeHTML(mem.description)}</p>` : ''}
@@ -1779,15 +1773,17 @@ class LumaApp {
     let musicSection = '';
     if (memory.song && (memory.song.title || memory.song.previewUrl)) {
       musicSection = `
-        <div class="card-soundtrack-box" style="padding: 0.85rem 1.15rem; border-radius: var(--radius-lg); margin-top: 1rem; background: rgba(99, 102, 241, 0.12);" onclick="window.app.playMemorySong('${memory.id}')">
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <img src="${memory.song.artwork || 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/91/3d/8c/913d8cb8-726d-2234-4537-586718cf27bf/197187123961.jpg/600x600bb.jpg'}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;" alt="art">
-            <div>
-              <div style="font-weight: 800; font-size: 0.95rem; color: var(--color-text-main);">${window.Utils.sanitizeHTML(memory.song.title)}</div>
-              <div style="font-size: 0.78rem; color: var(--color-text-muted);">${window.Utils.sanitizeHTML(memory.song.artist || '')}</div>
+        <div class="card-soundtrack-box" style="padding: 0.85rem 1.15rem; border-radius: var(--radius-lg); margin-top: 1rem; background: rgba(99, 102, 241, 0.12); cursor: pointer;" onclick="window.app.playMemorySong('${memory.id}')">
+          <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 0;">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(99, 102, 241, 0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.25rem;">
+              ${memory.song.artwork ? `<img src="${memory.song.artwork}" onerror="this.parentElement.innerHTML='🎵';" style="width: 100%; height: 100%; border-radius: 8px; object-fit: cover;" alt="art">` : '🎵'}
+            </div>
+            <div style="min-width: 0;">
+              <div style="font-weight: 800; font-size: 0.95rem; color: var(--color-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(memory.song.title)}</div>
+              <div style="font-size: 0.78rem; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(memory.song.artist || '')}</div>
             </div>
           </div>
-          <button type="button" class="btn-mini-play" style="width: 36px; height: 36px; font-size: 0.9rem;">▶</button>
+          <button type="button" class="btn-mini-play" style="width: 36px; height: 36px; font-size: 0.9rem; flex-shrink: 0;">▶</button>
         </div>
       `;
     }
