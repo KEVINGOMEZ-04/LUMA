@@ -1,4 +1,4 @@
-﻿/* LUMA 🌟 - Mobile-First Luxury Dark Sections */
+/* LUMA 🌟 - Mobile-First Luxury Dark Sections */
 
 /* =========================================
    1. SECCIÓN INICIO - HERO CARD DEL GRUPO
@@ -280,46 +280,47 @@
 }
 
 /* =========================================
-   ACCIONES RÁPIDAS (5 DARK PILLS ROW)
+   ACCIONES RÁPIDAS (6 DARK PILLS ROW)
    ========================================= */
 .quick-actions-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.55rem;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.4rem;
   margin-bottom: 1.5rem;
 }
 
 .quick-action-pill {
-  background: #0E1322;
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 0.75rem 0.35rem;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   text-decoration: none;
-  color: #FFFFFF;
+  color: var(--color-text-main);
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
   cursor: pointer;
+  min-width: 0;
 }
 
 .quick-action-pill:hover, .quick-action-pill:active {
   transform: translateY(-2px);
   border-color: var(--color-primary-light);
-  background: #151C30;
+  background: var(--color-bg-card-hover);
 }
 
 .quick-action-icon-box {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   flex-shrink: 0;
 }
 
@@ -330,9 +331,13 @@
 .quick-action-icon-box.orange { background: rgba(244, 63, 94, 0.16); color: #FB7185; }
 
 .quick-action-pill span {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 /* =========================================
