@@ -99,12 +99,12 @@
   --color-bg-card: #FFFFFF;
   --color-bg-card-hover: #F8FAFC;
 
-  --color-header-bg: rgba(255, 255, 255, 0.95);
-  --color-header-border: rgba(0, 0, 0, 0.08);
-  --color-bottom-bar-bg: rgba(255, 255, 255, 0.96);
+  --color-header-bg: rgba(255, 255, 255, 0.96);
+  --color-header-border: rgba(0, 0, 0, 0.05);
+  --color-bottom-bar-bg: rgba(255, 255, 255, 0.98);
 
-  --color-btn-surface: #F1F5F9;
-  --color-btn-surface-hover: #E2E8F0;
+  --color-btn-surface: #FFFFFF;
+  --color-btn-surface-hover: #F1F5F9;
   --color-btn-text: #0F172A;
   --color-pill-bg: #FFFFFF;
   --color-code-pill-bg: #F1F5F9;
@@ -113,15 +113,31 @@
   --color-close-btn-bg: #F1F5F9;
 
   --color-text-main: #0F172A;
-  --color-text-secondary: #475569;
+  --color-text-secondary: #64748B;
   --color-text-muted: #94A3B8;
 
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-subtle: rgba(0, 0, 0, 0.04);
-  --color-glass-border: rgba(0, 0, 0, 0.06);
+  /* Pasteles Suaves para Iconos en Modo Claro */
+  --color-badge-purple-bg: #EDE9FE;
+  --color-badge-purple-text: #6366F1;
+  --color-badge-orange-bg: #FFEDD5;
+  --color-badge-orange-text: #EA580C;
+  --color-badge-indigo-bg: #EDE9FE;
+  --color-badge-indigo-text: #6366F1;
+  --color-badge-blue-bg: #E0E7FF;
+  --color-badge-blue-text: #4F46E5;
+  --color-badge-teal-bg: #CCFBF1;
+  --color-badge-teal-text: #0D9488;
+  --color-badge-rose-bg: #FFE4E6;
+  --color-badge-rose-text: #E11D48;
+  --color-badge-emerald-bg: #D1FAE5;
+  --color-badge-emerald-text: #059669;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.09);
-  --shadow-elevated: 0 16px 40px rgba(0, 0, 0, 0.12);
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-border-subtle: rgba(0, 0, 0, 0.03);
+  --color-glass-border: rgba(0, 0, 0, 0.05);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-elevated: 0 16px 40px rgba(0, 0, 0, 0.1);
 }
