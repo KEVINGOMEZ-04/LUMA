@@ -423,24 +423,71 @@
         </div>
       </section>
 
-      <!-- 3. SECCIÓN MÚSICA -->
+      <!-- 3. SECCIÓN MÚSICA (BIBLIOTECA COLABORATIVA DEL GRUPO) -->
       <section id="section-musica" class="luma-section" role="tabpanel">
-        <div class="luma-section-header">
-          <h2 class="luma-section-title"><span>🎵</span> Música</h2>
-        </div>
-
-        <div class="trail-controls">
-          <form id="music-search-form" class="media-search">
-            <input id="music-search-input" class="form-control" placeholder="Buscar canción o artista en iTunes..." required>
-            <button type="submit" class="btn-primary">Buscar</button>
-          </form>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <button type="button" id="btn-new-song" class="btn-secondary">+ Añadir Canción</button>
+        <!-- Hero de la Sección Música -->
+        <div class="music-collab-hero">
+          <div class="music-hero-left">
+            <div class="music-hero-icon-box">
+              <span class="music-hero-symbol">🎵</span>
+              <span class="music-hero-glow-dot"></span>
+            </div>
+            <div class="music-hero-titles">
+              <h2 class="music-hero-title">Música del Grupo</h2>
+              <p class="music-hero-subtitle">Cada canción cuenta una <span class="highlight-purple-text">historia</span> del parche.</p>
+            </div>
+          </div>
+          <div class="music-hero-stats-card">
+            <div class="music-stat-col">
+              <span class="music-stat-val" id="stat-songs-count">72</span>
+              <span class="music-stat-lbl">Canciones</span>
+            </div>
+            <div class="music-stat-divider"></div>
+            <div class="music-stat-col">
+              <span class="music-stat-val" id="stat-members-count">18</span>
+              <span class="music-stat-lbl">Integrantes</span>
+            </div>
+            <div class="music-stat-divider"></div>
+            <div class="music-stat-col">
+              <span class="music-stat-val pink-highlight" id="stat-hours-count">36h</span>
+              <span class="music-stat-lbl">Tiempo total</span>
+            </div>
           </div>
         </div>
 
-        <div id="music-search-results" style="margin-bottom: 1.5rem;"></div>
-        <div class="music-grid" id="songs-grid-list"></div>
+        <!-- Buscador Inteligente + Botón Añadir Canción -->
+        <div class="music-search-action-row">
+          <div class="music-search-bar-wrap">
+            <span class="music-search-icon">🔍</span>
+            <input type="text" id="music-search-input" class="music-search-input" placeholder="Buscar canción, artista o álbum en iTunes..." autocomplete="off">
+            <button type="button" id="music-search-clear" class="btn-clear-search" style="display: none;">✕</button>
+          </div>
+          <button type="button" id="btn-open-add-song" class="btn-primary-purple">
+            <span>+ Añadir canción</span>
+          </button>
+        </div>
+
+        <!-- Resultados de Búsqueda en Vivo de iTunes (Debajo de la Barra) -->
+        <div id="music-live-search-results" class="music-live-results-dropdown" style="display: none;"></div>
+
+        <!-- Barra de Filtros con Scroll Horizontal -->
+        <div class="music-filter-chips-scroll" id="music-filter-chips">
+          <button type="button" class="music-filter-chip active" data-filter="all">Más recientes</button>
+          <button type="button" class="music-filter-chip" data-filter="top-rated">Mejor valoradas</button>
+          <div class="music-filter-dropdown-wrap">
+            <button type="button" class="music-filter-chip" id="btn-filter-member" data-filter="by-member">
+              <span>Por integrante</span> <span class="chevron">⌄</span>
+            </button>
+            <select id="select-filter-member" class="music-member-hidden-select">
+              <option value="">Todos los integrantes</option>
+            </select>
+          </div>
+          <button type="button" class="music-filter-chip" data-filter="with-memories">Vinculadas a recuerdos</button>
+          <button type="button" class="music-filter-chip" data-filter="my-songs">Mis añadidas</button>
+        </div>
+
+        <!-- Lista de Tarjetas Musicales Colaborativas -->
+        <div class="music-collab-feed" id="songs-grid-list"></div>
       </section>
 
       <!-- 4. SECCIÓN CINE (PELÍCULAS) -->
@@ -1314,52 +1361,142 @@
     </div>
   </div>
 
-  <!-- 9. MODAL AÑADIR CANCIÓN MANUAL -->
-  <div id="modal-song" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-song">
-    <div class="modal-content">
+  <!-- 9. MODAL: AÑADIR CANCIÓN COLABORATIVA AL GRUPO -->
+  <div id="modal-song-add" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title-song-add">
+    <div class="modal-content" style="max-width: 480px;">
       <div class="modal-header">
-        <h3 id="modal-title-song" class="modal-title"><span>🎵</span> Añadir Canción al Grupo</h3>
-        <button type="button" class="btn-modal-close" data-close-modal="modal-song">✕</button>
+        <h3 id="modal-title-song-add" class="modal-title"><span>🎵</span> Añadir a la Música del Grupo</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-song-add">✕</button>
       </div>
-      <form id="form-song" class="modal-form">
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label" for="song-title-input">Título de la Canción *</label>
-            <input type="text" id="song-title-input" class="form-control" placeholder="Nombre del tema..." required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="song-artist-input">Artista / Banda *</label>
-            <input type="text" id="song-artist-input" class="form-control" placeholder="Nombre del artista..." required>
-          </div>
-        </div>
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label" for="song-rating-select">Calificación (1 a 5 ⭐)</label>
-            <select id="song-rating-select" class="form-control">
-              <option value="5">⭐⭐⭐⭐⭐ (5)</option>
-              <option value="4">⭐⭐⭐⭐ (4)</option>
-              <option value="3">⭐⭐⭐ (3)</option>
-              <option value="2">⭐⭐ (2)</option>
-              <option value="1">⭐ (1)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="song-recommender-input">Recomendado por</label>
-            <input type="text" id="song-recommender-input" class="form-control" placeholder="Tu nombre...">
+      <form id="form-song-add" class="modal-form">
+        <!-- Hero de la Canción Seleccionada -->
+        <div class="modal-song-preview-header">
+          <img id="modal-song-art-preview" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80" alt="Cover" class="modal-song-art-img">
+          <div class="modal-song-info-col">
+            <h4 id="modal-song-title-preview" class="modal-song-title-text">Título de la Canción</h4>
+            <div id="modal-song-artist-preview" class="modal-song-artist-text">Artista / Banda</div>
+            <div id="modal-song-album-preview" class="modal-song-album-text">Álbum Oficial</div>
           </div>
         </div>
+
+        <!-- Calificación Interactiva con 5 Estrellas -->
+        <div class="form-group" style="margin-top: 1rem;">
+          <label class="form-label">Calificación del Grupo (1 a 5 ⭐)</label>
+          <div class="star-rating-interactive" id="song-star-picker">
+            <button type="button" class="star-btn active" data-value="1">⭐</button>
+            <button type="button" class="star-btn active" data-value="2">⭐</button>
+            <button type="button" class="star-btn active" data-value="3">⭐</button>
+            <button type="button" class="star-btn active" data-value="4">⭐</button>
+            <button type="button" class="star-btn active" data-value="5">⭐</button>
+            <span class="star-rating-number" id="song-star-score">5.0</span>
+          </div>
+          <input type="hidden" id="modal-song-rating-val" value="5">
+        </div>
+
+        <!-- Reseña / Historia del Momento -->
         <div class="form-group">
-          <label class="form-label" for="song-review-input">Comentario o reseña</label>
-          <input type="text" id="song-review-input" class="form-control" placeholder="«Tiene una melodía increíble...»">
+          <label class="form-label" for="modal-song-review-input">Historia o Reseña del Parche</label>
+          <textarea id="modal-song-review-input" class="form-control" rows="2" maxlength="150" placeholder="¿Por qué debería estar en el playlist del grupo? (ej: La canción que sonó todo el viaje a Guatapé 🚙)" required></textarea>
+          <div class="char-count-row"><span id="song-review-char-count">0</span> / 150 caracteres</div>
         </div>
-        <input type="hidden" id="song-preview-url">
-        <input type="hidden" id="song-artwork-url">
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" data-close-modal="modal-song">Cancelar</button>
-          <button type="submit" class="btn-primary"><span>Guardar Canción</span> 🎵</button>
+
+        <!-- Vincular Recuerdos del Grupo (Checkbox List) -->
+        <div class="form-group">
+          <label class="form-label">Vincular a Recuerdos Existentes (Opcional)</label>
+          <div class="song-memory-link-checklist" id="song-memory-links-container">
+            <!-- Renderizado dinámicamente con recuerdos existentes -->
+          </div>
+        </div>
+
+        <!-- Campos Ocultos de Metadatos -->
+        <input type="hidden" id="modal-song-id">
+        <input type="hidden" id="modal-song-title-hidden">
+        <input type="hidden" id="modal-song-artist-hidden">
+        <input type="hidden" id="modal-song-album-hidden">
+        <input type="hidden" id="modal-song-artwork-hidden">
+        <input type="hidden" id="modal-song-preview-hidden">
+
+        <div class="modal-footer" style="padding-top: 0.5rem; display: flex; gap: 0.5rem;">
+          <button type="button" class="btn-secondary" data-close-modal="modal-song-add" style="flex: 1;">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btn-submit-save-song" style="flex: 1.5;">✨ Guardar en la Música</button>
         </div>
       </form>
     </div>
+  </div>
+
+  <!-- 9.1 BOTTOM SHEET: COMENTARIOS Y REACCIONES DE CANCIÓN -->
+  <div id="modal-song-comments" class="modal-overlay modal-sheet-bottom" role="dialog" aria-modal="true">
+    <div class="modal-content modal-sheet-content">
+      <div class="modal-sheet-handle"></div>
+      <div class="modal-header" style="border: none; padding-bottom: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <img id="sheet-song-art" src="" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover;" alt="art">
+          <div>
+            <h3 id="sheet-song-title" class="modal-title" style="font-size: 0.95rem; margin: 0;">💬 Conversaciones del Parche</h3>
+            <span id="sheet-song-artist" style="font-size: 0.75rem; color: var(--color-primary-light);">Canción</span>
+          </div>
+        </div>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-song-comments">✕</button>
+      </div>
+
+      <div id="song-comments-stream" class="song-comments-chat-list"></div>
+
+      <!-- Quick Emoji Bar -->
+      <div class="quick-emoji-reactions-bar" id="song-quick-emojis">
+        <button type="button" class="btn-quick-emoji" data-emoji="❤️">❤️ Me encanta</button>
+        <button type="button" class="btn-quick-emoji" data-emoji="🔥">🔥 Temazo</button>
+        <button type="button" class="btn-quick-emoji" data-emoji="😂">😂 Recuerdos</button>
+        <button type="button" class="btn-quick-emoji" data-emoji="🎵">🎵 Vibe</button>
+      </div>
+
+      <form id="form-add-song-comment" class="song-comment-input-form">
+        <input type="text" id="input-song-comment-text" class="form-control" placeholder="Escribe tu historia o comentario..." required>
+        <button type="submit" class="btn-primary-purple" style="padding: 0.6rem 1rem;">Enviar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 9.2 REPRODUCTOR FLOTANTE GLOBAL DE MÚSICA (STICKY BOTTOM) -->
+  <div id="global-music-player" class="global-floating-player" style="display: none;">
+    <div class="player-left-media">
+      <img id="player-art" src="https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/bf/d4/0b/bfd40b3c-dc09-8473-b3c0-038827943c2c/0094639534658.jpg/600x600bb.jpg" alt="Art" class="player-art-img">
+      <div class="player-track-info">
+        <div id="player-title" class="player-track-title">Viva La Vida</div>
+        <div id="player-artist" class="player-track-artist">Coldplay</div>
+      </div>
+    </div>
+    <div class="player-center-wave">
+      <div class="player-waveform-visualizer" id="player-waveform">
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+        <span class="wave-bar"></span>
+      </div>
+      <div class="player-progress-bar-container">
+        <span id="player-current-time" class="player-time-label">0:00</span>
+        <div class="player-progress-track" id="player-progress-track">
+          <div class="player-progress-fill" id="player-progress-fill"></div>
+          <div class="player-progress-thumb" id="player-progress-thumb"></div>
+        </div>
+        <span id="player-total-time" class="player-time-label">0:30</span>
+      </div>
+    </div>
+    <div class="player-right-controls">
+      <button type="button" class="btn-player-ctl" id="btn-player-prev" title="Anterior">⏮</button>
+      <button type="button" class="btn-player-ctl play-toggle" id="btn-player-play-toggle" title="Play/Pausa">▶</button>
+      <button type="button" class="btn-player-ctl" id="btn-player-next" title="Siguiente">⏭</button>
+      <button type="button" class="btn-player-ctl close-ctl" id="btn-player-close" title="Cerrar">✕</button>
+    </div>
+    <audio id="global-audio-element" preload="none"></audio>
   </div>
 
   <!-- 10. MODAL PELÍCULA (ATRIA FULL PARITY) -->
