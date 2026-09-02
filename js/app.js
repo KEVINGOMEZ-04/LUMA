@@ -2541,7 +2541,18 @@ class LumaApp {
           if (filter === 'by-member') {
             e.stopPropagation();
             if (dropdownMenu) {
-              dropdownMenu.style.display = (dropdownMenu.style.display === 'none' || !dropdownMenu.style.display) ? 'flex' : 'none';
+              const isShown = (dropdownMenu.style.display === 'flex');
+              if (isShown) {
+                dropdownMenu.style.display = 'none';
+              } else {
+                const rect = chip.getBoundingClientRect();
+                dropdownMenu.style.position = 'fixed';
+                dropdownMenu.style.top = `${rect.bottom + 8}px`;
+                const maxLeft = window.innerWidth - 220;
+                dropdownMenu.style.left = `${Math.max(12, Math.min(rect.left, maxLeft))}px`;
+                dropdownMenu.style.zIndex = '10000';
+                dropdownMenu.style.display = 'flex';
+              }
             }
             return;
           }
@@ -2561,13 +2572,21 @@ class LumaApp {
       });
     }
 
-    // Cerrar menú si se hace clic fuera
+    // Cerrar menú si se hace clic fuera o al hacer scroll
     document.addEventListener('click', (e) => {
-      const wrap = document.getElementById('music-member-filter-wrap');
-      if (wrap && !wrap.contains(e.target) && dropdownMenu) {
-        dropdownMenu.style.display = 'none';
+      const btnMember = document.getElementById('btn-filter-member');
+      if (dropdownMenu && dropdownMenu.style.display === 'flex') {
+        if (!dropdownMenu.contains(e.target) && (!btnMember || !btnMember.contains(e.target))) {
+          dropdownMenu.style.display = 'none';
+        }
       }
     });
+
+    window.addEventListener('scroll', () => {
+      if (dropdownMenu && dropdownMenu.style.display === 'flex') {
+        dropdownMenu.style.display = 'none';
+      }
+    }, { passive: true });
   }
 
   selectMemberFilter(member) {
