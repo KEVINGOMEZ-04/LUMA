@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LUMA 🌟 - Configuración Centralizada
  */
 
@@ -17,7 +17,7 @@ window.CONFIG = {
 
   // Firebase Realtime Database
   firebase: {
-    enabled: true,
+    enabled: false,
     config: {
       apiKey: "AIzaSyDummyKeyForPresenceOnly_LUMA2026",
       authDomain: "luma-social-app.firebaseapp.com",
