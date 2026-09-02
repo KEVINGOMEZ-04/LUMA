@@ -1,79 +1,82 @@
-﻿/* LUMA 🌟 - Design System: Clean Luxury Dual Theme (Matching User Reference) */
+﻿/* LUMA 🌟 - Design System: Luxury Midnight Dark Mobile Theme */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
 
 :root {
-  /* Fondo Principal & Superficies (Clean Light/Dark Hybrid) */
-  --color-bg-base: #F8FAFC;
-  --color-bg-surface: #FFFFFF;
-  --color-bg-surface-elevated: #FFFFFF;
-  --color-bg-card: #FFFFFF;
-  --color-bg-card-hover: #F8FAFC;
+  /* Fondo Principal & Superficies Oscuras (Midnight OLED) */
+  --color-bg-base: #080C16;
+  --color-bg-surface: #0E1322;
+  --color-bg-surface-elevated: #151C30;
+  --color-bg-card: #111728;
+  --color-bg-card-hover: #182035;
 
-  /* Header Dark Obsidian */
-  --color-header-bg: #0B1021;
+  /* Header & Bottom Bar Dark */
+  --color-header-bg: rgba(8, 12, 22, 0.95);
   --color-header-border: rgba(255, 255, 255, 0.08);
+  --color-bottom-bar-bg: rgba(13, 18, 32, 0.95);
 
-  /* Acentos y Paleta */
+  /* Acentos y Paleta Cósmica */
   --color-primary: #6366F1;
   --color-primary-dark: #4F46E5;
   --color-primary-light: #818CF8;
-  --color-secondary: #3B82F6;
-  --color-accent: #0284C7;
+  --color-secondary: #38BDF8;
+  --color-accent: #A855F7;
   --color-gold: #F59E0B;
   --color-success: #10B981;
   --color-warning: #F97316;
   --color-error: #EF4444;
 
-  /* Fondos Pasteles para Iconos de Métricas */
-  --color-badge-purple-bg: #F3E8FF;
-  --color-badge-purple-text: #9333EA;
-  --color-badge-orange-bg: #FFEDD5;
-  --color-badge-orange-text: #EA580C;
-  --color-badge-indigo-bg: #E0E7FF;
-  --color-badge-indigo-text: #4F46E5;
-  --color-badge-blue-bg: #DBEAFE;
-  --color-badge-blue-text: #2563EB;
-  --color-badge-teal-bg: #CCFBF1;
-  --color-badge-teal-text: #0D9488;
-  --color-badge-rose-bg: #FFE4E6;
-  --color-badge-rose-text: #E11D48;
-  --color-badge-emerald-bg: #D1FAE5;
-  --color-badge-emerald-text: #059669;
+  /* Fondos para Iconos de Métricas */
+  --color-badge-purple-bg: rgba(168, 85, 247, 0.16);
+  --color-badge-purple-text: #C084FC;
+  --color-badge-orange-bg: rgba(249, 115, 22, 0.16);
+  --color-badge-orange-text: #FB923C;
+  --color-badge-indigo-bg: rgba(99, 102, 241, 0.16);
+  --color-badge-indigo-text: #818CF8;
+  --color-badge-blue-bg: rgba(59, 130, 246, 0.16);
+  --color-badge-blue-text: #60A5FA;
+  --color-badge-teal-bg: rgba(20, 184, 166, 0.16);
+  --color-badge-teal-text: #2DD4BF;
+  --color-badge-rose-bg: rgba(244, 63, 94, 0.16);
+  --color-badge-rose-text: #FB7185;
+  --color-badge-emerald-bg: rgba(16, 185, 129, 0.16);
+  --color-badge-emerald-text: #34D399;
 
   /* Gradientes */
   --gradient-luma: linear-gradient(135deg, #A855F7 0%, #6366F1 40%, #38BDF8 80%, #FBBF24 100%);
   --gradient-primary: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
-  --gradient-hero-overlay: linear-gradient(to bottom, rgba(11, 16, 33, 0.2) 0%, rgba(11, 16, 33, 0.92) 100%);
+  --gradient-card-border: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
 
   /* Textos */
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --color-text-main: #0F172A;
-  --color-text-secondary: #64748B;
-  --color-text-muted: #94A3B8;
-  --color-text-dark-theme: #F8FAFC;
+  --color-text-main: #FFFFFF;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  --color-text-dark-theme: #FFFFFF;
 
   /* Bordes & Sombras */
-  --color-border: #E2E8F0;
-  --color-border-subtle: #EDF2F7;
-  --color-glass-border: rgba(226, 232, 240, 0.8);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.04);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
   
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-card-hover: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
-  --shadow-elevated: 0 20px 40px -8px rgba(15, 23, 42, 0.15);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 20px 48px rgba(0, 0, 0, 0.6);
+  --shadow-fab: 0 10px 25px rgba(99, 102, 241, 0.5);
 
   /* Radios */
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
   --radius-full: 9999px;
 
-  --max-width-content: 1160px;
+  --max-width-content: 520px;
   --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-normal: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
