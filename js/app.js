@@ -254,21 +254,18 @@ class LumaApp {
       groupChip.onclick = () => this.openGroupMenuModal();
     }
 
-    const avatarWrap = document.getElementById('header-user-avatar-img-wrap');
-    if (avatarWrap && profile) {
-      avatarWrap.style.backgroundColor = profile.favoriteColor || '#6366F1';
-      if (profile.avatar) {
-        avatarWrap.innerHTML = `<img src="${window.Utils.sanitizeHTML(profile.avatar)}" alt="${window.Utils.sanitizeHTML(profile.name)}" />`;
-      } else if (profile.presetAvatar) {
-        avatarWrap.innerHTML = `<span>${profile.presetAvatar}</span>`;
+    const groupIconEl = document.getElementById('header-group-icon-display');
+    if (groupIconEl) {
+      if (group.iconImage) {
+        groupIconEl.innerHTML = `<img src="${group.iconImage}" style="width: 24px; height: 24px; border-radius: 6px; object-fit: cover;" alt="grupo" />`;
       } else {
-        avatarWrap.innerHTML = `<span>${(profile.name || 'U').charAt(0).toUpperCase()}</span>`;
+        groupIconEl.textContent = group.icon || '👥';
       }
     }
 
-    const profileBtn = document.getElementById('header-profile-avatar-btn');
-    if (profileBtn) {
-      profileBtn.onclick = () => this.openMembersPresenceModal();
+    const groupMembersBtn = document.getElementById('header-group-members-btn');
+    if (groupMembersBtn) {
+      groupMembersBtn.onclick = () => this.openMembersPresenceModal();
     }
 
     const searchBtn = document.getElementById('btn-header-search');
@@ -355,16 +352,43 @@ class LumaApp {
     this.openModal('modal-group-menu');
   }
 
-  // --- MODAL: MIEMBROS Y ESTADO DE CONEXIÓN ---
+  // --- MODAL: MIEMBROS Y ESTADO DE CONEXIÓN DEL GRUPO ---
   openMembersPresenceModal() {
-    this.populateMembersPresenceModal(this.presence.presenceMap || {});
+    this.populateMembersPresenceModal(this.presence ? (this.presence.presenceMap || {}) : {});
     this.openModal('modal-members-presence');
   }
 
-  populateMembersPresenceModal(presenceMap) {
+  populateMembersPresenceModal(presenceMap = {}) {
     const profile = this.storage.getUserProfile() || {};
     const group = this.storage.getActiveGroup();
     if (!group) return;
+
+    const titleEl = document.getElementById('presence-modal-group-title');
+    const emojiEl = document.getElementById('presence-modal-group-emoji');
+    const codeEl = document.getElementById('presence-modal-group-code');
+    const codeBtn = document.getElementById('presence-modal-group-code-btn');
+    const inviteBtn = document.getElementById('btn-presence-modal-invite');
+
+    if (titleEl) titleEl.textContent = `"${group.name}"`;
+    if (emojiEl) {
+      if (group.iconImage) {
+        emojiEl.innerHTML = `<img src="${group.iconImage}" style="width: 32px; height: 32px; border-radius: 8px; object-fit: cover;" alt="icono" />`;
+      } else {
+        emojiEl.textContent = group.icon || '🌟';
+      }
+    }
+    if (codeEl) codeEl.textContent = group.code || '------';
+    if (codeBtn) {
+      codeBtn.onclick = () => {
+        window.Utils.copyToClipboard(group.code, `Código ${group.code} copiado al portapapeles 📋`);
+      };
+    }
+    if (inviteBtn) {
+      inviteBtn.onclick = () => {
+        this.closeModal('modal-members-presence');
+        this.openInviteModal();
+      };
+    }
 
     const myAvatar = document.getElementById('presence-modal-my-avatar');
     const myName = document.getElementById('presence-modal-my-name');
@@ -406,7 +430,7 @@ class LumaApp {
       const isMe = m.id === profile.id;
       const isHost = group.host && group.host.id === m.id;
       const pData = presenceMap[m.id] || {};
-      const isOnline = Boolean(pData.online || pData.state === 'online');
+      const isOnline = Boolean(pData.online || pData.state === 'online' || isMe);
       const isAway = pData.state === 'away';
 
       let statusLabel = 'Desconectado';
@@ -419,13 +443,20 @@ class LumaApp {
         statusClass = 'away';
       }
 
-      let lastSeenText = '';
-      if (m.statusMsg) {
-        lastSeenText = m.statusMsg;
+      let detailText = '';
+      if (m.bio) {
+        detailText = `<div style="font-size: 0.74rem; color: var(--color-text-secondary); margin-top: 0.1rem;">${window.Utils.sanitizeHTML(m.bio)}</div>`;
+      }
+
+      let timeText = '';
+      if (isOnline) {
+        timeText = 'Activo ahora';
       } else if (pData.lastSeen) {
-        lastSeenText = `Última vez: ${window.Utils.formatDateTimeES(new Date(pData.lastSeen).toISOString())}`;
-      } else if (m.joinedAt) {
-        lastSeenText = `Miembro desde ${window.Utils.formatDateES(m.joinedAt)}`;
+        timeText = `Última vez: ${this.formatRelativeTime(new Date(pData.lastSeen).toISOString())}`;
+      } else if (m.lastSeen) {
+        timeText = `Última vez: ${this.formatRelativeTime(m.lastSeen)}`;
+      } else {
+        timeText = `Miembro desde ${window.Utils.formatDateES(m.joinedAt || group.createdAt)}`;
       }
 
       const card = document.createElement('div');
@@ -436,14 +467,15 @@ class LumaApp {
             ${m.avatar ? `<img src="${window.Utils.sanitizeHTML(m.avatar)}" alt="${window.Utils.sanitizeHTML(m.name)}" />` : (m.presetAvatar || (m.name || 'U').charAt(0).toUpperCase())}
           </div>
           <div style="min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
               <strong style="font-size: 0.9rem; color: var(--color-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 ${window.Utils.sanitizeHTML(m.name)}
               </strong>
-              ${isHost ? '<span class="user-role-badge">Host</span>' : ''}
+              ${isHost ? '<span class="user-role-badge">👑 Host</span>' : '<span class="user-role-badge">⭐ Miembro</span>'}
               ${isMe ? '<span class="user-role-badge self">Tú</span>' : ''}
             </div>
-            <div style="font-size: 0.72rem; color: var(--color-text-muted);">${lastSeenText}</div>
+            ${detailText}
+            <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 0.1rem;">${timeText}</div>
           </div>
         </div>
         <div class="member-card-status-pill ${statusClass}">${statusLabel}</div>
