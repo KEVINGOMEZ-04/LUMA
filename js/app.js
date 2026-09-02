@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LUMA 🌟 - Controlador Principal de Aplicación
  * Plataforma social de grupos privados (Clean Luxury Edition).
  * 100% Feature Parity con ATRIA (Recuerdos Trail, Películas con Rating Bar, Paper Notes, Frasco de Metas con Stats).
@@ -167,14 +167,20 @@ class LumaApp {
 
     this.currentTab = target;
 
-    document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-    const activePill = document.getElementById(`nav-pill-${target}`);
-    if (activePill) activePill.classList.add('active');
+    document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+    if (target === 'inicio') {
+      document.getElementById('bottom-tab-inicio')?.classList.add('active');
+    } else if (target === 'recuerdos') {
+      document.getElementById('bottom-tab-recuerdos')?.classList.add('active');
+    } else if (target === 'objetivos' || target === 'cine' || target === 'musica') {
+      document.getElementById('bottom-tab-stats')?.classList.add('active');
+    }
 
     document.querySelectorAll('.luma-section').forEach(s => s.classList.remove('active'));
     const activeSection = document.getElementById(`section-${target}`);
     if (activeSection) activeSection.classList.add('active');
 
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     this.renderCurrentTab();
   }
 
@@ -1478,6 +1484,42 @@ class LumaApp {
       if (e.key === 'Escape') {
         document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
       }
+    });
+
+    // Central Floating Action Button (FAB)
+    document.getElementById('btn-global-create')?.addEventListener('click', () => {
+      this.openModal('modal-create-sheet');
+    });
+
+    // Bottom Navigation Perfil Tab
+    document.getElementById('bottom-tab-perfil')?.addEventListener('click', () => {
+      this.openMembersPresenceModal();
+    });
+
+    // Quick Action Sheet Buttons
+    document.getElementById('btn-sheet-create-memory')?.addEventListener('click', () => {
+      this.closeModal('modal-create-sheet');
+      document.getElementById('btn-new-memory')?.click();
+    });
+    document.getElementById('btn-sheet-create-song')?.addEventListener('click', () => {
+      this.closeModal('modal-create-sheet');
+      document.getElementById('btn-new-song')?.click();
+    });
+    document.getElementById('btn-sheet-create-movie')?.addEventListener('click', () => {
+      this.closeModal('modal-create-sheet');
+      document.getElementById('btn-new-movie')?.click();
+    });
+    document.getElementById('btn-sheet-create-series')?.addEventListener('click', () => {
+      this.closeModal('modal-create-sheet');
+      document.getElementById('btn-new-series')?.click();
+    });
+    document.getElementById('btn-sheet-create-note')?.addEventListener('click', () => {
+      this.closeModal('modal-create-sheet');
+      document.getElementById('btn-new-note')?.click();
+    });
+    document.getElementById('btn-sheet-create-goal')?.addEventListener('click', () => {
+      this.closeModal('modal-create-sheet');
+      document.getElementById('btn-new-goal')?.click();
     });
 
     document.getElementById('btn-new-memory')?.addEventListener('click', () => {
