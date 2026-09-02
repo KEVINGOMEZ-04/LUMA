@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LUMA 🌟 - Capa de Persistencia y Multi-Grupos
  */
 
@@ -28,22 +28,120 @@
     memories: [
       {
         id: 'mem_1',
-        title: 'Noche de Estrellas y Risas',
-        date: '2026-02-20',
-        location: 'Mirador del Valle',
-        description: 'Una velada increíble donde compartimos anécdotas, buena música y planes para este año.',
-        coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
-        photos: [],
-        author: { id: 'luma_host_1', name: 'Alex' },
+        title: 'Atardecer en la playa',
+        date: '2025-09-21',
+        location: 'Playa Blanca, Barú',
+        description: 'El cielo se pintó de colores y todo se sintió perfecto contigo.',
+        coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+        photos: [
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=800&q=80'
+        ],
+        photosCount: 12,
+        isFeatured: true,
+        auraColor: '#F59E0B',
+        author: { id: 'usr_kevin', name: 'Kevin', color: '#6366F1', avatar: '' },
         song: {
-          title: 'Midnight City',
-          artist: 'M83',
-          previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/91/9f/5d/919f5de7-2035-7170-c0eb-4993883a429a/mzaf_10574069818816568228.plus.aac.p.m4a'
+          title: 'Golden Hour',
+          artist: 'JVKE',
+          artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/91/3d/8c/913d8cb8-726d-2234-4537-586718cf27bf/197187123961.jpg/600x600bb.jpg',
+          previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/4a/12/32/4a123281-2244-12ea-98eb-6cb405391c13/mzaf_16382103417757962879.plus.aac.p.m4a'
         },
         comments: [
-          { id: 'c1', authorName: 'Sam', text: '¡Tenemos que repetir muy pronto! 🙌', createdAt: '2026-02-21T10:00:00Z' }
+          { id: 'c1', authorName: 'Wendy', authorRole: 'wendy', text: '¡Ese atardecer fue inolvidable mi amor! 🌅❤️', time: 'Hace 1 día', reactions: { heart: 3 } },
+          { id: 'c2', authorName: 'Kevin', authorRole: 'kevin', text: 'El mejor día de todos 🌻', time: 'Hace 18 horas', reactions: { heart: 2 } }
         ],
-        createdAt: '2026-02-20T22:00:00Z'
+        commentsCount: 8,
+        createdAt: '2025-09-21T18:30:00Z'
+      },
+      {
+        id: 'mem_2',
+        title: 'Café y risas',
+        date: '2025-09-14',
+        location: 'Café de la Montaña',
+        description: 'Conversaciones que se quedan guardadas en el corazón.',
+        coverImage: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
+        photos: [
+          'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=800&q=80'
+        ],
+        photosCount: 8,
+        isFeatured: false,
+        auraColor: '#6366F1',
+        author: { id: 'usr_wendy', name: 'Wendy', color: '#EC4899', avatar: '' },
+        audioNote: {
+          duration: '0:45',
+          audioUrl: ''
+        },
+        comments: [
+          { id: 'c3', authorName: 'Kevin', authorRole: 'kevin', text: 'Me encanta escuchar esta nota de voz ☕', time: 'Hace 2 días', reactions: { heart: 4 } }
+        ],
+        commentsCount: 5,
+        createdAt: '2025-09-14T15:00:00Z'
+      },
+      {
+        id: 'mem_3',
+        title: 'Noche de estrellas',
+        date: '2025-09-05',
+        location: 'Desierto de la Tatacoa',
+        description: 'Acampamos, contamos historias y pedimos deseos.',
+        coverImage: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
+        photos: [
+          'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80'
+        ],
+        photosCount: 15,
+        isFeatured: true,
+        auraColor: '#F59E0B',
+        author: { id: 'usr_kevin', name: 'Kevin', color: '#6366F1', avatar: '' },
+        song: {
+          title: 'A Sky Full of Stars',
+          artist: 'Coldplay',
+          artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/bf/d4/0b/bfd40b3c-dc09-8473-b3c0-038827943c2c/0094639534658.jpg/600x600bb.jpg',
+          previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/05/cf/48/05cf4867-b5bf-734f-0131-bb96dafead21/mzaf_12411036066270632599.plus.aac.p.m4a'
+        },
+        comments: [
+          { id: 'c4', authorName: 'Wendy', authorRole: 'wendy', text: 'La noche más mágica bajo las estrellas ✨⛺', time: 'Hace 3 días', reactions: { heart: 5 } }
+        ],
+        commentsCount: 12,
+        createdAt: '2025-09-05T23:15:00Z'
+      },
+      {
+        id: 'mem_4',
+        title: 'Caminata por el bosque nublado',
+        date: '2025-08-18',
+        location: 'Parque Arví, Medellín',
+        description: 'El olor a pino, la neblina suave y un sendero lleno de magia.',
+        coverImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80',
+        photos: [],
+        photosCount: 6,
+        isFeatured: false,
+        auraColor: '#10B981',
+        author: { id: 'usr_wendy', name: 'Wendy', color: '#EC4899', avatar: '' },
+        song: {
+          title: 'Holocene',
+          artist: 'Bon Iver',
+          artwork: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/bf/d4/0b/bfd40b3c-dc09-8473-b3c0-038827943c2c/0094639534658.jpg/600x600bb.jpg',
+          previewUrl: ''
+        },
+        commentsCount: 3,
+        createdAt: '2025-08-18T14:20:00Z'
+      },
+      {
+        id: 'mem_5',
+        title: 'Tarde de cocina y pizzas caseras',
+        date: '2025-07-10',
+        location: 'En Casa',
+        description: 'Harina por todas partes pero las mejores pizzas que hemos probado.',
+        coverImage: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80',
+        photos: [],
+        photosCount: 4,
+        isFeatured: false,
+        auraColor: '#F43F5E',
+        author: { id: 'usr_kevin', name: 'Kevin', color: '#6366F1', avatar: '' },
+        commentsCount: 4,
+        createdAt: '2025-07-10T20:00:00Z'
       }
     ],
 
