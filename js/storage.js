@@ -50,7 +50,7 @@
         },
         comments: [
           { id: 'c1', authorName: 'Wendy', authorRole: 'wendy', text: '¡Ese atardecer fue inolvidable mi amor! 🌅❤️', time: 'Hace 1 día', reactions: { heart: 3 } },
-          { id: 'c2', authorName: 'Kevin', authorRole: 'kevin', text: 'El mejor día de todos 🌻', time: 'Hace 18 horas', reactions: { heart: 2 } }
+          { id: 'c2', authorName: 'Kevin', authorRole: 'kevin', text: 'El mejor día de todos ✨', time: 'Hace 18 horas', reactions: { heart: 2 } }
         ],
         commentsCount: 8,
         createdAt: '2025-09-21T18:30:00Z'
