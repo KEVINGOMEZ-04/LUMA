@@ -1172,14 +1172,29 @@ class LumaApp {
 
     if (this.activeCalendarYear === undefined) {
       this.activeCalendarYear = currentRealYear;
-      yearSelect.value = currentRealYear.toString();
     }
     if (this.activeCalendarMonth === undefined) {
       this.activeCalendarMonth = currentRealMonth;
     }
 
-    const selectedYear = parseInt(yearSelect.value, 10) || this.activeCalendarYear;
-    this.activeCalendarYear = selectedYear;
+    const selectedYear = this.activeCalendarYear;
+
+    // Poblar y sincronizar selector de año (rango dinámico continuo 2020 a 2035)
+    const minRangeYear = Math.min(2020, this.activeCalendarYear - 2);
+    const maxRangeYear = Math.max(2035, this.activeCalendarYear + 5);
+    const currentOptions = Array.from(yearSelect.options).map(o => parseInt(o.value, 10));
+
+    if (!currentOptions.includes(this.activeCalendarYear) || currentOptions.length === 0) {
+      yearSelect.innerHTML = '';
+      for (let y = minRangeYear; y <= maxRangeYear; y++) {
+        const opt = document.createElement('option');
+        opt.value = y.toString();
+        opt.textContent = y.toString();
+        if (y === this.activeCalendarYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+      }
+    }
+    yearSelect.value = this.activeCalendarYear.toString();
 
     const holidays = this.getHolidaysForYear(selectedYear);
     const memories = this.storage.getMemories() || [];
@@ -1190,13 +1205,25 @@ class LumaApp {
       labelMonthYear.textContent = `${monthFullNames[this.activeCalendarMonth]} ${selectedYear}`;
     }
 
+    // Botón "Hoy" para regresar inmediatamente a la fecha actual
+    const btnJumpToday = document.getElementById('btn-cal-jump-today');
+    if (btnJumpToday) {
+      btnJumpToday.onclick = () => {
+        const today = new Date();
+        this.activeCalendarYear = today.getFullYear();
+        this.activeCalendarMonth = today.getMonth();
+        this.selectedCalendarDay = today.getDate();
+        this.initMemoriesCalendar();
+        window.Utils.showToast('Regresaste a la fecha de hoy 📅✨', 'info');
+      };
+    }
+
     // Botones de navegación de mes anterior / siguiente
     if (btnPrev) {
       btnPrev.onclick = () => {
         if (this.activeCalendarMonth === 0) {
           this.activeCalendarMonth = 11;
           this.activeCalendarYear -= 1;
-          yearSelect.value = this.activeCalendarYear.toString();
         } else {
           this.activeCalendarMonth -= 1;
         }
@@ -1209,7 +1236,6 @@ class LumaApp {
         if (this.activeCalendarMonth === 11) {
           this.activeCalendarMonth = 0;
           this.activeCalendarYear += 1;
-          yearSelect.value = this.activeCalendarYear.toString();
         } else {
           this.activeCalendarMonth += 1;
         }
