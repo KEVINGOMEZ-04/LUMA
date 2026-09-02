@@ -3038,29 +3038,91 @@ class LumaApp {
     }
   }
 
-  // Menú contextual 3 puntos de tarjeta musical
+  // Menú contextual 3 puntos de tarjeta musical (Glassmorphism Action Sheet)
   openSongContextMenu(songId, event) {
-    event.stopPropagation();
+    if (event) event.stopPropagation();
     const song = (this.storage.getSongs() || []).find(s => s.id === songId);
     if (!song) return;
 
-    const action = prompt(`Opciones para "${song.title}":\n\n1. ⭐ Calificar canción (1 a 5)\n2. 💬 Ver conversaciones\n3. 🔗 Copiar enlace de canción\n4. 🗑️ Eliminar del playlist\n\nEscribe el número de la opción (1-4):`);
+    this.activeContextMenuSongId = songId;
 
-    if (action === '1') {
-      const score = prompt(`Califica "${song.title}" (1 al 5):`, '5');
-      const num = parseFloat(score);
-      if (!isNaN(num) && num >= 1 && num <= 5) {
-        this.storage.rateSong(songId, num);
-        window.Utils.showToast(`¡Calificación de ${num}⭐ guardada!`, 'success');
-        this.renderMusic();
-      }
-    } else if (action === '2') {
-      this.openSongComments(songId);
-    } else if (action === '3') {
-      window.Utils.copyToClipboard(`${song.title} - ${song.artist}`, '¡Nombre de canción copiado!');
-    } else if (action === '4') {
-      this.deleteSong(songId);
+    const artEl = document.getElementById('sheet-actions-art');
+    const titleEl = document.getElementById('sheet-actions-title');
+    const artistEl = document.getElementById('sheet-actions-artist');
+    const btnComments = document.getElementById('btn-sheet-view-comments');
+    const btnSpotify = document.getElementById('btn-sheet-open-spotify');
+    const btnYoutube = document.getElementById('btn-sheet-open-youtube');
+    const btnCopy = document.getElementById('btn-sheet-copy-info');
+    const btnDelete = document.getElementById('btn-sheet-delete-song');
+    const starPicker = document.getElementById('sheet-action-star-picker');
+    const starScore = document.getElementById('sheet-action-star-score');
+
+    if (artEl) artEl.src = song.artwork || 'assets/icon.png';
+    if (titleEl) titleEl.textContent = song.title;
+    if (artistEl) artistEl.textContent = song.artist;
+
+    // Actualizar estrellas de calificación
+    const currentRating = Math.round(song.rating || 5);
+    if (starScore) starScore.textContent = `${currentRating}.0`;
+    if (starPicker) {
+      starPicker.querySelectorAll('.star-btn').forEach(b => {
+        const val = parseInt(b.dataset.value, 10);
+        if (val <= currentRating) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+        b.onclick = () => {
+          this.storage.rateSong(songId, val);
+          if (starScore) starScore.textContent = `${val}.0`;
+          starPicker.querySelectorAll('.star-btn').forEach(btn => {
+            const bVal = parseInt(btn.dataset.value, 10);
+            if (bVal <= val) btn.classList.add('active');
+            else btn.classList.remove('active');
+          });
+          window.Utils.showToast(`¡Calificación de ${val}⭐ guardada!`, 'success');
+          this.renderMusic();
+        };
+      });
     }
+
+    // Botón Ver comentarios
+    if (btnComments) {
+      btnComments.onclick = () => {
+        this.closeModal('modal-song-actions');
+        this.openSongComments(songId);
+      };
+    }
+
+    // Botón Spotify
+    if (btnSpotify) {
+      const spotifyUrl = window.MediaService ? window.MediaService.spotifyUrl(song.title, song.artist) : `https://open.spotify.com/search/${encodeURIComponent(song.title + ' ' + song.artist)}`;
+      btnSpotify.href = spotifyUrl;
+    }
+
+    // Botón YouTube
+    if (btnYoutube) {
+      const youtubeUrl = window.MediaService ? window.MediaService.youtubeUrl(song.title, song.artist) : `https://www.youtube.com/results?search_query=${encodeURIComponent(song.title + ' ' + song.artist)}`;
+      btnYoutube.href = youtubeUrl;
+    }
+
+    // Botón Copiar
+    if (btnCopy) {
+      btnCopy.onclick = () => {
+        window.Utils.copyToClipboard(`${song.title} - ${song.artist}`, '¡Canción y artista copiados!');
+        this.closeModal('modal-song-actions');
+      };
+    }
+
+    // Botón Eliminar
+    if (btnDelete) {
+      btnDelete.onclick = () => {
+        this.closeModal('modal-song-actions');
+        this.deleteSong(songId);
+      };
+    }
+
+    this.openModal('modal-song-actions');
   }
 
   deleteSong(songId) {
