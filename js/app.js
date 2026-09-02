@@ -1152,11 +1152,17 @@ class LumaApp {
     }));
   }
 
-  // --- CALENDARIO ANUAL INTERACTIVO (MES SIEMPRE SELECCIONADO + DÍA ACTUAL & FESTIVOS) ---
+  // --- CALENDARIO MENSUAL COMPLETO INTERACTIVO (TODOS LOS DÍAS, FESTIVOS Y AÑADIR RECUERDO POR DÍA) ---
   initMemoriesCalendar() {
     const strip = document.getElementById('calendar-months-strip');
     const yearSelect = document.getElementById('select-calendar-year');
+    const daysGrid = document.getElementById('calendar-full-days-grid');
+    const labelMonthYear = document.getElementById('calendar-month-year-label');
+    const dayActionContainer = document.getElementById('calendar-selected-day-action');
     const detailsContainer = document.getElementById('calendar-active-month-details');
+    const btnPrev = document.getElementById('btn-cal-prev-month');
+    const btnNext = document.getElementById('btn-cal-next-month');
+
     if (!strip || !yearSelect) return;
 
     const now = new Date();
@@ -1180,11 +1186,44 @@ class LumaApp {
     const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const monthFullNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
+    if (labelMonthYear) {
+      labelMonthYear.textContent = `${monthFullNames[this.activeCalendarMonth]} ${selectedYear}`;
+    }
+
+    // Botones de navegación de mes anterior / siguiente
+    if (btnPrev) {
+      btnPrev.onclick = () => {
+        if (this.activeCalendarMonth === 0) {
+          this.activeCalendarMonth = 11;
+          this.activeCalendarYear -= 1;
+          yearSelect.value = this.activeCalendarYear.toString();
+        } else {
+          this.activeCalendarMonth -= 1;
+        }
+        this.selectedCalendarDay = 1;
+        this.initMemoriesCalendar();
+      };
+    }
+    if (btnNext) {
+      btnNext.onclick = () => {
+        if (this.activeCalendarMonth === 11) {
+          this.activeCalendarMonth = 0;
+          this.activeCalendarYear += 1;
+          yearSelect.value = this.activeCalendarYear.toString();
+        } else {
+          this.activeCalendarMonth += 1;
+        }
+        this.selectedCalendarDay = 1;
+        this.initMemoriesCalendar();
+      };
+    }
+
     yearSelect.onchange = () => {
       this.activeCalendarYear = parseInt(yearSelect.value, 10);
       this.initMemoriesCalendar();
     };
 
+    // 1. Selector rápido de los 12 meses horizontales
     strip.innerHTML = monthNames.map((mName, mIdx) => {
       const monthMemories = memories.filter(m => {
         const d = new Date(m.date || m.createdAt);
@@ -1195,34 +1234,23 @@ class LumaApp {
       const isCurrentActive = this.activeCalendarMonth === mIdx;
       const isCurrentRealMonthAndYear = (selectedYear === currentRealYear && mIdx === currentRealMonth);
 
-      // Render dots: Recuerdos + Días Festivos (Dot verde brillante exclusivo)
       let dotsHtml = '';
       if (monthMemories.length > 0) {
-        dotsHtml += monthMemories.slice(0, 2).map(m => {
-          let dotClass = 'purple';
-          if (m.isFeatured) dotClass = 'gold';
-          else if (m.audioNote) dotClass = 'blue';
-          else if (m.song) dotClass = 'rose';
-          return `<span class="cal-dot ${dotClass}" title="Recuerdo: ${window.Utils.sanitizeHTML(m.title)}"></span>`;
-        }).join('');
+        dotsHtml += `<span class="cal-dot purple"></span>`;
       }
       if (monthHolidays.length > 0) {
-        dotsHtml += `<span class="cal-dot holiday" title="Festivo: ${monthHolidays.map(h => h.name).join(', ')}"></span>`;
+        dotsHtml += `<span class="cal-dot holiday"></span>`;
       }
-      if (!monthMemories.length && !monthHolidays.length) {
+      if (!dotsHtml) {
         dotsHtml = `<span class="cal-dot muted"></span>`;
       }
 
-      // Badge de día destacado
       let badgeHtml = '';
       if (isCurrentActive) {
         if (isCurrentRealMonthAndYear) {
-          badgeHtml = `<div class="cal-day-badge today" title="Hoy: ${currentRealDay} de ${monthNames[mIdx]}">${currentRealDay}</div>`;
+          badgeHtml = `<div class="cal-day-badge today">${currentRealDay}</div>`;
         } else if (monthHolidays.length > 0) {
-          badgeHtml = `<div class="cal-day-badge" style="background:#10B981;" title="Festivo: ${monthHolidays[0].day} de ${monthNames[mIdx]}">${monthHolidays[0].day}</div>`;
-        } else if (monthMemories.length > 0) {
-          const dNum = new Date(monthMemories[0].date || monthMemories[0].createdAt).getDate();
-          badgeHtml = `<div class="cal-day-badge">${dNum || 1}</div>`;
+          badgeHtml = `<div class="cal-day-badge" style="background:#10B981;">${monthHolidays[0].day}</div>`;
         }
       }
 
@@ -1237,36 +1265,109 @@ class LumaApp {
       `;
     }).join('');
 
-    // Render Panel Informativo del Mes Activo: Día actual y Días Festivos
-    if (detailsContainer) {
-      const activeHolidays = holidays.filter(h => h.month === this.activeCalendarMonth);
-      const isCurrentRealMonthAndYear = (selectedYear === currentRealYear && this.activeCalendarMonth === currentRealMonth);
+    // 2. Cuadrícula de Todos los Días del Mes (Lunes a Domingo)
+    if (daysGrid) {
+      const firstDayOfMonth = new Date(selectedYear, this.activeCalendarMonth, 1);
+      // getDay(): 0 is Sunday, 1 is Monday... Convert to Monday=0, Sunday=6
+      const startDayIndex = (firstDayOfMonth.getDay() + 6) % 7;
+      const daysInMonth = new Date(selectedYear, this.activeCalendarMonth + 1, 0).getDate();
 
-      let todayInfoHtml = '';
-      if (isCurrentRealMonthAndYear) {
-        const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-        const dayName = days[now.getDay()];
-        todayInfoHtml = `
-          <div class="calendar-today-row">
-            <span class="calendar-today-badge">
-              <span style="color:#10B981;">🟢</span>
-              <span>Hoy es <strong>${dayName}, ${currentRealDay} de ${monthFullNames[currentRealMonth]}</strong></span>
-            </span>
-            <span style="font-size: 0.72rem; color: var(--color-primary-light); font-weight: 700;">Día actual remarcado</span>
+      // Ajuste de día seleccionado por defecto
+      if (!this.selectedCalendarDay || this.selectedCalendarDay > daysInMonth) {
+        this.selectedCalendarDay = (selectedYear === currentRealYear && this.activeCalendarMonth === currentRealMonth) ? currentRealDay : 1;
+      }
+
+      let gridHtml = '';
+
+      // Celdas vacías previas
+      for (let i = 0; i < startDayIndex; i++) {
+        gridHtml += `<div class="cal-day-cell empty"></div>`;
+      }
+
+      // Celdas de días del mes
+      for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+        const isToday = (selectedYear === currentRealYear && this.activeCalendarMonth === currentRealMonth && dayNum === currentRealDay);
+        const holiday = holidays.find(h => h.month === this.activeCalendarMonth && h.day === dayNum);
+        const dayMemories = memories.filter(m => {
+          const d = new Date(m.date || m.createdAt);
+          return d.getFullYear() === selectedYear && d.getMonth() === this.activeCalendarMonth && d.getDate() === dayNum;
+        });
+        const hasMemory = dayMemories.length > 0;
+        const isSelected = this.selectedCalendarDay === dayNum;
+
+        let dayClass = 'cal-day-cell';
+        if (isToday) dayClass += ' today';
+        if (holiday) dayClass += ' holiday';
+        if (isSelected) dayClass += ' active';
+
+        let dotsHtml = '';
+        if (hasMemory) dotsHtml += `<span class="day-mini-dot memory" title="${dayMemories.length} recuerdo(s)"></span>`;
+        if (holiday) dotsHtml += `<span class="day-mini-dot holiday" title="Festivo: ${holiday.name}"></span>`;
+
+        gridHtml += `
+          <div class="${dayClass}" onclick="window.app.onCalendarDaySelect(${dayNum}, ${this.activeCalendarMonth}, ${selectedYear})" title="${holiday ? '🎉 ' + holiday.name : ''}">
+            <span class="day-number">${dayNum}</span>
+            <div class="day-dots-wrap">
+              ${dotsHtml}
+            </div>
           </div>
         `;
       }
 
-      let holidaysListHtml = '';
+      daysGrid.innerHTML = gridHtml;
+    }
+
+    // 3. Barra de Acción del Día Seleccionado
+    if (dayActionContainer) {
+      const activeDay = this.selectedCalendarDay || 1;
+      const targetDate = new Date(selectedYear, this.activeCalendarMonth, activeDay);
+      const weekdayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const weekdayStr = weekdayNames[targetDate.getDay()];
+      const isToday = (selectedYear === currentRealYear && this.activeCalendarMonth === currentRealMonth && activeDay === currentRealDay);
+      const holiday = holidays.find(h => h.month === this.activeCalendarMonth && h.day === activeDay);
+      const dayMemories = memories.filter(m => {
+        const d = new Date(m.date || m.createdAt);
+        return d.getFullYear() === selectedYear && d.getMonth() === this.activeCalendarMonth && d.getDate() === activeDay;
+      });
+
+      const dateStr = `${selectedYear}-${String(this.activeCalendarMonth + 1).padStart(2, '0')}-${String(activeDay).padStart(2, '0')}`;
+
+      let descHtml = '';
+      if (holiday) {
+        descHtml = `<span style="color: #10B981; font-weight: 700;">🎉 Festivo: ${holiday.name}</span>`;
+      } else if (dayMemories.length > 0) {
+        descHtml = `<span style="color: #A855F7; font-weight: 700;">📸 ${dayMemories.length} recuerdo(s) este día</span>`;
+      } else {
+        descHtml = `<span>Sin recuerdos registrados</span>`;
+      }
+
+      dayActionContainer.innerHTML = `
+        <div class="action-day-info">
+          <div class="action-day-title">
+            <span>📅 ${weekdayStr}, ${activeDay} de ${monthFullNames[this.activeCalendarMonth]}</span>
+            ${isToday ? '<span class="today-tag" style="background:#6366F1; color:#FFF; font-size:0.65rem; padding:0.15rem 0.4rem; border-radius:12px; font-weight:800;">HOY</span>' : ''}
+          </div>
+          <div class="action-day-desc">${descHtml}</div>
+        </div>
+        <button type="button" class="btn-add-memory-day" onclick="window.app.openMemoryModalForDate('${dateStr}')">
+          <span>+ Añadir recuerdo</span>
+        </button>
+      `;
+    }
+
+    // 4. Panel Informativo de Días Festivos del Mes
+    if (detailsContainer) {
+      const activeHolidays = holidays.filter(h => h.month === this.activeCalendarMonth);
+
       if (activeHolidays.length > 0) {
-        holidaysListHtml = `
+        detailsContainer.innerHTML = `
           <div>
             <div style="font-size: 0.72rem; font-weight: 800; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem;">
               🎉 Días Festivos en ${monthFullNames[this.activeCalendarMonth]} (${activeHolidays.length})
             </div>
             <div class="calendar-holidays-list">
               ${activeHolidays.map(h => `
-                <span class="holiday-pill-item" title="${h.name}">
+                <span class="holiday-pill-item" onclick="window.app.onCalendarDaySelect(${h.day}, ${h.month}, ${selectedYear})" style="cursor: pointer;" title="Tocar para seleccionar">
                   <span>🎉</span>
                   <span><strong>${h.day} ${monthNames[h.month]}:</strong> ${h.name}</span>
                 </span>
@@ -1275,22 +1376,18 @@ class LumaApp {
           </div>
         `;
       } else {
-        holidaysListHtml = `
+        detailsContainer.innerHTML = `
           <div style="font-size: 0.72rem; color: var(--color-text-muted);">
             No hay días festivos en ${monthFullNames[this.activeCalendarMonth]}.
           </div>
         `;
       }
-
-      detailsContainer.innerHTML = `
-        ${todayInfoHtml}
-        ${holidaysListHtml}
-      `;
     }
   }
 
   onCalendarMonthSelect(monthIdx, year) {
     this.activeCalendarMonth = monthIdx;
+    this.selectedCalendarDay = 1;
     this.initMemoriesCalendar();
 
     // Desplazamiento suave al primer recuerdo de ese mes en la línea temporal
@@ -1308,6 +1405,41 @@ class LumaApp {
         setTimeout(() => { el.style.transform = ''; }, 600);
       }
     }
+  }
+
+  onCalendarDaySelect(dayNum, monthIdx, year) {
+    this.selectedCalendarDay = dayNum;
+    this.activeCalendarMonth = monthIdx;
+    this.activeCalendarYear = year;
+    this.initMemoriesCalendar();
+
+    // Buscar si hay recuerdos ese día y hacer scroll
+    const memories = this.storage.getMemories() || [];
+    const match = memories.find(m => {
+      const d = new Date(m.date || m.createdAt);
+      return d.getFullYear() === year && d.getMonth() === monthIdx && d.getDate() === dayNum;
+    });
+
+    if (match) {
+      const el = document.getElementById(`memory-node-${match.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.transform = 'scale(1.04)';
+        setTimeout(() => { el.style.transform = ''; }, 600);
+      }
+    }
+  }
+
+  openMemoryModalForDate(dateStr) {
+    this.openMemoryModal();
+    const dateInput = document.getElementById('memory-date-input');
+    if (dateInput) {
+      dateInput.value = dateStr;
+      dateInput.classList.remove('date-input-hidden');
+    }
+    // Desmarcar pills rápidos y marcar personalizado
+    document.querySelectorAll('.date-preset-pill').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('btn-date-custom')?.classList.add('active');
   }
 
   // --- BUSCADOR Y FILTROS EN TIEMPO REAL ---
