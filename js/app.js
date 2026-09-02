@@ -16,28 +16,59 @@ class LumaApp {
   }
 
   init() {
-    // 1. Iniciar Canvas de Fondo
+    // 1. Inicializar Tema Visual (Modo Oscuro / Claro)
+    this.initTheme();
+
+    // 2. Iniciar Canvas de Fondo
     if (window.StarfieldBackground) {
       new window.StarfieldBackground('stars-canvas');
     }
 
-    // 2. Registrar Service Worker PWA
+    // 3. Registrar Service Worker PWA
     this.registerServiceWorker();
 
-    // 3. Suscribirse a cambios de datos y presencia
+    // 4. Suscribirse a cambios de datos y presencia
     this.bindSubscriptions();
 
-    // 4. Configurar Navegación por Hash y Píldoras
+    // 5. Configurar Navegación por Hash y Tabs Móviles
     this.setupNavigation();
 
-    // 5. Vincular Eventos de Modales y Formularios
+    // 6. Vincular Eventos de Modales y Formularios
     this.bindModalEvents();
     this.bindFormEvents();
     this.bindSearchEvents();
     this.bindProfileCustomizerInteractions();
 
-    // 6. Verificar Estado Inicial y Mostrar Dashboard
+    // 7. Verificar Estado Inicial y Mostrar Dashboard
     this.checkInitialState();
+  }
+
+  initTheme() {
+    const savedTheme = localStorage.getItem('luma_theme') || 'dark';
+    this.setTheme(savedTheme, false);
+  }
+
+  setTheme(theme, showToast = true) {
+    this.currentTheme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('luma_theme', theme);
+
+    const darkBtn = document.getElementById('btn-theme-dark');
+    const lightBtn = document.getElementById('btn-theme-light');
+    if (darkBtn && lightBtn) {
+      if (theme === 'light') {
+        darkBtn.classList.remove('active');
+        lightBtn.classList.add('active');
+      } else {
+        lightBtn.classList.remove('active');
+        darkBtn.classList.add('active');
+      }
+    }
+
+    if (showToast) {
+      window.Utils.showToast(theme === 'light' ? '☀️ Modo Claro activado' : '🌙 Modo Oscuro activado', 'info');
+    }
   }
 
   registerServiceWorker() {
@@ -172,8 +203,8 @@ class LumaApp {
       document.getElementById('bottom-tab-inicio')?.classList.add('active');
     } else if (target === 'recuerdos') {
       document.getElementById('bottom-tab-recuerdos')?.classList.add('active');
-    } else if (target === 'objetivos' || target === 'cine' || target === 'musica') {
-      document.getElementById('bottom-tab-stats')?.classList.add('active');
+    } else if (target === 'notas') {
+      document.getElementById('bottom-tab-mensajes')?.classList.add('active');
     }
 
     document.querySelectorAll('.luma-section').forEach(s => s.classList.remove('active'));
@@ -743,25 +774,37 @@ class LumaApp {
       const card = document.createElement('div');
       card.className = 'activity-item-card';
 
-      let thumbHtml = '';
-      if (item.thumb) {
-        thumbHtml = `<img src="${item.thumb}" class="activity-thumb-img" alt="Recuerdo" onclick="window.app.openLightbox('${item.thumb}')" />`;
+      let rightSideHtml = '';
+      if (item._type === 'musica') {
+        const art = item.artwork || 'assets/icon.png';
+        rightSideHtml = `
+          <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">
+            <img src="${art}" style="width: 38px; height: 38px; border-radius: 8px; object-fit: cover; border: 1px solid var(--color-border);" alt="Portada" />
+            <button type="button" class="btn-activity-play-circle" onclick="window.app.playTrackDirectly('${item.id}')" title="Reproducir canción" style="width: 32px; height: 32px; border-radius: 50%; background: #182035; border: 1px solid var(--color-border); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; cursor: pointer;">
+              ▶
+            </button>
+          </div>
+        `;
+      } else if (item.thumb) {
+        rightSideHtml = `<img src="${item.thumb}" class="activity-thumb-img" alt="Recuerdo" onclick="window.app.openLightbox('${item.thumb}')" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;" />`;
       }
 
       card.innerHTML = `
         <div class="activity-card-left">
           <div class="activity-icon-badge ${item.badgeColor || 'purple'}">${item.icon}</div>
           <div style="min-width: 0;">
-            <div class="activity-tag ${item.tagColor || 'purple'}">${item.tag}</div>
-            <div class="activity-title">
-              ${window.Utils.sanitizeHTML(item.title || item.name || 'Sin título')}
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+              <span class="activity-title" style="font-weight: 700; font-size: 0.88rem; color: var(--color-text-main);">
+                ${window.Utils.sanitizeHTML(item.title || item.name || 'Sin título')}
+              </span>
+              <span class="activity-tag ${item.tagColor || 'purple'}">${item.tag}</span>
             </div>
             <div class="activity-meta">
               ${window.Utils.sanitizeHTML(item.meta || '')}
             </div>
           </div>
         </div>
-        ${thumbHtml}
+        ${rightSideHtml}
       `;
       feedContainer.appendChild(card);
     });
@@ -1484,6 +1527,35 @@ class LumaApp {
       if (e.key === 'Escape') {
         document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
       }
+    });
+
+    // Botón de Ajustes & Tema (Header)
+    document.getElementById('btn-header-settings')?.addEventListener('click', () => {
+      this.openModal('modal-settings');
+    });
+
+    document.getElementById('btn-theme-dark')?.addEventListener('click', () => {
+      this.setTheme('dark');
+    });
+
+    document.getElementById('btn-theme-light')?.addEventListener('click', () => {
+      this.setTheme('light');
+    });
+
+    document.getElementById('btn-settings-open-groups')?.addEventListener('click', () => {
+      this.closeModal('modal-settings');
+      this.openGroupsListModal();
+    });
+
+    document.getElementById('btn-settings-open-profile')?.addEventListener('click', () => {
+      this.closeModal('modal-settings');
+      this.populateProfileModal();
+      this.openModal('modal-profile');
+    });
+
+    // Botón Salir en barra inferior
+    document.getElementById('bottom-tab-salir')?.addEventListener('click', () => {
+      this.openGroupsListModal();
     });
 
     // Central Floating Action Button (FAB)
