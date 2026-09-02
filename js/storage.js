@@ -256,6 +256,7 @@
   class LumaStorage {
     constructor() {
       this.listeners = [];
+      this.memoryCache = {};
       this.init();
     }
 
@@ -498,13 +499,19 @@
       this.saveGroups(groups);
     }
 
-    // --- DATOS DEL GRUPO ACTIVO ---
+    // --- DATOS DEL GRUPO ACTIVO CON PROTECCIÓN DE CUOTA E INDEXEDDB ---
     getGroupData(groupId) {
       const gid = groupId || this.getActiveGroupId();
+      if (this.memoryCache && this.memoryCache[gid]) {
+        return this.memoryCache[gid];
+      }
       const raw = localStorage.getItem(window.CONFIG.storageKeys.groupData + gid);
       if (!raw) return { memories: [], songs: [], movies: [], series: [], goals: [], notes: [] };
       try {
-        return JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        if (!this.memoryCache) this.memoryCache = {};
+        this.memoryCache[gid] = parsed;
+        return parsed;
       } catch (_) {
         return { memories: [], songs: [], movies: [], series: [], goals: [], notes: [] };
       }
@@ -512,8 +519,57 @@
 
     saveGroupData(groupId, data) {
       const gid = groupId || this.getActiveGroupId();
-      localStorage.setItem(window.CONFIG.storageKeys.groupData + gid, JSON.stringify(data));
+      if (!this.memoryCache) this.memoryCache = {};
+      this.memoryCache[gid] = data;
+
+      try {
+        localStorage.setItem(window.CONFIG.storageKeys.groupData + gid, JSON.stringify(data));
+      } catch (e) {
+        if (e.name === 'QuotaExceededError' || e.code === 22) {
+          console.warn('LUMA Storage: Quota exceeded in localStorage. Optimizing payload safely.');
+          const optimized = this.optimizeGroupDataForStorage(data);
+          try {
+            localStorage.setItem(window.CONFIG.storageKeys.groupData + gid, JSON.stringify(optimized));
+          } catch (_) {
+            console.warn('LUMA Storage: Saved in memory cache.');
+          }
+        }
+      }
+      this.saveToIndexedDB(gid, data);
       this.notify('groupData');
+    }
+
+    optimizeGroupDataForStorage(data) {
+      if (!data) return data;
+      const clone = JSON.parse(JSON.stringify(data));
+      if (clone.memories && Array.isArray(clone.memories)) {
+        clone.memories = clone.memories.map(m => {
+          if (m.photos && m.photos.length > 4) {
+            m.photos = m.photos.slice(0, 4);
+          }
+          return m;
+        });
+      }
+      return clone;
+    }
+
+    saveToIndexedDB(groupId, data) {
+      try {
+        if (!window.indexedDB) return;
+        const request = window.indexedDB.open('LUMAPersistenceDB', 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('groups')) {
+            db.createObjectStore('groups', { keyPath: 'id' });
+          }
+        };
+        request.onsuccess = (e) => {
+          const db = e.target.result;
+          const tx = db.transaction('groups', 'readwrite');
+          const store = tx.objectStore('groups');
+          store.put({ id: groupId, data: data, updatedAt: new Date().toISOString() });
+        };
+      } catch (_) {}
     }
 
     // Módulos Individuales
