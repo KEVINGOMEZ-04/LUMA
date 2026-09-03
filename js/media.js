@@ -321,22 +321,118 @@ window.MediaService = {
   async searchSeries(query) {
     if (!query || !query.trim()) return [];
     try {
-      const { baseUrl, apiKey, language, imageBaseUrl } = window.CONFIG.tmdb;
-      const url = `${baseUrl}/search/tv?api_key=${apiKey}&query=${encodeURIComponent(query)}&language=${language}&page=1`;
-      const res = await fetch(url);
-      const data = await res.json();
-      return (data.results || []).slice(0, 10).map(s => ({
-        id: 'tmdb_series_' + s.id,
-        title: s.name,
-        originalTitle: s.original_name,
-        year: s.first_air_date ? s.first_air_date.split('-')[0] : '',
-        overview: s.overview,
-        poster: s.poster_path ? `${imageBaseUrl}${s.poster_path}` : '',
-        backdrop: s.backdrop_path ? `https://image.tmdb.org/t/p/w1280${s.backdrop_path}` : '',
-        voteAverage: s.vote_average ? s.vote_average.toFixed(1) : 'N/A'
-      }));
+      const data = await this.fetchTmdbWithFallback(`/search/tv?query=${encodeURIComponent(query)}&page=1`);
+      if (!data || !data.results) return [];
+      const imageBaseUrl = window.CONFIG?.tmdb?.imageBaseUrl || 'https://image.tmdb.org/t/p/w500';
+
+      return data.results.slice(0, 12).map(s => {
+        const year = s.first_air_date ? s.first_air_date.split('-')[0] : '';
+        return {
+          tmdbId: s.id,
+          id: 'tmdb_series_' + s.id,
+          title: s.name,
+          originalTitle: s.original_name,
+          year,
+          overview: s.overview || 'Sin sinopsis disponible.',
+          poster: s.poster_path ? `${imageBaseUrl}${s.poster_path}` : 'assets/icon.png',
+          backdrop: s.backdrop_path ? `https://image.tmdb.org/t/p/w1280${s.backdrop_path}` : '',
+          voteAverage: s.vote_average ? s.vote_average.toFixed(1) : '8.5'
+        };
+      });
     } catch (err) {
       console.warn('Error buscando series en TMDb:', err);
+      return [];
+    }
+  },
+
+  async getSeriesDetails(seriesId) {
+    if (!seriesId) return null;
+    try {
+      const data = await this.fetchTmdbWithFallback(`/tv/${seriesId}?append_to_response=watch/providers`);
+      if (!data) return null;
+
+      const imageBaseUrl = window.CONFIG?.tmdb?.imageBaseUrl || 'https://image.tmdb.org/t/p/w500';
+      const firstYear = data.first_air_date ? data.first_air_date.split('-')[0] : '';
+      const lastYear = data.last_air_date ? data.last_air_date.split('-')[0] : '';
+      const yearsFormatted = firstYear ? (lastYear && lastYear !== firstYear ? `${firstYear}–${lastYear}` : firstYear) : '';
+
+      const genresFormatted = (data.genres || []).map(g => g.name).slice(0, 3).join(', ');
+
+      // Determinar plataforma principal (de networks o watch/providers)
+      let platform = (data.networks && data.networks[0]) ? data.networks[0].name : '';
+      if (!platform && data['watch/providers'] && data['watch/providers'].results) {
+        const wp = data['watch/providers'].results;
+        const country = wp.CO || wp.MX || wp.ES || wp.US || Object.values(wp)[0];
+        if (country && country.flatrate && country.flatrate[0]) {
+          platform = country.flatrate[0].provider_name;
+        }
+      }
+      if (!platform) platform = 'Streaming';
+
+      // Filtrar temporadas (omitir temporada 0 si son solo extras/especiales, salvo que sea la única)
+      let seasons = (data.seasons || [])
+        .filter(s => s.season_number > 0 && s.episode_count > 0)
+        .map(s => ({
+          seasonNumber: s.season_number,
+          name: s.name || `Temporada ${s.season_number}`,
+          episodeCount: s.episode_count || 1,
+          poster: s.poster_path ? `${imageBaseUrl}${s.poster_path}` : ''
+        }));
+
+      if (seasons.length === 0 && data.seasons && data.seasons.length > 0) {
+        seasons = data.seasons.map(s => ({
+          seasonNumber: s.season_number,
+          name: s.name || `Temporada ${s.season_number}`,
+          episodeCount: s.episode_count || 1,
+          poster: s.poster_path ? `${imageBaseUrl}${s.poster_path}` : ''
+        }));
+      }
+
+      const totalEpisodes = seasons.reduce((acc, s) => acc + s.episodeCount, 0);
+
+      return {
+        tmdbId: data.id,
+        title: data.name,
+        originalTitle: data.original_name,
+        years: yearsFormatted,
+        genres: genresFormatted || 'Drama, Serie',
+        overview: data.overview || 'Sin sinopsis disponible.',
+        platform,
+        poster: data.poster_path ? `${imageBaseUrl}${data.poster_path}` : 'assets/icon.png',
+        backdrop: data.backdrop_path ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}` : '',
+        numberOfSeasons: seasons.length || data.number_of_seasons || 1,
+        totalEpisodes: totalEpisodes || data.number_of_episodes || 1,
+        voteAverage: data.vote_average ? data.vote_average.toFixed(1) : '8.5',
+        seasons
+      };
+    } catch (err) {
+      console.warn('Error obteniendo detalles de serie en TMDb:', err);
+      return null;
+    }
+  },
+
+  async getSeasonEpisodes(seriesId, seasonNumber = 1) {
+    if (!seriesId) return [];
+    try {
+      const data = await this.fetchTmdbWithFallback(`/tv/${seriesId}/season/${seasonNumber}`);
+      if (!data || !data.episodes) return [];
+
+      return data.episodes.map(ep => {
+        const runtime = ep.runtime ? `${ep.runtime} min` : '42 min';
+        return {
+          episodeNumber: ep.episode_number,
+          seasonNumber: ep.season_number || seasonNumber,
+          name: ep.name || `Episodio ${ep.episode_number}`,
+          overview: ep.overview || 'Sin descripción disponible para este episodio.',
+          duration: runtime,
+          runtimeMinutes: ep.runtime || 42,
+          still: ep.still_path ? `https://image.tmdb.org/t/p/w300${ep.still_path}` : 'assets/icon.png',
+          airDate: ep.air_date || '',
+          voteAverage: ep.vote_average ? ep.vote_average.toFixed(1) : '8.0'
+        };
+      });
+    } catch (err) {
+      console.warn(`Error obteniendo episodios de temporada ${seasonNumber} de serie ${seriesId}:`, err);
       return [];
     }
   },
