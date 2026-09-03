@@ -557,57 +557,67 @@
 
       <!-- 5. SECCIÓN SERIES (PANTALLA 1: BIBLIOTECA DE MARATONES) -->
       <section id="section-series" class="luma-section" role="tabpanel">
-        <!-- Hero de Series -->
-        <div class="series-hero-container">
-          <div class="series-hero-badge">
-            <span>📺 MARATONES DEL GRUPO</span>
+        <!-- Hero de la Sección Series (Mismo encabezado que Cine y Música) -->
+        <div class="movie-collab-hero">
+          <div class="movie-hero-left">
+            <div class="movie-hero-icon-box">
+              <span class="movie-hero-symbol">📺</span>
+              <span class="movie-hero-glow-dot"></span>
+            </div>
+            <div class="movie-hero-titles">
+              <span class="movie-hero-tag">📺 MARATONES DEL GRUPO</span>
+              <h2 class="movie-hero-title">Series</h2>
+              <p class="movie-hero-subtitle">Las mejores historias se viven capítulo a capítulo.</p>
+              <div class="movie-hero-underline-bar"></div>
+            </div>
           </div>
-          <h1 class="series-hero-title">Series</h1>
-          <p class="series-hero-subtitle">“Cada capítulo nos acerca a la próxima aventura.”</p>
-
-          <!-- Tarjeta de Estadísticas del Grupo -->
-          <div class="series-stats-card">
-            <div class="series-stat-item">
-              <span class="series-stat-value" id="stat-series-count">18</span>
-              <span class="series-stat-label">Series</span>
+          <div class="movie-hero-stats-card">
+            <div class="movie-stat-col">
+              <span class="movie-stat-top-icon purple">📺</span>
+              <span class="movie-stat-val" id="stat-series-count">18</span>
+              <span class="movie-stat-lbl">Series</span>
             </div>
-            <div class="series-stat-divider"></div>
-            <div class="series-stat-item">
-              <span class="series-stat-value text-purple" id="stat-series-watching">9</span>
-              <span class="series-stat-label">Viendo</span>
+            <div class="movie-stat-divider"></div>
+            <div class="movie-stat-col">
+              <span class="movie-stat-top-icon blue">🍿</span>
+              <span class="movie-stat-val" id="stat-series-watching">9</span>
+              <span class="movie-stat-lbl">Viendo</span>
             </div>
-            <div class="series-stat-divider"></div>
-            <div class="series-stat-item">
-              <span class="series-stat-value text-emerald" id="stat-series-completed">7</span>
-              <span class="series-stat-label">Completadas</span>
+            <div class="movie-stat-divider"></div>
+            <div class="movie-stat-col">
+              <span class="movie-stat-top-icon rose">✨</span>
+              <span class="movie-stat-val pink-highlight" id="stat-series-completed">7</span>
+              <span class="movie-stat-lbl">Completadas</span>
             </div>
           </div>
         </div>
 
-        <!-- Buscador TMDb en Vivo -->
-        <div class="series-search-section-wrap">
-          <div class="series-search-action-row">
-            <div class="series-search-bar-wrap">
-              <span class="series-search-icon">🔍</span>
-              <input type="text" id="series-search-input" class="series-search-input" placeholder="Buscar serie en TMDb..." autocomplete="off">
-              <button type="button" id="series-search-clear-btn" class="series-search-clear-btn" style="display: none;" title="Limpiar">✕</button>
+        <!-- Contenedor del Buscador y Resultados Flotantes -->
+        <div class="movie-search-section-wrap">
+          <!-- Buscador TMDb + Botón Buscar -->
+          <div class="movie-search-action-row">
+            <div class="movie-search-bar-wrap">
+              <span class="movie-search-input-icon">🔍</span>
+              <input type="text" id="series-search-input" class="movie-search-input-field" placeholder="Buscar serie en TMDb..." autocomplete="off">
+              <button type="button" id="series-search-clear-btn" class="btn-clear-movie-input" style="display: none;">✕</button>
             </div>
-            <button type="button" id="series-search-submit-btn" class="btn-series-search-action">
+            <button type="button" id="series-search-submit-btn" class="btn-add-movie-purple" title="Buscar en TMDb">
               <span>Buscar</span> <span>🔍</span>
             </button>
           </div>
 
-          <!-- Resultados flotantes de búsqueda TMDb -->
-          <div id="series-live-search-results" class="series-live-search-results" style="display: none;"></div>
+          <!-- Resultados en Vivo de TMDb (Dropdown Flotante Directo) -->
+          <div id="series-live-search-results" class="movie-live-results-dropdown" style="display: none;"></div>
         </div>
 
-        <!-- Filtros Chips Horizontales -->
-        <div class="series-filter-chips-wrap" id="series-filter-chips">
-          <button type="button" class="series-filter-chip active" data-filter="all">Todas</button>
-          <button type="button" class="series-filter-chip" data-filter="Viendo">📺 Viendo actualmente</button>
-          <button type="button" class="series-filter-chip" data-filter="Completada">✨ Completadas</button>
-          <button type="button" class="series-filter-chip" data-filter="Por ver">🌱 Por ver</button>
-          <button type="button" class="series-filter-chip" data-filter="Favorita">⭐ Favoritas</button>
+        <!-- Filtros Rápidos (Chips con Scroll Horizontal) -->
+        <div class="movie-filter-chips-scroll" id="series-filter-chips">
+          <button type="button" class="movie-filter-chip active" data-filter="all">Todas</button>
+          <button type="button" class="movie-filter-chip" data-filter="Viendo">🍿 Viendo</button>
+          <button type="button" class="movie-filter-chip" data-filter="Por ver">🌱 Por ver</button>
+          <button type="button" class="movie-filter-chip" data-filter="Completada">✨ Completadas</button>
+          <button type="button" class="movie-filter-chip" data-filter="Favorita">❤️ Favoritas</button>
+          <button type="button" class="movie-filter-chip" data-filter="my-proposals">Propuestas por mí</button>
         </div>
 
         <!-- Lista de Tarjetas de Series (Maratones) -->
@@ -640,6 +650,7 @@
                 <span id="series-detail-seasons-count">2 temporadas</span> • 
                 <span id="series-detail-genres">Animación, Acción</span>
               </div>
+              <div class="series-proposer-info" id="series-detail-proposer-info" style="margin-top: 0.4rem;"></div>
             </div>
           </div>
 
