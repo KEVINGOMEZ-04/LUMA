@@ -3849,16 +3849,31 @@
   flex-shrink: 0;
 }
 
-/* Píldoras de Estado (Solo un estado principal) */
+/* Píldoras de Estado (Interactiva / Clickable para alternar) */
 .movie-status-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   font-size: 0.72rem;
   font-weight: 700;
-  padding: 0.2rem 0.6rem;
+  padding: 0.22rem 0.65rem;
   border-radius: var(--radius-full);
   white-space: nowrap;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.movie-status-pill:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.2);
+}
+
+.movie-status-pill:active {
+  transform: scale(0.93);
 }
 
 .movie-status-pill.watched {
@@ -3877,6 +3892,24 @@
   background: rgba(244, 63, 94, 0.16);
   color: #FB7185;
   border: 1px solid rgba(244, 63, 94, 0.35);
+}
+
+[data-theme="light"] .movie-status-pill.watched {
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid rgba(21, 128, 61, 0.3);
+}
+
+[data-theme="light"] .movie-status-pill.pending {
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+[data-theme="light"] .movie-status-pill.favorite {
+  background: #FFE4E6;
+  color: #E11D48;
+  border: 1px solid rgba(225, 29, 72, 0.3);
 }
 
 .movie-dots-btn {
