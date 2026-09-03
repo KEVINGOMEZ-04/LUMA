@@ -3300,8 +3300,9 @@ class LumaApp {
           <div class="movie-card-main-info">
             <div class="movie-card-header-row">
               <h3 class="movie-card-title">${window.Utils.sanitizeHTML(m.title)}</h3>
-              <div class="movie-card-header-actions">
-                <span class="movie-status-pill ${statusClass}">${statusLabel}</span>
+                <button type="button" class="movie-status-pill ${statusClass}" onclick="event.stopPropagation(); window.app.toggleMovieWatchedStatus('${m.id}', event)" title="Toca para alternar entre 'Por ver' y 'Vista'">
+                  ${statusLabel}
+                </button>
                 <button type="button" class="movie-dots-btn" onclick="event.stopPropagation(); window.app.openMovieContextMenu('${m.id}', event)" title="Opciones">⋮</button>
               </div>
             </div>
@@ -3643,6 +3644,34 @@ class LumaApp {
     this.openModal('modal-movie-add');
   }
 
+  toggleMovieWatchedStatus(movieId, event) {
+    if (event) event.stopPropagation();
+    const movie = this.storage.getMovie(movieId);
+    if (!movie) return;
+
+    // Alternar: si es 'Por ver' pasa a 'Vista', si es 'Vista' (o Favorita) pasa a 'Por ver'
+    const newStatus = (movie.status === 'Vista') ? 'Por ver' : 'Vista';
+    movie.status = newStatus;
+    this.storage.saveMovie(movie);
+
+    const isWatched = newStatus === 'Vista';
+    const msg = isWatched 
+      ? `¡"${movie.title}" marcada como Vista! 🍿` 
+      : `¡"${movie.title}" marcada como Por ver! 🌱`;
+    window.Utils.showToast(msg, 'success');
+
+    // Actualizar pill en el modal de detalle si está abierto
+    const modalViewPill = document.getElementById('movie-view-status-pill');
+    if (modalViewPill && this.activeViewMovieId === movieId) {
+      modalViewPill.className = `movie-status-pill ${isWatched ? 'watched' : 'pending'}`;
+      modalViewPill.textContent = isWatched ? '🍿 Vista' : '🌱 Por ver';
+    }
+
+    // Refrescar cartelera y estadísticas
+    this.renderMovies();
+    this.renderInicio();
+  }
+
   async openMovieView(movieId) {
     const movie = this.storage.getMovie(movieId);
     if (!movie) return;
@@ -3686,6 +3715,11 @@ class LumaApp {
     if (statusPill) {
       statusPill.className = `movie-status-pill ${statusClass}`;
       statusPill.textContent = statusLabel;
+      statusPill.title = "Toca para alternar entre 'Por ver' y 'Vista'";
+      statusPill.onclick = (e) => {
+        e.stopPropagation();
+        this.toggleMovieWatchedStatus(movieId, e);
+      };
     }
     if (tmdbPill) tmdbPill.textContent = `⭐ ${movie.tmdbRating || '8.5'} TMDb`;
 
