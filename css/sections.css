@@ -4858,37 +4858,1502 @@
 }
 
 /* =========================================
-   5. SERIES
+   5. SERIES (CENTRO DE MARATONES DEL GRUPO)
    ========================================= */
-.series-grid {
+
+/* --- PANTALLA 1: HERO Y ESTADÍSTICAS --- */
+.series-hero-container {
+  text-align: center;
+  padding: 1.5rem 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.series-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(109, 92, 255, 0.15);
+  border: 1px solid rgba(109, 92, 255, 0.35);
+  color: #A78BFA;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.18);
+}
+
+.series-hero-title {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.4rem;
+}
+
+.series-hero-subtitle {
+  font-size: 0.9rem;
+  color: #94A3B8;
+  font-style: italic;
+  max-width: 360px;
+  line-height: 1.4;
+  margin: 0 0 1.25rem;
+}
+
+.series-stats-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 440px;
+  background: rgba(14, 19, 36, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(109, 92, 255, 0.28);
+  border-radius: 22px;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 20px rgba(109, 92, 255, 0.12);
+}
+
+.series-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.series-stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.1;
+}
+
+.series-stat-value.text-purple {
+  color: #A78BFA;
+}
+
+.series-stat-value.text-emerald {
+  color: #34D399;
+}
+
+.series-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94A3B8;
+}
+
+.series-stat-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- BUSCADOR TMDB EN VIVO --- */
+.series-search-section-wrap {
+  position: relative;
+  z-index: 100;
+  margin: 1rem 0 1.15rem;
+}
+
+.series-search-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.series-search-bar-wrap {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.series-search-icon {
+  position: absolute;
+  left: 1rem;
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.series-search-input {
+  width: 100%;
+  height: 48px;
+  background: rgba(14, 19, 36, 0.85);
+  border: 1px solid rgba(109, 92, 255, 0.35);
+  border-radius: var(--radius-full);
+  padding: 0 2.5rem 0 2.75rem;
+  font-size: 0.9rem;
+  color: #FFFFFF;
+  outline: none;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.series-search-input:focus {
+  border-color: #6D5CFF;
+  box-shadow: 0 0 0 3px rgba(109, 92, 255, 0.25), 0 8px 25px rgba(109, 92, 255, 0.2);
+  background: rgba(16, 22, 42, 0.95);
+}
+
+.series-search-clear-btn {
+  position: absolute;
+  right: 0.85rem;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.btn-series-search-action {
+  height: 48px;
+  padding: 0 1.25rem;
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: var(--radius-full);
+  color: #FFFFFF;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.4);
+  transition: all var(--transition-fast);
+}
+
+.btn-series-search-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(109, 92, 255, 0.55);
+}
+
+/* Resultados flotantes de búsqueda TMDb */
+.series-live-search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(11, 15, 29, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(109, 92, 255, 0.45);
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(109, 92, 255, 0.25);
+  padding: 0.85rem;
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.series-live-search-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.65rem;
+  font-size: 0.78rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.series-live-search-header-close {
+  background: none;
+  border: none;
+  color: #CBD5E1;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.series-search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem;
+  border-radius: 16px;
+  transition: background var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.series-search-result-item:hover {
+  background: rgba(109, 92, 255, 0.12);
+  border-color: rgba(109, 92, 255, 0.3);
+}
+
+.series-result-poster {
+  width: 48px;
+  height: 68px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.series-result-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.series-result-title {
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 0 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.series-result-meta {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin-bottom: 0.35rem;
+}
+
+.btn-series-add-inline {
+  width: auto !important;
+  max-width: fit-content;
+  flex-shrink: 0;
+  padding: 0.4rem 0.75rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: var(--radius-full);
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-series-add-inline:hover {
+  transform: scale(1.04);
+  background: linear-gradient(135deg, #7C6DFF, #5B52F2);
+}
+
+/* --- FILTROS CHIPS HORIZONTALES --- */
+.series-filter-chips-wrap {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.25rem 0.25rem 1rem;
+  margin-bottom: 0.5rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.series-filter-chips-wrap::-webkit-scrollbar {
+  display: none;
+}
+
+.series-filter-chip {
+  padding: 0.45rem 0.95rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  background: rgba(14, 19, 36, 0.75);
+  border: 1px solid rgba(109, 92, 255, 0.25);
+  color: #94A3B8;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.series-filter-chip:hover {
+  border-color: rgba(109, 92, 255, 0.5);
+  color: #FFFFFF;
+  background: rgba(20, 27, 48, 0.85);
+}
+
+.series-filter-chip.active {
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  border-color: #7C6DFF;
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(109, 92, 255, 0.4);
+}
+
+/* --- TARJETAS DE SERIES EN LA BIBLIOTECA --- */
+.series-collab-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.series-collab-card {
+  background: rgba(13, 18, 34, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(109, 92, 255, 0.3);
+  border-radius: 24px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(109, 92, 255, 0.08);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  gap: 0.9rem;
+}
+
+.series-collab-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(109, 92, 255, 0.55);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 0 25px rgba(109, 92, 255, 0.18);
+}
+
+.series-card-poster-wrap {
+  width: 90px;
+  height: 135px;
+  border-radius: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.series-card-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.series-platform-pill {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  color: #FFFFFF;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.series-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.series-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.series-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.series-card-meta {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  margin: 0.2rem 0 0.5rem;
+}
+
+.series-card-progress-box {
+  margin: 0.35rem 0;
+}
+
+.series-card-progress-bar-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 0.3rem;
+}
+
+.series-card-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6D5CFF, #4F46E5);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease-out;
+}
+
+.series-card-progress-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #A78BFA;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.series-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.btn-series-continue {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(109, 92, 255, 0.2);
+  border: 1px solid rgba(109, 92, 255, 0.45);
+  color: #FFFFFF;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-series-continue:hover {
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  border-color: #6D5CFF;
+}
+
+.series-card-members-watching {
+  display: flex;
+  align-items: center;
+}
+
+.series-card-member-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #0D1222;
+  margin-left: -6px;
+  object-fit: cover;
+}
+
+.series-card-member-avatar:first-child {
+  margin-left: 0;
+}
+
+/* --- PANTALLA 2: DETALLE DE LA SERIE --- */
+#section-series-detail {
+  padding-bottom: 5rem;
+}
+
+.series-detail-topbar {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0 1rem;
+}
+
+.btn-back-series {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(14, 19, 36, 0.85);
+  border: 1px solid rgba(109, 92, 255, 0.3);
+  color: #CBD5E1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(10px);
+}
+
+.btn-back-series:hover {
+  background: rgba(109, 92, 255, 0.2);
+  color: #FFFFFF;
+  border-color: #6D5CFF;
+  transform: translateX(-2px);
+}
+
+.series-detail-hero {
+  background: rgba(13, 18, 34, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(109, 92, 255, 0.35);
+  border-radius: 24px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 25px rgba(109, 92, 255, 0.12);
+  margin-bottom: 1.25rem;
+}
+
+.series-detail-hero-content {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.series-detail-poster-wrap {
+  width: 105px;
+  height: 155px;
+  border-radius: 18px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+.series-detail-poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.series-detail-meta-box {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.series-detail-header-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.series-status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  background: rgba(109, 92, 255, 0.2);
+  border: 1px solid rgba(109, 92, 255, 0.4);
+  color: #A78BFA;
+}
+
+.series-detail-title {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 0.35rem;
+  line-height: 1.2;
+}
+
+.series-detail-specs-row {
+  font-size: 0.8rem;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+/* 3 Tarjetas de Información Elevadas */
+.series-info-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+}
+
+.series-info-card {
+  background: rgba(20, 27, 48, 0.8);
+  border: 1px solid rgba(109, 92, 255, 0.25);
+  border-radius: 18px;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.series-info-card-icon {
+  font-size: 1.15rem;
+}
+
+.series-info-card-val {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0.1rem 0;
+}
+
+.series-info-card-label {
+  font-size: 0.68rem;
+  color: #94A3B8;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Sinopsis y Ver Más */
+.series-detail-synopsis-section {
+  background: rgba(13, 18, 34, 0.85);
+  border: 1px solid rgba(109, 92, 255, 0.25);
+  border-radius: 22px;
+  padding: 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.series-subheading {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 0.65rem;
+}
+
+.series-synopsis-text {
+  font-size: 0.86rem;
+  color: #CBD5E1;
+  line-height: 1.55;
+  margin: 0 0 0.5rem;
+}
+
+.series-synopsis-text.clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.btn-series-toggle-more {
+  background: none;
+  border: none;
+  color: #A78BFA;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Selector de Temporadas (Scroll Horizontal) */
+.series-seasons-selector-wrap {
+  margin-bottom: 1.25rem;
+}
+
+.series-seasons-scroll {
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scrollbar-width: none;
+}
+
+.series-seasons-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.series-season-tab {
+  flex-shrink: 0;
+  padding: 0.65rem 1.15rem;
+  background: rgba(14, 19, 36, 0.85);
+  border: 1px solid rgba(109, 92, 255, 0.28);
+  border-radius: 18px;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 80px;
+}
+
+.series-season-tab:hover {
+  border-color: rgba(109, 92, 255, 0.55);
+  background: rgba(20, 27, 48, 0.9);
+}
+
+.series-season-tab.active {
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  border-color: #8B5CF6;
+  box-shadow: 0 6px 20px rgba(109, 92, 255, 0.45);
+}
+
+.series-season-tab-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.series-season-tab-eps {
+  font-size: 0.72rem;
+  color: #CBD5E1;
+  font-weight: 600;
+}
+
+.series-season-tab.active .series-season-tab-eps {
+  color: #EDE9FE;
+}
+
+/* Barra de Progreso Dinámica de la Temporada */
+.series-season-progress-box {
+  background: rgba(13, 18, 34, 0.8);
+  border: 1px solid rgba(109, 92, 255, 0.25);
+  border-radius: 20px;
+  padding: 0.85rem 1.15rem;
+  margin-bottom: 1.25rem;
+}
+
+.series-progress-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.series-progress-text {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.series-progress-percent {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #A78BFA;
+}
+
+.series-progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.series-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6D5CFF, #8B5CF6);
+  border-radius: var(--radius-full);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Lista de Capítulos */
+.series-episodes-section {
+  margin-bottom: 1.5rem;
+}
+
+.series-episodes-list {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
 }
 
-.series-card {
-  background: #0E1322;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+.series-episode-card {
+  background: rgba(13, 18, 34, 0.88);
+  border: 1px solid rgba(109, 92, 255, 0.25);
+  border-radius: 22px;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  position: relative;
 }
 
-.series-progress-bar-wrap {
+/* Estado: Visto */
+.series-episode-card.is-watched {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(13, 24, 28, 0.88);
+}
+
+/* Estado: Último Episodio Visto (Destacado luminiscente) */
+.series-episode-card.is-last-watched {
+  border: 2px solid #6D5CFF;
+  background: rgba(30, 27, 75, 0.75);
+  box-shadow: 0 8px 24px rgba(109, 92, 255, 0.35), 0 0 15px rgba(109, 92, 255, 0.2);
+}
+
+.series-ep-main-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.series-ep-num-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.series-ep-number {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #94A3B8;
+}
+
+.series-ep-pulse-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6D5CFF;
+  box-shadow: 0 0 10px #6D5CFF;
+  margin-top: 4px;
+  animation: pulseGlow 1.8s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 14px #A78BFA; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.series-ep-thumb-wrap {
+  width: 90px;
+  height: 56px;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.series-ep-thumb-img {
   width: 100%;
-  height: 5px;
-  background: #182035;
-  border-radius: var(--radius-full);
-  margin: 0.5rem 0;
+  height: 100%;
+  object-fit: cover;
+}
+
+.series-ep-runtime-pill {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #CBD5E1;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.series-ep-info-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.series-ep-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 0 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.series-ep-overview {
+  font-size: 0.74rem;
+  color: #94A3B8;
+  line-height: 1.35;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.series-progress-fill {
-  height: 100%;
-  background: var(--gradient-primary);
+/* Fila de Avatares de Participantes en el Episodio */
+.series-ep-participants-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: #CBD5E1;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+}
+
+.series-ep-avatars-stack {
+  display: flex;
+  align-items: center;
+}
+
+.series-ep-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid #0D1222;
+  margin-left: -5px;
+  object-fit: cover;
+}
+
+.series-ep-avatar:first-child {
+  margin-left: 0;
+}
+
+.series-ep-names-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Fila de Botones de Acción del Episodio */
+.series-ep-actions-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.btn-ep-watch-single {
+  flex: 1;
+  height: 38px;
+  background: #FFFFFF;
+  color: #10B981;
+  border: 1.5px solid #10B981;
   border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-ep-watch-single:hover {
+  background: #ECFDF5;
+  transform: scale(1.02);
+}
+
+.btn-ep-watch-single.is-watched {
+  background: #10B981;
+  color: #FFFFFF;
+  border-color: #10B981;
+}
+
+.btn-ep-watch-upto {
+  flex: 1.3;
+  height: 38px;
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  color: #FFFFFF;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.35);
+}
+
+.btn-ep-watch-upto:hover {
+  background: linear-gradient(135deg, #7C6DFF, #5B52F2);
+  transform: scale(1.02);
+}
+
+/* --- FORO DE COMENTARIOS DE LA SERIE --- */
+.series-comments-forum-wrap {
+  background: rgba(13, 18, 34, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(109, 92, 255, 0.3);
+  border-radius: 24px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.series-comments-forum-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.series-comments-count-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #A78BFA;
+  background: rgba(109, 92, 255, 0.15);
+  border: 1px solid rgba(109, 92, 255, 0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+}
+
+.series-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.series-comment-card {
+  background: rgba(20, 27, 48, 0.75);
+  border: 1px solid rgba(109, 92, 255, 0.2);
+  border-radius: 18px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.series-comment-author-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.series-comment-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.series-comment-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(109, 92, 255, 0.4);
+}
+
+.series-comment-name {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.series-comment-progress-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #A78BFA;
+  background: rgba(109, 92, 255, 0.2);
+  border: 1px solid rgba(109, 92, 255, 0.35);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.series-comment-date {
+  font-size: 0.7rem;
+  color: #94A3B8;
+}
+
+.series-comment-text {
+  font-size: 0.84rem;
+  color: #CBD5E1;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.series-comment-reactions-row {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.series-comment-react-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-full);
+  padding: 0.2rem 0.55rem;
+  font-size: 0.74rem;
+  color: #CBD5E1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all var(--transition-fast);
+}
+
+.series-comment-react-btn:hover {
+  background: rgba(109, 92, 255, 0.2);
+  border-color: rgba(109, 92, 255, 0.4);
+  color: #FFFFFF;
+}
+
+.series-comment-react-btn.active {
+  background: rgba(109, 92, 255, 0.3);
+  border-color: #6D5CFF;
+  color: #FFFFFF;
+}
+
+/* Formulario fijo para escribir comentario */
+.series-comment-post-form {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.series-comment-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  background: rgba(20, 27, 48, 0.9);
+  border: 1px solid rgba(109, 92, 255, 0.35);
+  border-radius: var(--radius-full);
+  padding: 0 1.25rem;
+  font-size: 0.85rem;
+  color: #FFFFFF;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.series-comment-input:focus {
+  border-color: #6D5CFF;
+  box-shadow: 0 0 0 3px rgba(109, 92, 255, 0.25);
+  background: rgba(25, 33, 58, 0.95);
+}
+
+/* =========================================
+   MODO CLARO PARA SERIES (BLANCO + LILA + MORADO)
+   ========================================= */
+[data-theme="light"] .series-hero-badge {
+  background: #EDE9FE;
+  border-color: rgba(109, 92, 255, 0.3);
+  color: #6D5CFF;
+  box-shadow: 0 2px 10px rgba(109, 92, 255, 0.12);
+}
+
+[data-theme="light"] .series-hero-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-hero-subtitle {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-stats-card {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.25);
+  box-shadow: 0 8px 24px rgba(109, 92, 255, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .series-stat-value {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-stat-value.text-purple {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .series-stat-value.text-emerald {
+  color: #059669;
+}
+
+[data-theme="light"] .series-stat-label {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-stat-divider {
+  background: #E2E8F0;
+}
+
+[data-theme="light"] .series-search-input {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.25);
+  color: #0F172A;
+  box-shadow: 0 4px 16px rgba(109, 92, 255, 0.06);
+}
+
+[data-theme="light"] .series-search-input:focus {
+  border-color: #6D5CFF;
+  background: #FFFFFF;
+}
+
+[data-theme="light"] .series-live-search-results {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.35);
+  box-shadow: 0 16px 40px rgba(109, 92, 255, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .series-result-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-result-meta {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-search-result-item:hover {
+  background: #F5F3FF;
+}
+
+[data-theme="light"] .series-filter-chip {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.2);
+  color: #64748B;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .series-filter-chip:hover {
+  color: #6D5CFF;
+  background: #F5F3FF;
+}
+
+[data-theme="light"] .series-filter-chip.active {
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .series-collab-card {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.22);
+  box-shadow: 0 8px 24px rgba(109, 92, 255, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .series-collab-card:hover {
+  border-color: rgba(109, 92, 255, 0.5);
+  box-shadow: 0 12px 32px rgba(109, 92, 255, 0.14);
+}
+
+[data-theme="light"] .series-card-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-card-meta {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-card-progress-bar-track {
+  background: #EDE9FE;
+}
+
+[data-theme="light"] .series-card-progress-text {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .btn-series-continue {
+  background: #EDE9FE;
+  border-color: rgba(109, 92, 255, 0.35);
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .btn-series-continue:hover {
+  background: #6D5CFF;
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .series-card-member-avatar {
+  border-color: #FFFFFF;
+}
+
+[data-theme="light"] .btn-back-series {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.25);
+  color: #0F172A;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .btn-back-series:hover {
+  background: #F5F3FF;
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .series-detail-hero {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.25);
+  box-shadow: 0 10px 30px rgba(109, 92, 255, 0.08);
+}
+
+[data-theme="light"] .series-detail-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-detail-specs-row {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-info-card {
+  background: #F8FAFC;
+  border-color: rgba(109, 92, 255, 0.18);
+}
+
+[data-theme="light"] .series-info-card-val {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-info-card-label {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-detail-synopsis-section {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.2);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .series-subheading {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-synopsis-text {
+  color: #334155;
+}
+
+[data-theme="light"] .series-season-tab {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.2);
+}
+
+[data-theme="light"] .series-season-tab:hover {
+  background: #F5F3FF;
+}
+
+[data-theme="light"] .series-season-tab.active {
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .series-season-tab-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-season-tab.active .series-season-tab-title {
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .series-season-tab-eps {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-season-progress-box {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.2);
+}
+
+[data-theme="light"] .series-progress-text {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-progress-percent {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .series-progress-bar-track {
+  background: #EDE9FE;
+}
+
+[data-theme="light"] .series-episode-card {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .series-episode-card.is-watched {
+  border-color: #34D399;
+  background: #F0FDF4;
+}
+
+[data-theme="light"] .series-episode-card.is-last-watched {
+  border: 2px solid #6D5CFF;
+  background: #F5F3FF;
+  box-shadow: 0 6px 20px rgba(109, 92, 255, 0.2);
+}
+
+[data-theme="light"] .series-ep-number {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-ep-title {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-ep-overview {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-ep-participants-row {
+  background: #F8FAFC;
+  color: #334155;
+}
+
+[data-theme="light"] .series-ep-avatar {
+  border-color: #FFFFFF;
+}
+
+[data-theme="light"] .series-comments-forum-wrap {
+  background: #FFFFFF;
+  border-color: rgba(109, 92, 255, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .series-comment-card {
+  background: #F8FAFC;
+  border-color: rgba(109, 92, 255, 0.15);
+}
+
+[data-theme="light"] .series-comment-name {
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-comment-progress-pill {
+  background: #EDE9FE;
+  color: #6D5CFF;
+  border-color: rgba(109, 92, 255, 0.3);
+}
+
+[data-theme="light"] .series-comment-text {
+  color: #334155;
+}
+
+[data-theme="light"] .series-comment-react-btn {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  color: #64748B;
+}
+
+[data-theme="light"] .series-comment-react-btn:hover {
+  background: #F5F3FF;
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .series-comment-react-btn.active {
+  background: #EDE9FE;
+  border-color: #6D5CFF;
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .series-comment-input {
+  background: #F8FAFC;
+  border-color: rgba(109, 92, 255, 0.25);
+  color: #0F172A;
+}
+
+[data-theme="light"] .series-comment-input:focus {
+  background: #FFFFFF;
+  border-color: #6D5CFF;
 }
 
 /* =========================================
