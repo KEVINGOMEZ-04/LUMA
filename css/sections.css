@@ -3423,12 +3423,19 @@
 }
 
 /* Buscador TMDb y Botón Añadir Película */
+.movie-search-section-wrap {
+  position: relative;
+  width: 100%;
+  margin-bottom: 0.85rem;
+  z-index: 100;
+}
+
 .movie-search-action-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.85rem;
   position: relative;
+  width: 100%;
 }
 
 .movie-search-bar-wrap {
@@ -3436,6 +3443,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .movie-search-input-icon {
@@ -3458,6 +3466,7 @@
   color: #FFFFFF;
   transition: all var(--transition-fast);
   outline: none;
+  box-sizing: border-box;
 }
 
 .movie-search-input-field:focus {
@@ -3501,37 +3510,73 @@
   background: linear-gradient(135deg, #7C6DFF, #5B52F2);
 }
 
-/* Dropdown Resultados en Vivo TMDb */
+/* Dropdown Resultados en Vivo TMDb (Flotante Directo bajo el Buscador) */
 .movie-live-results-dropdown {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   left: 0;
+  right: 0;
   width: 100%;
-  max-width: 580px;
+  box-sizing: border-box;
   background: rgba(11, 16, 32, 0.98);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(109, 92, 255, 0.4);
   border-radius: 20px;
-  padding: 0.6rem;
-  max-height: 400px;
+  padding: 0.65rem 0.75rem;
+  max-height: 440px;
   overflow-y: auto;
-  z-index: 100;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(109, 92, 255, 0.25);
+  -webkit-overflow-scrolling: touch;
+  z-index: 1000;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(109, 92, 255, 0.3);
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
+.movie-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2rem 0.4rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #A78BFA;
+  letter-spacing: 0.02em;
+}
+
+.btn-close-movie-results {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.btn-close-movie-results:hover {
+  color: #FFFFFF;
+  background: rgba(244, 63, 94, 0.25);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+/* Tarjeta individual de resultado TMDb (100% Mobile First & Responsive) */
 .movie-live-result-item {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.55rem 0.75rem;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   transition: all var(--transition-fast);
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .movie-live-result-item:hover {
@@ -3540,39 +3585,79 @@
 }
 
 .movie-live-poster {
-  width: 44px;
-  height: 66px;
+  width: 46px;
+  height: 69px;
   border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
 .movie-live-meta {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  overflow: hidden;
 }
 
 .movie-live-title {
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-weight: 800;
   font-size: 0.9rem;
   color: #FFFFFF;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.25;
 }
 
 .movie-live-sub {
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   color: var(--color-text-secondary);
-  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 .movie-live-rating {
   font-size: 0.72rem;
   color: #FBBF24;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.05rem;
+}
+
+/* Botón + Añadir específico para resultados en vivo (sin colapsar en móvil) */
+.btn-movie-add-inline {
+  flex-shrink: 0;
+  width: auto !important;
+  max-width: fit-content !important;
+  padding: 0.42rem 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  margin-top: 0.15rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
+  color: #FFFFFF;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(109, 92, 255, 0.4);
+  transition: all var(--transition-fast);
+}
+
+.btn-movie-add-inline:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #7C6DFF, #5B52F2);
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.6);
 }
 
 /* Filtros Horizontales (Scroll Chips) */
@@ -5462,7 +5547,24 @@
 [data-theme="light"] .movie-live-results-dropdown {
   background: #FFFFFF;
   border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] .movie-results-header {
+  color: #6D5CFF;
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .btn-close-movie-results {
+  background: #F1F5F9;
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #64748B;
+}
+
+[data-theme="light"] .btn-close-movie-results:hover {
+  color: #EF4444;
+  background: #FEE2E2;
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 [data-theme="light"] .movie-live-result-item {
