@@ -5338,6 +5338,122 @@
   border-color: #6D5CFF;
 }
 
+.series-card-trash-btn {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  color: #EF4444;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  opacity: 0.75;
+}
+
+.series-card-trash-btn:hover {
+  opacity: 1;
+  background: rgba(239, 68, 68, 0.15);
+  transform: scale(1.1);
+}
+
+.series-proposer-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.73rem;
+  color: #94A3B8;
+  margin: 0.25rem 0;
+}
+
+.series-proposer-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(109, 92, 255, 0.4);
+}
+
+.series-watchers-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.25rem 0;
+}
+
+.series-watchers-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #CBD5E1;
+}
+
+.series-card-ratings-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.35rem 0;
+}
+
+.series-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.series-rating-badge.locked {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94A3B8;
+  cursor: not-allowed;
+}
+
+.series-rating-badge.unlocked {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #FBBF24;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.series-rating-badge.unlocked:hover {
+  background: rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
+}
+
+.series-group-rating-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #FBBF24;
+  background: rgba(251, 191, 36, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.series-footer-comments-btn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #A78BFA;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.series-footer-comments-btn:hover {
+  background: rgba(109, 92, 255, 0.12);
+  color: #FFFFFF;
+}
+
 .series-card-members-watching {
   display: flex;
   align-items: center;
@@ -6167,6 +6283,36 @@
 
 [data-theme="light"] .series-card-member-avatar {
   border-color: #FFFFFF;
+}
+
+[data-theme="light"] .series-card-trash-btn {
+  color: #EF4444;
+}
+
+[data-theme="light"] .series-card-trash-btn:hover {
+  background: #FEE2E2;
+}
+
+[data-theme="light"] .series-proposer-info {
+  color: #64748B;
+}
+
+[data-theme="light"] .series-watchers-label {
+  color: #475569;
+}
+
+[data-theme="light"] .series-rating-badge.locked {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  color: #64748B;
+}
+
+[data-theme="light"] .series-footer-comments-btn {
+  color: #6D5CFF;
+}
+
+[data-theme="light"] .series-footer-comments-btn:hover {
+  background: #F5F3FF;
 }
 
 [data-theme="light"] .btn-back-series {
