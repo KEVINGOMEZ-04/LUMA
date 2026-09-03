@@ -4112,96 +4112,691 @@ class LumaApp {
   }
 
   // --- 5. RENDER SERIES ---
+  // --- 5. RENDER SERIES (CENTRO DE MARATONES DEL GRUPO) ---
   renderSeries() {
-    const container = document.getElementById('series-grid-list');
-    if (!container) return;
+    const feedContainer = document.getElementById('series-feed-list');
+    if (!feedContainer) return;
 
     let seriesList = this.storage.getSeries();
-    const filterStatus = document.getElementById('filter-series-status')?.value || 'all';
+    const currentUser = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
 
-    if (filterStatus !== 'all') {
-      seriesList = seriesList.filter(s => s.status === filterStatus);
+    // 1. Métricas del Hero
+    const statCount = document.getElementById('stat-series-count');
+    const statWatching = document.getElementById('stat-series-watching');
+    const statCompleted = document.getElementById('stat-series-completed');
+
+    const watchingCount = seriesList.filter(s => {
+      if (s.status === 'Viendo') return true;
+      if (s.userProgress && Object.values(s.userProgress).some(up => up.status === 'Viendo')) return true;
+      return false;
+    }).length;
+
+    const completedCount = seriesList.filter(s => {
+      if (s.status === 'Completada') return true;
+      if (s.userProgress && Object.values(s.userProgress).some(up => up.status === 'Completada')) return true;
+      return false;
+    }).length;
+
+    if (statCount) statCount.textContent = seriesList.length || 18;
+    if (statWatching) statWatching.textContent = watchingCount || 9;
+    if (statCompleted) statCompleted.textContent = completedCount || 7;
+
+    // 2. Filtros Rápidos
+    const activeFilter = this.activeSeriesFilter || 'all';
+    if (activeFilter === 'Viendo' || activeFilter === 'Completada' || activeFilter === 'Por ver' || activeFilter === 'Favorita') {
+      seriesList = seriesList.filter(s => {
+        if (s.status === activeFilter) return true;
+        const up = s.userProgress?.[currentUser.id];
+        return up && up.status === activeFilter;
+      });
     }
 
+    // 3. Renderizar Feed de Series
     if (seriesList.length === 0) {
-      container.innerHTML = `
-        <div class="series-card" style="grid-column: 1/-1; text-align: center; padding: 2.5rem; color: var(--color-text-secondary);">
-          <span style="font-size: 2.2rem;">📺</span>
-          <p style="margin-top: 0.5rem; font-size: 1rem; color: var(--color-text-main);">No hay series en esta sección.</p>
-          <button type="button" class="btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('btn-new-series').click()">
-            + Añadir Serie 📺
+      feedContainer.innerHTML = `
+        <div class="glass-card" style="text-align: center; color: var(--color-text-secondary); padding: 3rem 1.5rem; border-radius: 24px; border: 1px dashed rgba(109, 92, 255, 0.35);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📺</div>
+          <h3 style="color: #FFFFFF; font-size: 1.1rem; margin-bottom: 0.35rem;">No hay series en esta categoría</h3>
+          <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">Usa el buscador de TMDb arriba para añadir la próxima maratón del grupo.</p>
+          <button type="button" class="btn-series-search-action" onclick="document.getElementById('series-search-input')?.focus()">
+            <span>Buscar en TMDb</span> <span>🔍</span>
           </button>
         </div>
       `;
+      this.initSeriesLiveSearch();
+      this.initSeriesFilterChips();
       return;
     }
 
-    container.innerHTML = '';
-    seriesList.forEach(series => {
-      const card = document.createElement('div');
-      card.className = 'series-card';
+    feedContainer.innerHTML = seriesList.map(s => {
+      const up = s.userProgress?.[currentUser.id] || {};
+      const curSeason = up.currentSeason || 1;
+      const curEpisode = up.currentEpisode || 1;
 
-      const poster = series.poster || 'assets/icon.png';
-      const curEp = series.currentEpisode || 1;
-      const totEp = series.totalEpisodes || 10;
-      const progressPct = Math.min(100, Math.round((curEp / totEp) * 100));
+      // Calcular temporadas y episodios
+      const seasons = s.seasons || [{ seasonNumber: 1, episodeCount: s.totalEpisodes || 10 }];
+      const currentSeasonObj = seasons.find(sea => sea.seasonNumber === curSeason) || seasons[0];
+      const totalSeasonEps = currentSeasonObj.episodeCount || 10;
+      const progressPct = Math.min(100, Math.max(0, Math.round((curEpisode / totalSeasonEps) * 100)));
 
-      card.innerHTML = `
-        <div class="movie-poster-wrap" style="height: 160px; overflow: hidden; position: relative;">
-          <img src="${poster}" class="movie-poster-img" alt="${window.Utils.sanitizeHTML(series.title)}" loading="lazy" style="width:100%; height:100%; object-fit:cover;" />
-          ${series.platform ? `<div class="movie-platform-badge" style="position:absolute; top:0.5rem; right:0.5rem; background:rgba(0,0,0,0.7); color:#fff; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.75rem;">${window.Utils.sanitizeHTML(series.platform)}</div>` : ''}
+      // Avatares de integrantes viéndola
+      const watchingUsers = Object.values(s.userProgress || {});
+      const watchingAvatarsHtml = watchingUsers.slice(0, 4).map(u => `
+        <img src="${u.userAvatar || 'assets/icon.png'}" class="series-card-member-avatar" alt="${window.Utils.sanitizeHTML(u.userName || 'Amigo')}" title="${window.Utils.sanitizeHTML(u.userName || 'Amigo')}: T${u.currentSeason || 1} · Cap ${u.currentEpisode || 1}">
+      `).join('');
+
+      const platformLabel = s.platform || 'Netflix';
+      const ratingLabel = s.groupRating ? `⭐ ${s.groupRating}` : '⭐ 9.5';
+
+      return `
+        <div class="series-collab-card" onclick="window.app.openSeriesDetail('${s.id}')" data-id="${s.id}">
+          <!-- Póster Grande -->
+          <div class="series-card-poster-wrap">
+            <img src="${s.poster || 'assets/icon.png'}" class="series-card-poster-img" alt="${window.Utils.sanitizeHTML(s.title)}" loading="lazy">
+            <span class="series-platform-pill">${window.Utils.sanitizeHTML(platformLabel)}</span>
+          </div>
+
+          <!-- Información y Avance -->
+          <div class="series-card-info">
+            <div>
+              <div class="series-card-title-row">
+                <h3 class="series-card-title">${window.Utils.sanitizeHTML(s.title)}</h3>
+                <span style="font-size: 0.78rem; font-weight: 700; color: #FBBF24;">${ratingLabel}</span>
+              </div>
+              <div class="series-card-meta">
+                ${s.years || s.year || '2024'} • ${window.Utils.sanitizeHTML(s.genres || 'Serie')}
+              </div>
+            </div>
+
+            <!-- Barra de Progreso Dinámica -->
+            <div class="series-card-progress-box">
+              <div class="series-card-progress-bar-track">
+                <div class="series-card-progress-bar-fill" style="width: ${progressPct}%;"></div>
+              </div>
+              <div class="series-card-progress-text">
+                <span>Temp. ${curSeason} · Cap. ${curEpisode} / ${totalSeasonEps}</span>
+                <span>${progressPct}%</span>
+              </div>
+            </div>
+
+            <!-- Footer: Botón Continuar y Avatares -->
+            <div class="series-card-footer">
+              <button type="button" class="btn-series-continue" onclick="event.stopPropagation(); window.app.openSeriesDetail('${s.id}')">
+                <span>Continuar</span> <span>▶</span>
+              </button>
+              <div class="series-card-members-watching" title="Integrantes siguiendo esta serie">
+                ${watchingAvatarsHtml}
+              </div>
+            </div>
+          </div>
         </div>
-        <div style="padding: 1.15rem; display: flex; flex-direction: column; flex: 1;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <h3 class="movie-title-heading" style="font-size: 1.15rem;">${window.Utils.sanitizeHTML(series.title)}</h3>
-            <button type="button" class="btn-ghost" style="padding: 0.1rem 0.3rem; font-size: 0.75rem; color: var(--color-error);" onclick="window.app.deleteSeries('${series.id}')">🗑️</button>
+      `;
+    }).join('');
+
+    this.initSeriesLiveSearch();
+    this.initSeriesFilterChips();
+  }
+
+  initSeriesFilterChips() {
+    const chipsContainer = document.getElementById('series-filter-chips');
+    if (!chipsContainer) return;
+
+    chipsContainer.querySelectorAll('.series-filter-chip').forEach(chip => {
+      chip.onclick = () => {
+        chipsContainer.querySelectorAll('.series-filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        this.activeSeriesFilter = chip.dataset.filter || 'all';
+        this.renderSeries();
+      };
+    });
+  }
+
+  initSeriesLiveSearch() {
+    const input = document.getElementById('series-search-input');
+    const submitBtn = document.getElementById('series-search-submit-btn');
+    const clearBtn = document.getElementById('series-search-clear-btn');
+    const resultsBox = document.getElementById('series-live-search-results');
+
+    if (!input || !resultsBox) return;
+
+    let debounceTimer = null;
+
+    const performSearch = async (val) => {
+      const q = (val || '').trim();
+      if (!q) {
+        resultsBox.style.display = 'none';
+        resultsBox.innerHTML = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        return;
+      }
+      if (clearBtn) clearBtn.style.display = 'block';
+
+      resultsBox.style.display = 'block';
+      resultsBox.innerHTML = `
+        <div style="text-align: center; padding: 1.5rem; color: #CBD5E1; font-size: 0.85rem;">
+          <div style="font-size: 1.5rem; margin-bottom: 0.35rem; animation: spin 1s infinite linear;">🔍</div>
+          <span>Buscando maratones en TMDb...</span>
+        </div>
+      `;
+
+      try {
+        const results = await window.MediaService.searchSeries(q);
+        if (results.length === 0) {
+          resultsBox.innerHTML = `
+            <div class="series-live-search-header">
+              <span>Resultados para "${window.Utils.sanitizeHTML(q)}"</span>
+              <button type="button" class="series-live-search-header-close" id="btn-close-series-search">✕ Cerrar</button>
+            </div>
+            <div style="text-align: center; padding: 1.5rem; color: #94A3B8; font-size: 0.85rem;">
+              No se encontraron series para "${window.Utils.sanitizeHTML(q)}".
+            </div>
+          `;
+          document.getElementById('btn-close-series-search')?.addEventListener('click', () => {
+            resultsBox.style.display = 'none';
+          });
+          return;
+        }
+
+        resultsBox.innerHTML = `
+          <div class="series-live-search-header">
+            <span>${results.length} serie${results.length > 1 ? 's' : ''} en TMDb</span>
+            <button type="button" class="series-live-search-header-close" id="btn-close-series-search">✕ Cerrar</button>
           </div>
-          <div style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700; margin-top: 0.2rem;">
-            Temp. ${series.currentSeason || 1} · Cap. ${curEp} / ${totEp} (${progressPct}%)
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            ${results.map(s => `
+              <div class="series-search-result-item">
+                <img src="${s.poster || 'assets/icon.png'}" class="series-result-poster" alt="${window.Utils.sanitizeHTML(s.title)}">
+                <div class="series-result-info">
+                  <h4 class="series-result-title">${window.Utils.sanitizeHTML(s.title)}</h4>
+                  <div class="series-result-meta">${s.year || 'TMDb'} • ⭐ ${s.voteAverage}</div>
+                </div>
+                <button type="button" class="btn-series-add-inline" onclick="window.app.addSeriesFromSearch(${s.tmdbId})">
+                  <span>+ Añadir</span>
+                </button>
+              </div>
+            `).join('')}
           </div>
-          <div class="series-progress-bar-wrap">
-            <div class="series-progress-fill" style="width: ${progressPct}%;"></div>
+        `;
+
+        document.getElementById('btn-close-series-search')?.addEventListener('click', () => {
+          resultsBox.style.display = 'none';
+        });
+      } catch (err) {
+        console.warn('Error en búsqueda de series:', err);
+        resultsBox.innerHTML = '<div style="padding: 1rem; color: #EF4444; font-size: 0.85rem;">Error al consultar TMDb.</div>';
+      }
+    };
+
+    input.oninput = (e) => {
+      clearTimeout(debounceTimer);
+      const val = e.target.value;
+      debounceTimer = setTimeout(() => performSearch(val), 350);
+    };
+
+    if (submitBtn) {
+      submitBtn.onclick = () => performSearch(input.value);
+    }
+
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        input.value = '';
+        performSearch('');
+        input.focus();
+      };
+    }
+
+    document.addEventListener('click', (e) => {
+      const wrap = document.querySelector('.series-search-section-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        resultsBox.style.display = 'none';
+      }
+    });
+  }
+
+  async addSeriesFromSearch(tmdbId) {
+    window.Utils.showToast('Importando serie desde TMDb...', 'info');
+    const details = await window.MediaService.getSeriesDetails(tmdbId);
+    if (!details) {
+      window.Utils.showToast('No se pudieron obtener los detalles de la serie', 'error');
+      return;
+    }
+
+    const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+
+    // Construir nueva serie colaborativa
+    const newSeries = {
+      id: 'ser_' + Date.now().toString(36),
+      tmdbId: details.tmdbId,
+      title: details.title,
+      originalTitle: details.originalTitle,
+      years: details.years,
+      genres: details.genres,
+      platform: details.platform,
+      poster: details.poster,
+      backdrop: details.backdrop,
+      synopsis: details.overview,
+      proposedBy: {
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar || 'assets/icon.png',
+        date: 'Hoy'
+      },
+      groupRating: parseFloat(details.voteAverage) || 9.0,
+      status: 'Viendo',
+      priority: 5,
+      numberOfSeasons: details.numberOfSeasons,
+      totalEpisodes: details.totalEpisodes,
+      seasons: details.seasons,
+      userProgress: {
+        [user.id]: {
+          userId: user.id,
+          userName: user.name,
+          userAvatar: user.avatar || 'assets/icon.png',
+          currentSeason: 1,
+          currentEpisode: 1,
+          watchedEpisodes: {},
+          lastWatched: { season: 1, episode: 1 },
+          status: 'Viendo',
+          updatedAt: new Date().toISOString()
+        }
+      },
+      comments: []
+    };
+
+    this.storage.saveSeries(newSeries);
+    window.Utils.showToast(`¡"${newSeries.title}" añadida a las maratones del grupo! 📺`, 'success');
+
+    // Cerrar buscador y renderizar
+    const resultsBox = document.getElementById('series-live-search-results');
+    if (resultsBox) resultsBox.style.display = 'none';
+    const input = document.getElementById('series-search-input');
+    if (input) input.value = '';
+
+    this.renderSeries();
+    this.openSeriesDetail(newSeries.id);
+  }
+
+  // --- PANTALLA 2: DETALLE DE LA SERIE (PANTALLA COMPLETA) ---
+  async openSeriesDetail(seriesId) {
+    const series = this.storage.getSeriesById(seriesId);
+    if (!series) return;
+
+    this.activeSeriesId = seriesId;
+
+    // Cambiar vistas: Ocultar biblioteca y mostrar detalle
+    const biblioSec = document.getElementById('section-series');
+    const detailSec = document.getElementById('section-series-detail');
+    if (biblioSec) biblioSec.style.display = 'none';
+    if (detailSec) {
+      detailSec.style.display = 'block';
+      detailSec.classList.add('active');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Cargar detalles extendidos de TMDb si faltan temporadas
+    if ((!series.seasons || series.seasons.length === 0) && series.tmdbId) {
+      const details = await window.MediaService.getSeriesDetails(series.tmdbId);
+      if (details) {
+        series.seasons = details.seasons;
+        series.platform = series.platform || details.platform;
+        series.years = series.years || details.years;
+        series.genres = series.genres || details.genres;
+        series.numberOfSeasons = details.numberOfSeasons;
+        series.totalEpisodes = details.totalEpisodes;
+        this.storage.saveSeries(series);
+      }
+    }
+
+    // Hero superior
+    const posterEl = document.getElementById('series-detail-poster');
+    const titleEl = document.getElementById('series-detail-title');
+    const yearsEl = document.getElementById('series-detail-years');
+    const seasonsCountEl = document.getElementById('series-detail-seasons-count');
+    const genresEl = document.getElementById('series-detail-genres');
+    const platformBadge = document.getElementById('series-detail-platform-badge');
+    const statusPill = document.getElementById('series-detail-status-pill');
+
+    if (posterEl) posterEl.src = series.poster || 'assets/icon.png';
+    if (titleEl) titleEl.textContent = series.title;
+    if (yearsEl) yearsEl.textContent = series.years || series.year || '2024';
+    if (seasonsCountEl) seasonsCountEl.textContent = `${series.numberOfSeasons || (series.seasons ? series.seasons.length : 1)} temporadas`;
+    if (genresEl) genresEl.textContent = series.genres || 'Drama, Serie';
+    if (platformBadge) platformBadge.textContent = series.platform || 'Netflix';
+    if (statusPill) statusPill.textContent = series.status === 'Completada' ? '✨ Completada' : '📺 Viendo';
+
+    // 3 Tarjetas de Información
+    const ratingEl = document.getElementById('series-detail-group-rating');
+    const membersEl = document.getElementById('series-detail-members-watching');
+    const progressEl = document.getElementById('series-detail-group-progress');
+
+    const membersList = this.storage.getMembers() || [];
+    const watchingUsers = Object.values(series.userProgress || {});
+    const watchingCount = watchingUsers.length || 1;
+    const totalGroupCount = membersList.length || 4;
+
+    // Progreso promedio del grupo
+    let totalPctSum = 0;
+    const totalSeriesEpisodes = series.totalEpisodes || (series.seasons ? series.seasons.reduce((acc, s) => acc + s.episodeCount, 0) : 10);
+    watchingUsers.forEach(u => {
+      const watchedCount = Object.keys(u.watchedEpisodes || {}).length;
+      totalPctSum += (watchedCount / (totalSeriesEpisodes || 1)) * 100;
+    });
+    const avgGroupPct = watchingUsers.length > 0 ? Math.min(100, Math.round(totalPctSum / watchingUsers.length)) : 67;
+
+    if (ratingEl) ratingEl.textContent = `${series.groupRating || '9.5'}/10`;
+    if (membersEl) membersEl.textContent = `${watchingCount}/${totalGroupCount}`;
+    if (progressEl) progressEl.textContent = `${avgGroupPct}%`;
+
+    // Sinopsis y Ver Más
+    const synopsisEl = document.getElementById('series-detail-overview');
+    const toggleBtn = document.getElementById('btn-series-overview-toggle');
+    if (synopsisEl) {
+      synopsisEl.textContent = series.synopsis || 'Sin descripción disponible.';
+      synopsisEl.classList.add('clamped');
+      if (toggleBtn) {
+        toggleBtn.style.display = (series.synopsis && series.synopsis.length > 180) ? 'inline-block' : 'none';
+        toggleBtn.textContent = 'Ver más';
+        toggleBtn.onclick = () => {
+          const isClamped = synopsisEl.classList.contains('clamped');
+          if (isClamped) {
+            synopsisEl.classList.remove('clamped');
+            toggleBtn.textContent = 'Ver menos';
+          } else {
+            synopsisEl.classList.add('clamped');
+            toggleBtn.textContent = 'Ver más';
+          }
+        };
+      }
+    }
+
+    // Selector de Temporadas (Scroll Horizontal)
+    this.renderSeriesSeasonTabs(series);
+
+    // Renderizar capítulos de la temporada activa (por defecto T1)
+    const activeSeason = this.activeSeriesSeason || 1;
+    this.renderSeriesEpisodes(series, activeSeason);
+
+    // Renderizar sección de comentarios del grupo
+    this.renderSeriesComments(series);
+  }
+
+  backToSeriesList() {
+    const biblioSec = document.getElementById('section-series');
+    const detailSec = document.getElementById('section-series-detail');
+    if (detailSec) {
+      detailSec.style.display = 'none';
+      detailSec.classList.remove('active');
+    }
+    if (biblioSec) {
+      biblioSec.style.display = 'block';
+      biblioSec.classList.add('active');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.renderSeries();
+  }
+
+  renderSeriesSeasonTabs(series) {
+    const tabsContainer = document.getElementById('series-seasons-tabs');
+    if (!tabsContainer) return;
+
+    const seasons = series.seasons && series.seasons.length > 0
+      ? series.seasons
+      : [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: series.totalEpisodes || 9 }];
+
+    if (!this.activeSeriesSeason) this.activeSeriesSeason = seasons[0].seasonNumber;
+
+    tabsContainer.innerHTML = seasons.map(s => {
+      const isActive = s.seasonNumber === this.activeSeriesSeason;
+      return `
+        <button type="button" class="series-season-tab ${isActive ? 'active' : ''}" onclick="window.app.selectSeriesSeason(${s.seasonNumber})">
+          <span class="series-season-tab-title">T${s.seasonNumber}</span>
+          <span class="series-season-tab-eps">${s.episodeCount} cap</span>
+        </button>
+      `;
+    }).join('');
+  }
+
+  selectSeriesSeason(seasonNumber) {
+    this.activeSeriesSeason = seasonNumber;
+    const series = this.storage.getSeriesById(this.activeSeriesId);
+    if (!series) return;
+
+    this.renderSeriesSeasonTabs(series);
+    this.renderSeriesEpisodes(series, seasonNumber);
+  }
+
+  async renderSeriesEpisodes(series, seasonNumber) {
+    const episodesListEl = document.getElementById('series-episodes-list');
+    const progressLabel = document.getElementById('series-season-progress-label');
+    const progressPercent = document.getElementById('series-season-progress-percent');
+    const progressFill = document.getElementById('series-season-progress-fill');
+
+    if (!episodesListEl) return;
+
+    episodesListEl.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: #CBD5E1; font-size: 0.85rem;">
+        <div style="font-size: 1.5rem; margin-bottom: 0.35rem; animation: spin 1s infinite linear;">⏳</div>
+        <span>Cargando episodios de la Temporada ${seasonNumber}...</span>
+      </div>
+    `;
+
+    // Obtener episodios de TMDb (con caché en memoria)
+    this.seriesEpisodesCache = this.seriesEpisodesCache || {};
+    const cacheKey = `${series.tmdbId || series.id}_s${seasonNumber}`;
+    let episodes = this.seriesEpisodesCache[cacheKey];
+
+    if (!episodes && series.tmdbId) {
+      episodes = await window.MediaService.getSeasonEpisodes(series.tmdbId, seasonNumber);
+      if (episodes && episodes.length > 0) {
+        this.seriesEpisodesCache[cacheKey] = episodes;
+      }
+    }
+
+    // Fallback si no hay conexión o no es de TMDb
+    if (!episodes || episodes.length === 0) {
+      const seasonObj = (series.seasons || []).find(s => s.seasonNumber === seasonNumber) || { episodeCount: 9 };
+      episodes = Array.from({ length: seasonObj.episodeCount }, (_, i) => ({
+        episodeNumber: i + 1,
+        seasonNumber,
+        name: `Capítulo ${i + 1}`,
+        overview: 'Disfruta de este emocionante episodio con el grupo.',
+        duration: '42 min',
+        still: series.backdrop || series.poster || 'assets/icon.png'
+      }));
+    }
+
+    const currentUser = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+    const userProgress = series.userProgress?.[currentUser.id] || {};
+    const watchedMap = userProgress.watchedEpisodes || {};
+    const lastWatched = userProgress.lastWatched || { season: 1, episode: 0 };
+
+    // Calcular progreso de esta temporada para el usuario
+    const totalEpsThisSeason = episodes.length;
+    let watchedThisSeason = 0;
+    episodes.forEach(ep => {
+      if (watchedMap[`${seasonNumber}_${ep.episodeNumber}`]) watchedThisSeason++;
+    });
+
+    const seasonPct = Math.min(100, Math.round((watchedThisSeason / (totalEpsThisSeason || 1)) * 100));
+    if (progressLabel) progressLabel.textContent = `Temp. ${seasonNumber} · Cap. ${watchedThisSeason} / ${totalEpsThisSeason}`;
+    if (progressPercent) progressPercent.textContent = `${seasonPct}%`;
+    if (progressFill) progressFill.style.width = `${seasonPct}%`;
+
+    // Renderizar cada episodio
+    episodesListEl.innerHTML = episodes.map(ep => {
+      const epKey = `${seasonNumber}_${ep.episodeNumber}`;
+      const isWatched = !!watchedMap[epKey];
+      const isLastWatched = (lastWatched.season === seasonNumber && lastWatched.episode === ep.episodeNumber);
+
+      // Integrantes que ya vieron este capítulo
+      const allWatchedUsers = Object.values(series.userProgress || []).filter(u => u.watchedEpisodes && u.watchedEpisodes[epKey]);
+      const watchedAvatarsHtml = allWatchedUsers.map(u => `
+        <img src="${u.userAvatar || 'assets/icon.png'}" class="series-ep-avatar" alt="${window.Utils.sanitizeHTML(u.userName || 'Amigo')}" title="${window.Utils.sanitizeHTML(u.userName || 'Amigo')}">
+      `).join('');
+      const watchedNamesText = allWatchedUsers.map(u => u.userName || 'Amigo').join(' · ');
+
+      const formattedEpNum = ep.episodeNumber < 10 ? `0${ep.episodeNumber}` : `${ep.episodeNumber}`;
+
+      return `
+        <div class="series-episode-card ${isWatched ? 'is-watched' : ''} ${isLastWatched ? 'is-last-watched' : ''}" data-ep="${ep.episodeNumber}">
+          <div class="series-ep-main-row">
+            <!-- Número y Señal Luminosa -->
+            <div class="series-ep-num-box">
+              <span class="series-ep-number">${formattedEpNum}</span>
+              ${isLastWatched ? '<div class="series-ep-pulse-indicator" title="Tu último episodio visto"></div>' : ''}
+            </div>
+
+            <!-- Miniatura Oficial -->
+            <div class="series-ep-thumb-wrap">
+              <img src="${ep.still || series.poster || 'assets/icon.png'}" class="series-ep-thumb-img" alt="${window.Utils.sanitizeHTML(ep.name)}" loading="lazy">
+              <span class="series-ep-runtime-pill">⏱ ${ep.duration || '42 min'}</span>
+            </div>
+
+            <!-- Datos del Capítulo -->
+            <div class="series-ep-info-box">
+              <h4 class="series-ep-title">${window.Utils.sanitizeHTML(ep.name)}</h4>
+              <p class="series-ep-overview">${window.Utils.sanitizeHTML(ep.overview)}</p>
+            </div>
           </div>
-          <div style="display: flex; gap: 0.4rem; margin-top: auto; padding-top: 0.6rem;">
-            <button type="button" class="btn-secondary" style="flex: 1; padding: 0.35rem; font-size: 0.78rem;" onclick="window.app.stepSeriesEpisode('${series.id}', -1)">
-              ◀ -1 Cap
+
+          <!-- Participantes que ya lo vieron -->
+          ${allWatchedUsers.length > 0 ? `
+            <div class="series-ep-participants-row">
+              <div class="series-ep-avatars-stack">${watchedAvatarsHtml}</div>
+              <span class="series-ep-names-label">${window.Utils.sanitizeHTML(watchedNamesText)}</span>
+            </div>
+          ` : ''}
+
+          <!-- Botones de Acción -->
+          <div class="series-ep-actions-row">
+            <button type="button" class="btn-ep-watch-single ${isWatched ? 'is-watched' : ''}" onclick="window.app.toggleEpisodeWatched('${series.id}', ${seasonNumber}, ${ep.episodeNumber})">
+              <span>${isWatched ? '✓ Visto' : 'Visto'}</span>
             </button>
-            <button type="button" class="btn-primary" style="flex: 1; padding: 0.35rem; font-size: 0.78rem;" onclick="window.app.stepSeriesEpisode('${series.id}', 1)">
-              +1 Cap ▶
+            <button type="button" class="btn-ep-watch-upto" onclick="window.app.watchEpisodesUpTo('${series.id}', ${seasonNumber}, ${ep.episodeNumber})">
+              <span>Visto hasta aquí</span> <span>✓</span>
             </button>
           </div>
         </div>
       `;
-      container.appendChild(card);
-    });
-
-    const statusFilter = document.getElementById('filter-series-status');
-    if (statusFilter) statusFilter.onchange = () => this.renderSeries();
+    }).join('');
   }
 
-  stepSeriesEpisode(seriesId, delta) {
-    const series = this.storage.getSeries().find(s => s.id === seriesId);
-    if (series) {
-      series.currentEpisode = Math.max(1, (series.currentEpisode || 1) + delta);
-      if (series.totalEpisodes && series.currentEpisode >= series.totalEpisodes) {
-        series.status = 'Completada';
-        window.Animations.triggerLumaBurst();
-        window.Utils.showToast(`¡Completaron "${series.title}"! 🎉✨`, 'success');
+  toggleEpisodeWatched(seriesId, seasonNum, episodeNum) {
+    const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+    const res = this.storage.markEpisodeWatched(seriesId, seasonNum, episodeNum, user);
+    if (!res) return;
+
+    const msg = res.isWatched
+      ? `Capítulo ${episodeNum} marcado como visto 🍿`
+      : `Capítulo ${episodeNum} desmarcado 🌱`;
+    window.Utils.showToast(msg, 'info');
+
+    // Refrescar lista de episodios y datos
+    this.renderSeriesEpisodes(res.series, seasonNum);
+  }
+
+  watchEpisodesUpTo(seriesId, seasonNum, episodeNum) {
+    const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+    const res = this.storage.markEpisodesUpTo(seriesId, seasonNum, episodeNum, user);
+    if (!res) return;
+
+    if (res.isFullyCompleted) {
+      // 1. Animación de Confeti
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 140,
+          spread: 85,
+          origin: { y: 0.6 },
+          colors: ['#6D5CFF', '#A78BFA', '#10B981', '#F59E0B', '#FFFFFF']
+        });
       }
-      this.storage.saveSeries(series);
-      this.renderSeries();
-      this.renderInicio();
+      // 2. Mensaje Especial
+      window.Utils.showToast(`🎉 ¡${user.name} completó ${res.series.title}!`, 'success');
+    } else {
+      window.Utils.showToast(`¡Avanzaste hasta el capítulo ${episodeNum}! 🍿🔥`, 'success');
+    }
+
+    // Refrescar vista completa
+    this.openSeriesDetail(seriesId);
+  }
+
+  renderSeriesComments(series) {
+    const commentsListEl = document.getElementById('series-comments-list');
+    const counterEl = document.getElementById('series-comments-counter');
+    const formEl = document.getElementById('form-add-series-comment');
+
+    if (!commentsListEl) return;
+
+    const comments = series.comments || [];
+    if (counterEl) counterEl.textContent = `${comments.length} comentario${comments.length === 1 ? '' : 's'}`;
+
+    if (comments.length === 0) {
+      commentsListEl.innerHTML = `
+        <div style="text-align: center; padding: 1.5rem; color: #94A3B8; font-size: 0.85rem;">
+          Aún no hay comentarios sobre esta serie. ¡Sé el primero en compartir tu opinión! 🍿
+        </div>
+      `;
+    } else {
+      commentsListEl.innerHTML = comments.map(c => {
+        const reactions = c.reactions || { '❤️': 0, '😂': 0, '🔥': 0 };
+        return `
+          <div class="series-comment-card" data-comment-id="${c.id}">
+            <div class="series-comment-author-row">
+              <div class="series-comment-user-info">
+                <img src="${c.userAvatar || 'assets/icon.png'}" class="series-comment-avatar" alt="${window.Utils.sanitizeHTML(c.userName)}">
+                <span class="series-comment-name">${window.Utils.sanitizeHTML(c.userName)}</span>
+                <span class="series-comment-progress-pill">${window.Utils.sanitizeHTML(c.userProgressLabel || 'T1 · Cap 1')}</span>
+              </div>
+              <span class="series-comment-date">${c.date || 'Reciente'}</span>
+            </div>
+            <p class="series-comment-text">${window.Utils.sanitizeHTML(c.text)}</p>
+            <div class="series-comment-reactions-row">
+              <button type="button" class="series-comment-react-btn ${reactions['❤️'] > 0 ? 'active' : ''}" onclick="window.app.reactSeriesComment('${series.id}', '${c.id}', '❤️')">
+                <span>❤️</span> <span>${reactions['❤️'] || 0}</span>
+              </button>
+              <button type="button" class="series-comment-react-btn ${reactions['🔥'] > 0 ? 'active' : ''}" onclick="window.app.reactSeriesComment('${series.id}', '${c.id}', '🔥')">
+                <span>🔥</span> <span>${reactions['🔥'] || 0}</span>
+              </button>
+              <button type="button" class="series-comment-react-btn ${reactions['😂'] > 0 ? 'active' : ''}" onclick="window.app.reactSeriesComment('${series.id}', '${c.id}', '😂')">
+                <span>😂</span> <span>${reactions['😂'] || 0}</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    if (formEl) {
+      formEl.onsubmit = (e) => {
+        e.preventDefault();
+        const input = document.getElementById('input-series-comment-text');
+        const text = input ? input.value.trim() : '';
+        if (!text) return;
+
+        const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+        this.storage.addSeriesComment(series.id, text, user);
+        if (input) input.value = '';
+
+        const updatedSeries = this.storage.getSeriesById(series.id);
+        this.renderSeriesComments(updatedSeries);
+        window.Utils.showToast('¡Comentario publicado!', 'success');
+      };
+    }
+  }
+
+  reactSeriesComment(seriesId, commentId, emoji) {
+    this.storage.reactSeriesComment(seriesId, commentId, emoji);
+    const updatedSeries = this.storage.getSeriesById(seriesId);
+    if (updatedSeries) {
+      this.renderSeriesComments(updatedSeries);
     }
   }
 
   deleteSeries(seriesId) {
-    if (confirm('¿Eliminar esta serie?')) {
-      const data = this.storage.getGroupData();
-      data.series = (data.series || []).filter(s => s.id !== seriesId);
-      this.storage.saveGroupData(null, data);
+    if (confirm('¿Eliminar esta serie de las maratones del grupo?')) {
+      this.storage.deleteSeries(seriesId);
       window.Utils.showToast('Serie eliminada', 'info');
-      this.renderSeries();
-      this.renderInicio();
+      this.backToSeriesList();
     }
   }
 
@@ -4461,7 +5056,10 @@ class LumaApp {
     });
     document.getElementById('btn-sheet-create-series')?.addEventListener('click', () => {
       this.closeModal('modal-create-sheet');
-      document.getElementById('btn-new-series')?.click();
+      window.location.hash = '#series';
+      setTimeout(() => {
+        document.getElementById('series-search-input')?.focus();
+      }, 300);
     });
     document.getElementById('btn-sheet-create-note')?.addEventListener('click', () => {
       this.closeModal('modal-create-sheet');
