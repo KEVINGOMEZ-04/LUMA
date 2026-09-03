@@ -1347,6 +1347,51 @@
       return comment;
     }
 
+    isSeriesCompletedByUser(series, userId) {
+      if (!series) return false;
+      const uid = userId || (this.getUserProfile() || {}).id || 'usr_me';
+      const up = series.userProgress?.[uid];
+      if (up && up.status === 'Completada') return true;
+
+      const seasons = series.seasons || [];
+      if (seasons.length === 0) return false;
+      const totalEpisodes = seasons.reduce((acc, s) => acc + (s.episodeCount || 0), 0);
+      if (totalEpisodes === 0) return false;
+
+      const watchedKeys = Object.keys(up?.watchedEpisodes || {});
+      return watchedKeys.length >= totalEpisodes;
+    }
+
+    rateSeriesScore(seriesId, score, userObj) {
+      const data = this.getGroupData();
+      const series = (data.series || []).find(s => s.id === seriesId);
+      if (!series) return { error: 'Serie no encontrada' };
+
+      const user = userObj || this.getUserProfile();
+      const uid = user.id || 'usr_me';
+
+      if (!this.isSeriesCompletedByUser(series, uid)) {
+        return { error: 'Solo se puede calificar la serie cuando hayas visto todos los episodios 🍿' };
+      }
+
+      if (!series.ratings) series.ratings = {};
+      series.ratings[uid] = {
+        userId: uid,
+        userName: user.name || 'Kevin',
+        userAvatar: user.avatar || 'assets/icon.png',
+        score: parseFloat(score),
+        ratedAt: new Date().toISOString()
+      };
+
+      const ratingValues = Object.values(series.ratings).map(r => r.score);
+      const avg = ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length;
+      series.groupRating = parseFloat(avg.toFixed(1));
+
+      this.saveGroupData(null, data);
+      this.notify('series');
+      return { success: true, groupRating: series.groupRating, myRating: series.ratings[uid].score };
+    }
+
     getGoals() { return this.getGroupData().goals || []; }
     saveGoal(goal) {
       const data = this.getGroupData();
