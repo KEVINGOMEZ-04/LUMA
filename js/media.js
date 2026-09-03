@@ -256,6 +256,68 @@ window.MediaService = {
     }
   },
 
+  async getMovieWatchProviders(tmdbId) {
+    if (!tmdbId) return null;
+    try {
+      const data = await this.fetchTmdbWithFallback(`/movie/${tmdbId}/watch/providers`);
+      if (!data || !data.results) return null;
+
+      const results = data.results;
+      const priorityCountries = ['CO', 'MX', 'ES', 'AR', 'CL', 'US'];
+      let selectedCountry = priorityCountries.find(c => results[c] && (results[c].flatrate || results[c].rent || results[c].buy || results[c].ads));
+      if (!selectedCountry) {
+        selectedCountry = Object.keys(results).find(c => results[c] && (results[c].flatrate || results[c].rent || results[c].buy || results[c].ads));
+      }
+
+      if (!selectedCountry || !results[selectedCountry]) return null;
+
+      const countryData = results[selectedCountry];
+      const providersMap = new Map();
+
+      (countryData.flatrate || []).forEach(p => {
+        if (!providersMap.has(p.provider_id)) {
+          providersMap.set(p.provider_id, {
+            id: p.provider_id,
+            name: p.provider_name,
+            logo: p.logo_path ? `https://image.tmdb.org/t/p/original${p.logo_path}` : '',
+            type: 'Suscripción'
+          });
+        }
+      });
+
+      (countryData.ads || []).forEach(p => {
+        if (!providersMap.has(p.provider_id)) {
+          providersMap.set(p.provider_id, {
+            id: p.provider_id,
+            name: p.provider_name,
+            logo: p.logo_path ? `https://image.tmdb.org/t/p/original${p.logo_path}` : '',
+            type: 'Gratis'
+          });
+        }
+      });
+
+      (countryData.rent || []).forEach(p => {
+        if (!providersMap.has(p.provider_id)) {
+          providersMap.set(p.provider_id, {
+            id: p.provider_id,
+            name: p.provider_name,
+            logo: p.logo_path ? `https://image.tmdb.org/t/p/original${p.logo_path}` : '',
+            type: 'Alquiler'
+          });
+        }
+      });
+
+      return {
+        country: selectedCountry,
+        link: countryData.link || '',
+        providers: Array.from(providersMap.values())
+      };
+    } catch (err) {
+      console.warn('Error obteniendo plataformas en TMDb:', err);
+      return null;
+    }
+  },
+
   async searchSeries(query) {
     if (!query || !query.trim()) return [];
     try {
