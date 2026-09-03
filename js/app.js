@@ -3273,8 +3273,15 @@ class LumaApp {
         `;
       }
 
-      // Comentarios
-      const commentsCount = m.commentsCount || (m.comments ? m.comments.length : 0);
+      // Comentarios seguros (evitar undefined)
+      let commentsCount = 0;
+      if (typeof m.commentsCount === 'number') {
+        commentsCount = m.commentsCount;
+      } else if (Array.isArray(m.comments)) {
+        commentsCount = m.comments.length;
+      } else if (m.comments && typeof m.comments === 'object') {
+        commentsCount = Object.keys(m.comments).length;
+      }
 
       return `
         <div class="movie-collab-card" onclick="window.app.openMovieView('${m.id}')" data-id="${m.id}">
@@ -3339,7 +3346,7 @@ class LumaApp {
             <!-- Fila Inferior: Comentarios y Recuerdos -->
             <div class="movie-card-footer-row">
               <button type="button" class="movie-footer-comments-btn" onclick="event.stopPropagation(); window.app.openMovieComments('${m.id}', event)">
-                <span>💬</span> <span>${commentsCount} comentarios</span>
+                <span>💬</span> <span>${commentsCount} comentario${commentsCount === 1 ? '' : 's'}</span>
               </button>
               ${memoriesHtml}
             </div>
@@ -3367,6 +3374,11 @@ class LumaApp {
     });
   }
 
+  closeMovieSearchResults() {
+    const resultsBox = document.getElementById('movie-live-search-results');
+    if (resultsBox) resultsBox.style.display = 'none';
+  }
+
   initMovieLiveSearch() {
     const searchInput = document.getElementById('movie-search-input');
     const resultsBox = document.getElementById('movie-live-search-results');
@@ -3385,12 +3397,20 @@ class LumaApp {
       }
 
       resultsBox.style.display = 'flex';
-      resultsBox.innerHTML = '<div style="color: var(--color-text-secondary); padding: 0.85rem; text-align: center;">Buscando películas en TMDb... 🍿</div>';
+      resultsBox.innerHTML = `
+        <div style="color: var(--color-text-secondary); padding: 1rem; text-align: center; font-size: 0.85rem;">
+          Buscando "<strong>${window.Utils.sanitizeHTML(query)}</strong>" en TMDb... 🍿
+        </div>
+      `;
 
       const movies = await window.MediaService.searchMovies(query);
       if (movies.length === 0) {
         resultsBox.innerHTML = `
-          <div style="color: var(--color-text-muted); padding: 0.85rem; text-align: center;">
+          <div class="movie-results-header">
+            <span>🎬 Búsqueda TMDb</span>
+            <button type="button" class="btn-close-movie-results" onclick="window.app.closeMovieSearchResults()">✕ Cerrar</button>
+          </div>
+          <div style="color: var(--color-text-muted); padding: 1rem; text-align: center; font-size: 0.85rem;">
             No se encontraron películas en TMDb para "<strong>${window.Utils.sanitizeHTML(query)}</strong>".
           </div>
         `;
@@ -3399,19 +3419,25 @@ class LumaApp {
 
       this.cachedTmdbSearch = movies;
 
-      resultsBox.innerHTML = movies.map((m, idx) => `
-        <div class="movie-live-result-item">
-          <img src="${m.poster || 'assets/icon.png'}" class="movie-live-poster" alt="poster">
-          <div class="movie-live-meta">
-            <div class="movie-live-title">${window.Utils.sanitizeHTML(m.title)}</div>
-            <div class="movie-live-sub">${m.year || ''} • ${window.Utils.sanitizeHTML(m.genres || 'Cine')}</div>
-            <div class="movie-live-rating">⭐ TMDb ${m.voteAverage || '8.5'}</div>
-          </div>
-          <button type="button" class="btn-primary-purple" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;" onclick="window.app.selectMovieFromSearch(${idx})">
-            + Añadir
-          </button>
+      resultsBox.innerHTML = `
+        <div class="movie-results-header">
+          <span>🎬 Resultados en TMDb (${movies.length})</span>
+          <button type="button" class="btn-close-movie-results" onclick="window.app.closeMovieSearchResults()">✕ Cerrar</button>
         </div>
-      `).join('');
+        ${movies.map((m, idx) => `
+          <div class="movie-live-result-item">
+            <img src="${m.poster || 'assets/icon.png'}" class="movie-live-poster" alt="poster" loading="lazy">
+            <div class="movie-live-meta">
+              <div class="movie-live-title" title="${window.Utils.sanitizeHTML(m.title)}">${window.Utils.sanitizeHTML(m.title)}</div>
+              <div class="movie-live-sub">${m.year || ''} • ${window.Utils.sanitizeHTML(m.genres || 'Cine')}</div>
+              <div class="movie-live-rating">⭐ TMDb ${m.voteAverage || '8.5'}</div>
+            </div>
+            <button type="button" class="btn-movie-add-inline" onclick="window.app.selectMovieFromSearch(${idx})">
+              + Añadir
+            </button>
+          </div>
+        `).join('')}
+      `;
     };
 
     if (btnSearch && !btnSearch.dataset.bound) {
@@ -3464,6 +3490,7 @@ class LumaApp {
       }
     });
   }
+
 
   selectMovieFromSearch(index) {
     if (!this.cachedTmdbSearch || !this.cachedTmdbSearch[index]) return;
