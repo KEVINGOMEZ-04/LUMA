@@ -374,17 +374,193 @@
     series: [
       {
         id: 'ser_1',
+        tmdbId: 94605,
         title: 'Arcane',
-        year: '2021',
-        poster: 'https://image.tmdb.org/t/p/w500/abPQHGHp0kLwNq2q6p8v3s1H37x.jpg',
-        synopsis: 'En medio del conflicto entre las ciudades gemelas de Piltóver y Zaun, dos hermanas luchan en bandos opuestos de una guerra.',
-        proposedBy: 'Dani',
+        originalTitle: 'Arcane: League of Legends',
+        years: '2021–2024',
+        genres: 'Animación, Ciencia ficción, Acción',
         platform: 'Netflix',
-        currentSeason: 2,
-        currentEpisode: 6,
-        totalEpisodes: 9,
+        poster: 'https://image.tmdb.org/t/p/w500/abPQHGHp0kLwNq2q6p8v3s1H37x.jpg',
+        backdrop: 'https://image.tmdb.org/t/p/w1280/2meX1nMdScFOoV4370rqHWKm5oY.jpg',
+        synopsis: 'En medio del conflicto entre las ciudades gemelas de Piltóver y Zaun, dos hermanas luchan en bandos opuestos de una guerra entre tecnologías mágicas y convicciones incompatibles.',
+        proposedBy: {
+          id: 'luma_member_2',
+          name: 'Laura',
+          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+          date: '15 Feb 2026'
+        },
+        groupRating: 9.5,
         status: 'Viendo',
-        createdAt: '2026-02-01T21:00:00Z'
+        priority: 5,
+        numberOfSeasons: 2,
+        totalEpisodes: 18,
+        seasons: [
+          { seasonNumber: 1, name: 'Temporada 1', episodeCount: 9 },
+          { seasonNumber: 2, name: 'Temporada 2', episodeCount: 9 }
+        ],
+        userProgress: {
+          'usr_me': {
+            userId: 'usr_me',
+            userName: 'Kevin',
+            userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+            currentSeason: 1,
+            currentEpisode: 4,
+            watchedEpisodes: { '1_1': true, '1_2': true, '1_3': true, '1_4': true },
+            lastWatched: { season: 1, episode: 4 },
+            status: 'Viendo',
+            updatedAt: '2026-03-01T18:00:00Z'
+          },
+          'luma_member_2': {
+            userId: 'luma_member_2',
+            userName: 'Laura',
+            userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+            currentSeason: 1,
+            currentEpisode: 6,
+            watchedEpisodes: { '1_1': true, '1_2': true, '1_3': true, '1_4': true, '1_5': true, '1_6': true },
+            lastWatched: { season: 1, episode: 6 },
+            status: 'Viendo',
+            updatedAt: '2026-03-02T20:30:00Z'
+          },
+          'luma_host_1': {
+            userId: 'luma_host_1',
+            userName: 'Andrés',
+            userAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+            currentSeason: 2,
+            currentEpisode: 2,
+            watchedEpisodes: {
+              '1_1': true, '1_2': true, '1_3': true, '1_4': true, '1_5': true, '1_6': true, '1_7': true, '1_8': true, '1_9': true,
+              '2_1': true, '2_2': true
+            },
+            lastWatched: { season: 2, episode: 2 },
+            status: 'Viendo',
+            updatedAt: '2026-03-03T01:15:00Z'
+          }
+        },
+        comments: [
+          {
+            id: 'scom_1',
+            userId: 'usr_me',
+            userName: 'Kevin',
+            userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+            userProgressLabel: 'T1 · Cap 4',
+            text: 'Este capítulo me voló la cabeza. La animación estuvo brutal.',
+            date: 'Hace 2 h',
+            createdAt: '2026-03-03T09:00:00Z',
+            reactions: { '❤️': 3, '🔥': 5, '😂': 0 }
+          },
+          {
+            id: 'scom_2',
+            userId: 'luma_member_2',
+            userName: 'Laura',
+            userAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+            userProgressLabel: 'T1 · Cap 6',
+            text: 'La música en la batalla del puente es una obra maestra 🎶🔥',
+            date: 'Ayer',
+            createdAt: '2026-03-02T21:00:00Z',
+            reactions: { '🔥': 4, '❤️': 2, '😂': 0 }
+          }
+        ],
+        createdAt: '2026-02-15T18:00:00Z'
+      },
+      {
+        id: 'ser_2',
+        tmdbId: 66732,
+        title: 'Stranger Things',
+        originalTitle: 'Stranger Things',
+        years: '2016–2025',
+        genres: 'Ciencia ficción, Drama, Misterio',
+        platform: 'Netflix',
+        poster: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
+        backdrop: 'https://image.tmdb.org/t/p/w1280/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
+        synopsis: 'A raíz de la desaparición de un niño, un pueblo desvela un misterio relacionado con experimentos secretos, fuerzas sobrenaturales aterradoras y una niña muy extraña.',
+        proposedBy: {
+          id: 'usr_me',
+          name: 'Kevin',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+          date: '10 Feb 2026'
+        },
+        groupRating: 9.2,
+        status: 'Viendo',
+        priority: 5,
+        numberOfSeasons: 4,
+        totalEpisodes: 34,
+        seasons: [
+          { seasonNumber: 1, name: 'Temporada 1', episodeCount: 8 },
+          { seasonNumber: 2, name: 'Temporada 2', episodeCount: 9 },
+          { seasonNumber: 3, name: 'Temporada 3', episodeCount: 8 },
+          { seasonNumber: 4, name: 'Temporada 4', episodeCount: 9 }
+        ],
+        userProgress: {
+          'usr_me': {
+            userId: 'usr_me',
+            userName: 'Kevin',
+            userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+            currentSeason: 2,
+            currentEpisode: 3,
+            watchedEpisodes: { '1_1': true, '1_2': true, '1_3': true, '1_4': true, '1_5': true, '1_6': true, '1_7': true, '1_8': true, '2_1': true, '2_2': true, '2_3': true },
+            lastWatched: { season: 2, episode: 3 },
+            status: 'Viendo',
+            updatedAt: '2026-02-28T19:00:00Z'
+          }
+        },
+        comments: [
+          {
+            id: 'scom_3',
+            userId: 'usr_me',
+            userName: 'Kevin',
+            userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+            userProgressLabel: 'T2 · Cap 3',
+            text: '¡Esa escena con Running Up That Hill en la temporada 4 es legendaria!',
+            date: 'Hace 3 días',
+            createdAt: '2026-03-01T15:00:00Z',
+            reactions: { '🔥': 6, '❤️': 3, '😂': 1 }
+          }
+        ],
+        createdAt: '2026-02-10T20:00:00Z'
+      },
+      {
+        id: 'ser_3',
+        tmdbId: 76479,
+        title: 'The Boys',
+        originalTitle: 'The Boys',
+        years: '2019–2024',
+        genres: 'Acción, Comedia, Ciencia ficción',
+        platform: 'Prime Video',
+        poster: 'https://image.tmdb.org/t/p/w500/2ZmQuiom7ZpGfMS5sXQYgU3gJ7y.jpg',
+        backdrop: 'https://image.tmdb.org/t/p/w1280/muth44leeEsB571222k3Yq0gB1.jpg',
+        synopsis: 'Un grupo de vigilantes se propone terminar con los superhéroes corruptos que abusan de sus superpoderes.',
+        proposedBy: {
+          id: 'luma_host_1',
+          name: 'Andrés',
+          avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+          date: '01 Ene 2026'
+        },
+        groupRating: 8.8,
+        status: 'Completada',
+        priority: 4,
+        numberOfSeasons: 4,
+        totalEpisodes: 32,
+        seasons: [
+          { seasonNumber: 1, name: 'Temporada 1', episodeCount: 8 },
+          { seasonNumber: 2, name: 'Temporada 2', episodeCount: 8 },
+          { seasonNumber: 3, name: 'Temporada 3', episodeCount: 8 },
+          { seasonNumber: 4, name: 'Temporada 4', episodeCount: 8 }
+        ],
+        userProgress: {
+          'usr_me': {
+            userId: 'usr_me',
+            userName: 'Kevin',
+            userAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+            currentSeason: 4,
+            currentEpisode: 8,
+            watchedEpisodes: {},
+            lastWatched: { season: 4, episode: 8 },
+            status: 'Completada',
+            updatedAt: '2026-02-20T22:00:00Z'
+          }
+        },
+        comments: [],
+        createdAt: '2026-01-01T12:00:00Z'
       }
     ],
 
@@ -981,17 +1157,194 @@
       return movie;
     }
 
-    getSeries() { return this.getGroupData().series || []; }
+    getSeries() {
+      const data = this.getGroupData();
+      let seriesList = data.series || [];
+
+      // Migración si las series guardadas previamente son del formato antiguo
+      if (seriesList.length > 0 && !seriesList[0].seasons) {
+        const defaultSeries = window.CONFIG?.defaultData?.series || [];
+        if (defaultSeries.length > 0) {
+          seriesList = JSON.parse(JSON.stringify(defaultSeries));
+          data.series = seriesList;
+          this.saveGroupData(null, data);
+        }
+      }
+      return seriesList;
+    }
+
+    getSeriesById(id) {
+      return this.getSeries().find(s => s.id === id || s.tmdbId === id);
+    }
+
     saveSeries(series) {
       const data = this.getGroupData();
       if (!data.series) data.series = [];
-      if (!series.id) series.id = window.Utils.generateId();
+      if (!series.id) series.id = 'ser_' + Date.now().toString(36);
       if (!series.createdAt) series.createdAt = new Date().toISOString();
       const idx = data.series.findIndex(s => s.id === series.id);
       if (idx >= 0) data.series[idx] = series;
       else data.series.unshift(series);
       this.saveGroupData(null, data);
+      this.notify('series');
       return series;
+    }
+
+    deleteSeries(id) {
+      const data = this.getGroupData();
+      data.series = (data.series || []).filter(s => s.id !== id);
+      this.saveGroupData(null, data);
+      this.notify('series');
+    }
+
+    markEpisodeWatched(seriesId, seasonNum, episodeNum, userObj) {
+      const data = this.getGroupData();
+      const series = (data.series || []).find(s => s.id === seriesId);
+      if (!series) return null;
+
+      const user = userObj || this.getUserProfile();
+      const uid = user.id || 'usr_me';
+      if (!series.userProgress) series.userProgress = {};
+      if (!series.userProgress[uid]) {
+        series.userProgress[uid] = {
+          userId: uid,
+          userName: user.name || 'Kevin',
+          userAvatar: user.avatar || 'assets/icon.png',
+          currentSeason: seasonNum,
+          currentEpisode: episodeNum,
+          watchedEpisodes: {},
+          lastWatched: { season: seasonNum, episode: episodeNum },
+          status: 'Viendo',
+          updatedAt: new Date().toISOString()
+        };
+      }
+
+      const up = series.userProgress[uid];
+      const key = `${seasonNum}_${episodeNum}`;
+      const isWatched = !!up.watchedEpisodes[key];
+
+      if (isWatched) {
+        delete up.watchedEpisodes[key];
+      } else {
+        up.watchedEpisodes[key] = true;
+        up.lastWatched = { season: seasonNum, episode: episodeNum };
+        up.currentSeason = seasonNum;
+        up.currentEpisode = episodeNum;
+      }
+      up.updatedAt = new Date().toISOString();
+
+      this.saveGroupData(null, data);
+      this.notify('series');
+      return { series, isWatched: !isWatched, progress: up };
+    }
+
+    markEpisodesUpTo(seriesId, targetSeason, targetEpisode, userObj) {
+      const data = this.getGroupData();
+      const series = (data.series || []).find(s => s.id === seriesId);
+      if (!series) return null;
+
+      const user = userObj || this.getUserProfile();
+      const uid = user.id || 'usr_me';
+      if (!series.userProgress) series.userProgress = {};
+      if (!series.userProgress[uid]) {
+        series.userProgress[uid] = {
+          userId: uid,
+          userName: user.name || 'Kevin',
+          userAvatar: user.avatar || 'assets/icon.png',
+          watchedEpisodes: {},
+          status: 'Viendo'
+        };
+      }
+
+      const up = series.userProgress[uid];
+      if (!up.watchedEpisodes) up.watchedEpisodes = {};
+
+      const seasons = series.seasons || [{ seasonNumber: targetSeason, episodeCount: targetEpisode }];
+
+      // Marcar del 1 al N
+      for (const s of seasons) {
+        const sNum = s.seasonNumber;
+        if (sNum < targetSeason) {
+          for (let ep = 1; ep <= s.episodeCount; ep++) {
+            up.watchedEpisodes[`${sNum}_${ep}`] = true;
+          }
+        } else if (sNum === targetSeason) {
+          for (let ep = 1; ep <= targetEpisode; ep++) {
+            up.watchedEpisodes[`${sNum}_${ep}`] = true;
+          }
+        }
+      }
+
+      up.lastWatched = { season: targetSeason, episode: targetEpisode };
+      up.currentSeason = targetSeason;
+      up.currentEpisode = targetEpisode;
+      up.updatedAt = new Date().toISOString();
+
+      // Comprobar si completó toda la serie (último episodio de última temporada)
+      const lastSeason = seasons[seasons.length - 1];
+      const isFullyCompleted = (targetSeason === lastSeason.seasonNumber && targetEpisode >= lastSeason.episodeCount);
+      if (isFullyCompleted) {
+        up.status = 'Completada';
+        series.status = 'Completada';
+      } else {
+        up.status = 'Viendo';
+        if (series.status !== 'Completada') series.status = 'Viendo';
+      }
+
+      this.saveGroupData(null, data);
+      this.notify('series');
+      return { series, isFullyCompleted, progress: up };
+    }
+
+    addSeriesComment(seriesId, text, userObj) {
+      const data = this.getGroupData();
+      const series = (data.series || []).find(s => s.id === seriesId);
+      if (!series || !text || !text.trim()) return null;
+
+      const user = userObj || this.getUserProfile();
+      const uid = user.id || 'usr_me';
+      const up = (series.userProgress && series.userProgress[uid]) ? series.userProgress[uid] : null;
+
+      let progressLabel = 'T1 · Cap 1';
+      if (up && up.lastWatched) {
+        progressLabel = `T${up.lastWatched.season} · Cap ${up.lastWatched.episode}`;
+      } else if (up && up.currentSeason) {
+        progressLabel = `T${up.currentSeason} · Cap ${up.currentEpisode || 1}`;
+      }
+
+      if (!series.comments) series.comments = [];
+      const newComment = {
+        id: 'scom_' + Date.now().toString(36),
+        userId: uid,
+        userName: user.name || 'Kevin',
+        userAvatar: user.avatar || 'assets/icon.png',
+        userProgressLabel: progressLabel,
+        text: text.trim(),
+        date: 'Hace un momento',
+        createdAt: new Date().toISOString(),
+        reactions: { '❤️': 0, '😂': 0, '🔥': 0 }
+      };
+
+      series.comments.unshift(newComment);
+      this.saveGroupData(null, data);
+      this.notify('series');
+      return newComment;
+    }
+
+    reactSeriesComment(seriesId, commentId, emoji) {
+      const data = this.getGroupData();
+      const series = (data.series || []).find(s => s.id === seriesId);
+      if (!series || !series.comments) return null;
+
+      const comment = series.comments.find(c => c.id === commentId);
+      if (!comment) return null;
+
+      if (!comment.reactions) comment.reactions = {};
+      comment.reactions[emoji] = (comment.reactions[emoji] || 0) + 1;
+
+      this.saveGroupData(null, data);
+      this.notify('series');
+      return comment;
     }
 
     getGoals() { return this.getGroupData().goals || []; }
