@@ -1623,30 +1623,49 @@
         <div class="movie-view-hero-body">
           <div class="movie-view-poster-container">
             <img id="movie-view-poster" src="" alt="Poster" class="movie-view-poster-img">
-            <button type="button" id="movie-view-trailer-btn" class="movie-view-trailer-fab" title="Ver tráiler oficial">
-              <span>▶</span>
-            </button>
           </div>
           <div class="movie-view-hero-meta">
             <div class="movie-view-status-badge-wrap">
               <span id="movie-view-status-pill" class="movie-status-pill">🍿 Vista</span>
               <span id="movie-view-tmdb-score" class="movie-tmdb-pill">⭐ 8.6 TMDb</span>
             </div>
-            <h2 id="movie-view-title" class="movie-view-title-text">Interstellar</h2>
+            <h2 id="movie-view-title" class="movie-view-title-text">Película</h2>
             <div class="movie-view-meta-row" id="movie-view-meta-row">
-              <span id="movie-view-year">2014</span> • 
-              <span id="movie-view-duration">2h 49m</span> • 
-              <span id="movie-view-genres">Aventura, Drama, Ciencia ficción</span>
+              <span id="movie-view-year">2024</span> • 
+              <span id="movie-view-duration">2h 15m</span> • 
+              <span id="movie-view-genres">Drama, Cine</span>
             </div>
             <div class="movie-view-proposer-line" id="movie-view-proposer">
               <img id="movie-view-proposer-avatar" src="" class="movie-author-mini-avatar" alt="Avatar">
-              <span>Propuesta por <strong id="movie-view-proposer-name">Laura</strong> • <span id="movie-view-date">10 Sep 2025</span></span>
+              <span>Propuesta por <strong id="movie-view-proposer-name">Usuario</strong> • <span id="movie-view-date">Hoy</span></span>
+            </div>
+            <div class="movie-view-actions-row">
+              <button type="button" id="movie-view-trailer-btn" class="btn-movie-trailer-link">
+                <span>🎬 Ver tráiler oficial</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       <div class="movie-view-scroll-body">
+        <!-- Dónde Ver (Plataformas de Streaming Disponibles) -->
+        <div class="movie-view-section" id="movie-view-providers-section">
+          <div class="movie-providers-header">
+            <h4 class="movie-view-sec-title" style="margin-bottom: 0;">📺 Dónde Ver</h4>
+            <span class="movie-providers-badge" id="movie-providers-country-badge">Streaming oficial</span>
+          </div>
+          <div class="movie-providers-list" id="movie-providers-list">
+            <!-- Badges de plataformas con logo oficial y nombre -->
+          </div>
+          <div class="movie-providers-quick-row">
+            <span class="movie-providers-quick-label">Buscar directamente:</span>
+            <div class="movie-providers-chips-wrap" id="movie-providers-chips">
+              <!-- Links directos a Netflix, Prime Video, Disney+, Max -->
+            </div>
+          </div>
+        </div>
+
         <!-- Sinopsis -->
         <div class="movie-view-section">
           <h4 class="movie-view-sec-title">📖 Sinopsis</h4>
@@ -1670,11 +1689,13 @@
 
           <!-- Slider / Selector para que el usuario califique -->
           <div class="movie-user-rate-box">
-            <span class="user-rate-prompt">Tu calificación personal:</span>
+            <div class="user-rate-header-row">
+              <span class="user-rate-prompt">⭐ Tu calificación personal:</span>
+              <span class="user-rate-value-pill" id="movie-rate-slider-val">9.5 ⭐</span>
+            </div>
             <div class="user-rate-slider-row">
               <input type="range" id="movie-rate-slider" min="1" max="10" step="0.5" value="9.5" class="custom-slider">
-              <span class="user-rate-value-pill" id="movie-rate-slider-val">9.5 ⭐</span>
-              <button type="button" class="btn-primary-purple" id="btn-save-user-movie-rating" style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">Guardar</button>
+              <button type="button" class="btn-rate-save-pill" id="btn-save-user-movie-rating">Guardar nota</button>
             </div>
           </div>
 
@@ -1693,7 +1714,7 @@
             <textarea id="input-movie-user-review" class="form-control" rows="2" placeholder="Escribe tu reseña o qué te pareció..." required></textarea>
             <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.4rem;">
               <button type="button" class="btn-secondary" id="btn-cancel-write-review" style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">Cancelar</button>
-              <button type="submit" class="btn-primary-purple" style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">Publicar reseña</button>
+              <button type="submit" class="btn-rate-save-pill" style="padding: 0.45rem 1rem; font-size: 0.82rem;">Publicar reseña</button>
             </div>
           </form>
           <!-- Lista de reseñas con formato cita -->
