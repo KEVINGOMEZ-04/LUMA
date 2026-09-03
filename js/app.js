@@ -3246,8 +3246,14 @@ class LumaApp {
       const priorityCount = Math.min(5, Math.max(1, m.priority || 5));
       const priorityStars = '★'.repeat(priorityCount) + '☆'.repeat(5 - priorityCount);
 
-      // Reseña destacada
-      const quoteText = m.review || m.overview || 'Una gran experiencia cinematográfica.';
+      // Reseña destacada (solo si un integrante la escribió de verdad, nunca texto falso de relleno)
+      const cleanReview = (m.review && typeof m.review === 'string') ? m.review.trim() : '';
+      const hasRealReview = cleanReview.length > 0 && cleanReview !== 'Una gran experiencia cinematográfica.';
+      const quoteHtml = hasRealReview ? `
+        <div class="movie-quote-container">
+          <p class="movie-quote-text">“${window.Utils.sanitizeHTML(cleanReview)}”</p>
+        </div>
+      ` : '';
 
       // Recuerdos vinculados
       const linkedMems = (m.linkedMemories || []).map(mid => memories.find(x => x.id === mid)).filter(Boolean);
@@ -3337,8 +3343,7 @@ class LumaApp {
               </div>
             </div>
 
-            <!-- Reseña del Parche -->
-            <p class="movie-quote-text">“${window.Utils.sanitizeHTML(quoteText)}”</p>
+            ${quoteHtml}
 
             <!-- Fila Inferior: Comentarios y Recuerdos -->
             <div class="movie-card-footer-row">
