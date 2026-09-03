@@ -4144,7 +4144,9 @@ class LumaApp {
 
     // 2. Filtros Rápidos
     const activeFilter = this.activeSeriesFilter || 'all';
-    if (activeFilter === 'Viendo' || activeFilter === 'Completada' || activeFilter === 'Por ver' || activeFilter === 'Favorita') {
+    if (activeFilter === 'my-proposals') {
+      seriesList = seriesList.filter(s => s.proposedBy && (s.proposedBy.id === currentUser.id || s.proposedBy.name === currentUser.name));
+    } else if (activeFilter === 'Viendo' || activeFilter === 'Completada' || activeFilter === 'Por ver' || activeFilter === 'Favorita') {
       seriesList = seriesList.filter(s => {
         if (s.status === activeFilter) return true;
         const up = s.userProgress?.[currentUser.id];
@@ -4159,7 +4161,7 @@ class LumaApp {
           <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📺</div>
           <h3 style="color: #FFFFFF; font-size: 1.1rem; margin-bottom: 0.35rem;">No hay series en esta categoría</h3>
           <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 1rem;">Usa el buscador de TMDb arriba para añadir la próxima maratón del grupo.</p>
-          <button type="button" class="btn-series-search-action" onclick="document.getElementById('series-search-input')?.focus()">
+          <button type="button" class="btn-add-movie-purple" style="margin: 0 auto;" onclick="document.getElementById('series-search-input')?.focus()">
             <span>Buscar en TMDb</span> <span>🔍</span>
           </button>
         </div>
@@ -4178,16 +4180,26 @@ class LumaApp {
       const seasons = s.seasons || [{ seasonNumber: 1, episodeCount: s.totalEpisodes || 10 }];
       const currentSeasonObj = seasons.find(sea => sea.seasonNumber === curSeason) || seasons[0];
       const totalSeasonEps = currentSeasonObj.episodeCount || 10;
+      const totalSeriesEpisodes = s.totalEpisodes || (s.seasons ? s.seasons.reduce((acc, sea) => acc + (sea.episodeCount || 0), 0) : 10);
       const progressPct = Math.min(100, Math.max(0, Math.round((curEpisode / totalSeasonEps) * 100)));
 
-      // Avatares de integrantes viéndola
+      // Integrantes viéndola
       const watchingUsers = Object.values(s.userProgress || {});
-      const watchingAvatarsHtml = watchingUsers.slice(0, 4).map(u => `
+      const watchingAvatarsHtml = watchingUsers.slice(0, 5).map(u => `
         <img src="${u.userAvatar || 'assets/icon.png'}" class="series-card-member-avatar" alt="${window.Utils.sanitizeHTML(u.userName || 'Amigo')}" title="${window.Utils.sanitizeHTML(u.userName || 'Amigo')}: T${u.currentSeason || 1} · Cap ${u.currentEpisode || 1}">
       `).join('');
 
       const platformLabel = s.platform || 'Netflix';
-      const ratingLabel = s.groupRating ? `⭐ ${s.groupRating}` : '⭐ 9.5';
+      const proposerName = s.proposedBy?.name || 'Usuario LUMA';
+      const proposerAvatar = s.proposedBy?.avatar || 'assets/icon.png';
+      const proposerDate = s.proposedBy?.date || 'Reciente';
+
+      // Comentarios seguros
+      const commentsCount = Array.isArray(s.comments) ? s.comments.length : 0;
+
+      // Calificación: Solo permitida si se han visto todos los episodios
+      const isCompleted = this.storage.isSeriesCompletedByUser(s, currentUser.id);
+      const myRating = s.ratings?.[currentUser.id]?.score;
 
       return `
         <div class="series-collab-card" onclick="window.app.openSeriesDetail('${s.id}')" data-id="${s.id}">
@@ -4199,35 +4211,69 @@ class LumaApp {
 
           <!-- Información y Avance -->
           <div class="series-card-info">
-            <div>
-              <div class="series-card-title-row">
-                <h3 class="series-card-title">${window.Utils.sanitizeHTML(s.title)}</h3>
-                <span style="font-size: 0.78rem; font-weight: 700; color: #FBBF24;">${ratingLabel}</span>
-              </div>
-              <div class="series-card-meta">
-                ${s.years || s.year || '2024'} • ${window.Utils.sanitizeHTML(s.genres || 'Serie')}
+            <!-- Título y Botón de Borrar -->
+            <div class="series-card-title-row">
+              <h3 class="series-card-title">${window.Utils.sanitizeHTML(s.title)}</h3>
+              <button type="button" class="series-card-trash-btn" onclick="event.stopPropagation(); window.app.deleteSeries('${s.id}')" title="Eliminar serie de las maratones">🗑️</button>
+            </div>
+
+            <!-- Temporadas y total de capítulos -->
+            <div class="series-card-meta">
+              ${s.years || s.year || '2024'} • ${s.numberOfSeasons || (s.seasons ? s.seasons.length : 1)} temporadas • ${totalSeriesEpisodes} capítulos
+            </div>
+
+            <!-- Géneros -->
+            <div style="font-size: 0.73rem; color: #A78BFA; font-weight: 500; margin-bottom: 0.25rem;">
+              ${window.Utils.sanitizeHTML(s.genres || 'Drama, Serie')}
+            </div>
+
+            <!-- Quién la añadió -->
+            <div class="series-proposer-info">
+              <img src="${proposerAvatar}" class="series-proposer-avatar" alt="${window.Utils.sanitizeHTML(proposerName)}">
+              <span>Propuesta por <strong>${window.Utils.sanitizeHTML(proposerName)}</strong> • ${proposerDate}</span>
+            </div>
+
+            <!-- Quiénes la están viendo -->
+            <div class="series-watchers-row">
+              <span class="series-watchers-label">Viendo:</span>
+              <div class="series-card-members-watching" title="Integrantes siguiendo esta serie">
+                ${watchingAvatarsHtml}
               </div>
             </div>
 
-            <!-- Barra de Progreso Dinámica -->
+            <!-- Barra de Progreso Dinámica (% de cuánto se han visto) -->
             <div class="series-card-progress-box">
               <div class="series-card-progress-bar-track">
                 <div class="series-card-progress-bar-fill" style="width: ${progressPct}%;"></div>
               </div>
               <div class="series-card-progress-text">
                 <span>Temp. ${curSeason} · Cap. ${curEpisode} / ${totalSeasonEps}</span>
-                <span>${progressPct}%</span>
+                <span>${progressPct}% visto</span>
               </div>
             </div>
 
-            <!-- Footer: Botón Continuar y Avatares -->
+            <!-- Calificación (Solo disponible si se han visto todos los episodios) -->
+            <div class="series-card-ratings-row">
+              ${isCompleted ? `
+                <button type="button" class="series-rating-badge unlocked" onclick="event.stopPropagation(); window.app.promptRateSeries('${s.id}')" title="Toca para calificar la serie">
+                  ⭐ ${myRating ? 'Tu nota: ' + myRating + '/10' : 'Calificar (¡Completada!)'}
+                </button>
+              ` : `
+                <span class="series-rating-badge locked" onclick="event.stopPropagation(); window.Utils.showToast('Solo podrás calificar la serie cuando hayas visto todos los episodios 🍿', 'info')" title="Solo podrás calificar cuando hayas visto todos los episodios">
+                  🔒 Calificar al completar
+                </span>
+              `}
+              <span class="series-group-rating-pill">⭐ ${s.groupRating || '9.5'} Grupo</span>
+            </div>
+
+            <!-- Footer: Cantidad de Comentarios y Botón Continuar -->
             <div class="series-card-footer">
+              <button type="button" class="series-footer-comments-btn" onclick="event.stopPropagation(); window.app.openSeriesDetail('${s.id}')" title="Ver comentarios del grupo">
+                <span>💬</span> <span>${commentsCount} comentario${commentsCount === 1 ? '' : 's'}</span>
+              </button>
               <button type="button" class="btn-series-continue" onclick="event.stopPropagation(); window.app.openSeriesDetail('${s.id}')">
                 <span>Continuar</span> <span>▶</span>
               </button>
-              <div class="series-card-members-watching" title="Integrantes siguiendo esta serie">
-                ${watchingAvatarsHtml}
-              </div>
             </div>
           </div>
         </div>
@@ -4417,12 +4463,48 @@ class LumaApp {
     this.openSeriesDetail(newSeries.id);
   }
 
+  promptRateSeries(seriesId) {
+    const series = this.storage.getSeriesById(seriesId);
+    if (!series) return;
+    const currentUser = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+
+    if (!this.storage.isSeriesCompletedByUser(series, currentUser.id)) {
+      window.Utils.showToast('Solo podrás calificar la serie cuando hayas visto todos los episodios 🍿', 'info');
+      return;
+    }
+
+    const currentScore = series.ratings?.[currentUser.id]?.score || 9.5;
+    const inputScore = prompt(`Califica "${series.title}" del 1 al 10 (¡Felicidades por completarla! 🎉):`, currentScore);
+    if (inputScore === null) return;
+
+    const scoreNum = parseFloat(inputScore);
+    if (isNaN(scoreNum) || scoreNum < 1 || scoreNum > 10) {
+      window.Utils.showToast('Por favor introduce una nota válida entre 1 y 10', 'error');
+      return;
+    }
+
+    const res = this.storage.rateSeriesScore(seriesId, scoreNum, currentUser);
+    if (res.error) {
+      window.Utils.showToast(res.error, 'error');
+    } else {
+      window.Utils.showToast(`¡Calificación de ${scoreNum}/10 guardada para "${series.title}"! ⭐`, 'success');
+      this.renderSeries();
+      if (this.activeSeriesId === seriesId) {
+        this.openSeriesDetail(seriesId);
+      }
+    }
+  }
+
   // --- PANTALLA 2: DETALLE DE LA SERIE (PANTALLA COMPLETA) ---
   async openSeriesDetail(seriesId) {
     const series = this.storage.getSeriesById(seriesId);
     if (!series) return;
 
     this.activeSeriesId = seriesId;
+    const currentUser = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+
+    // Temporada 1 seleccionada por defecto al abrir
+    this.activeSeriesSeason = (series.seasons && series.seasons.length > 0) ? series.seasons[0].seasonNumber : 1;
 
     // Cambiar vistas: Ocultar biblioteca y mostrar detalle
     const biblioSec = document.getElementById('section-series');
@@ -4465,6 +4547,18 @@ class LumaApp {
     if (platformBadge) platformBadge.textContent = series.platform || 'Netflix';
     if (statusPill) statusPill.textContent = series.status === 'Completada' ? '✨ Completada' : '📺 Viendo';
 
+    // Quién la propuso
+    const proposerName = series.proposedBy?.name || 'Usuario LUMA';
+    const proposerAvatar = series.proposedBy?.avatar || 'assets/icon.png';
+    const proposerDate = series.proposedBy?.date || 'Reciente';
+    const propEl = document.getElementById('series-detail-proposer-info');
+    if (propEl) {
+      propEl.innerHTML = `
+        <img src="${proposerAvatar}" class="series-proposer-avatar" alt="${window.Utils.sanitizeHTML(proposerName)}">
+        <span>Propuesta por <strong>${window.Utils.sanitizeHTML(proposerName)}</strong> • ${proposerDate}</span>
+      `;
+    }
+
     // 3 Tarjetas de Información
     const ratingEl = document.getElementById('series-detail-group-rating');
     const membersEl = document.getElementById('series-detail-members-watching');
@@ -4484,7 +4578,28 @@ class LumaApp {
     });
     const avgGroupPct = watchingUsers.length > 0 ? Math.min(100, Math.round(totalPctSum / watchingUsers.length)) : 67;
 
-    if (ratingEl) ratingEl.textContent = `${series.groupRating || '9.5'}/10`;
+    // Calificación en la tarjeta: Solo si el usuario vio todos los episodios
+    const isCompleted = this.storage.isSeriesCompletedByUser(series, currentUser.id);
+    const myRating = series.ratings?.[currentUser.id]?.score;
+
+    if (ratingEl) {
+      if (isCompleted) {
+        ratingEl.innerHTML = `
+          <div style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF;">${series.groupRating || '9.5'}/10</div>
+          <div style="font-size: 0.68rem; color: #FBBF24; font-weight: 700; cursor: pointer; margin-top: 0.15rem;" onclick="event.stopPropagation(); window.app.promptRateSeries('${series.id}')">
+            ${myRating ? 'Tu nota: ' + myRating + ' ✏️' : '⭐ Calificar'}
+          </div>
+        `;
+      } else {
+        ratingEl.innerHTML = `
+          <div style="font-size: 1.15rem; font-weight: 800; color: #FFFFFF;">${series.groupRating || '9.5'}/10</div>
+          <div style="font-size: 0.62rem; color: #94A3B8; font-weight: 500; margin-top: 0.15rem;" title="Solo podrás calificar cuando hayas visto todos los episodios">
+            🔒 Calificar al completar
+          </div>
+        `;
+      }
+    }
+
     if (membersEl) membersEl.textContent = `${watchingCount}/${totalGroupCount}`;
     if (progressEl) progressEl.textContent = `${avgGroupPct}%`;
 
