@@ -862,7 +862,12 @@
 
     getMovies() {
       const data = this.getGroupData();
-      return data.movies || [];
+      return (data.movies || []).map(m => {
+        if (m && m.review === 'Una gran experiencia cinematográfica.') {
+          m.review = '';
+        }
+        return m;
+      });
     }
     getMovie(id) {
       return this.getMovies().find(m => m.id === id);
