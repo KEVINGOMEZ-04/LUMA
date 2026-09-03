@@ -3984,13 +3984,19 @@
   color: #FBBF24;
 }
 
-/* Reseña / Cita del Parche */
+/* Reseña / Cita del Parche (solo visible si un integrante la escribió) */
+.movie-quote-container {
+  margin: 0.2rem 0;
+  padding-left: 0.55rem;
+  border-left: 2px solid rgba(109, 92, 255, 0.45);
+}
+
 .movie-quote-text {
   font-size: 0.77rem;
   color: #CBD5E1;
   font-style: italic;
   line-height: 1.35;
-  margin: 0.15rem 0;
+  margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
