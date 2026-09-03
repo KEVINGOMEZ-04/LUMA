@@ -3300,6 +3300,7 @@ class LumaApp {
           <div class="movie-card-main-info">
             <div class="movie-card-header-row">
               <h3 class="movie-card-title">${window.Utils.sanitizeHTML(m.title)}</h3>
+              <div class="movie-card-header-actions">
                 <button type="button" class="movie-status-pill ${statusClass}" onclick="event.stopPropagation(); window.app.toggleMovieWatchedStatus('${m.id}', event)" title="Toca para alternar entre 'Por ver' y 'Vista'">
                   ${statusLabel}
                 </button>
