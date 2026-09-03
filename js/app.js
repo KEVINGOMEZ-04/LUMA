@@ -3285,12 +3285,9 @@ class LumaApp {
 
       return `
         <div class="movie-collab-card" onclick="window.app.openMovieView('${m.id}')" data-id="${m.id}">
-          <!-- Póster con botón play -->
+          <!-- Póster oficial -->
           <div class="movie-poster-wrap">
             <img src="${m.poster || 'assets/icon.png'}" class="movie-poster-img" alt="${window.Utils.sanitizeHTML(m.title)}" loading="lazy">
-            <button type="button" class="movie-poster-play-btn" onclick="event.stopPropagation(); window.app.openMovieView('${m.id}')" title="Ver detalles y tráiler">
-              ▶
-            </button>
           </div>
 
           <!-- Información Principal -->
@@ -3699,6 +3696,77 @@ class LumaApp {
           window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + ' trailer official')}`, '_blank');
         }
       };
+    }
+
+    // Cargar y mostrar plataformas de streaming (Dónde Ver)
+    const providersListEl = document.getElementById('movie-providers-list');
+    const providersBadgeEl = document.getElementById('movie-providers-country-badge');
+    const quickChipsEl = document.getElementById('movie-providers-chips');
+
+    // Botones de búsqueda directa rápida
+    if (quickChipsEl) {
+      const q = encodeURIComponent(movie.title);
+      quickChipsEl.innerHTML = `
+        <a href="https://www.netflix.com/search?q=${q}" target="_blank" rel="noopener noreferrer" class="provider-quick-btn" title="Buscar en Netflix">
+          <span>🍿</span> <span>Netflix</span>
+        </a>
+        <a href="https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${q}" target="_blank" rel="noopener noreferrer" class="provider-quick-btn" title="Buscar en Prime Video">
+          <span>📦</span> <span>Prime Video</span>
+        </a>
+        <a href="https://www.disneyplus.com/search?q=${q}" target="_blank" rel="noopener noreferrer" class="provider-quick-btn" title="Buscar en Disney+">
+          <span>🏰</span> <span>Disney+</span>
+        </a>
+        <a href="https://www.max.com/search?q=${q}" target="_blank" rel="noopener noreferrer" class="provider-quick-btn" title="Buscar en Max">
+          <span>⚡</span> <span>Max</span>
+        </a>
+        <a href="https://tv.apple.com/search?term=${q}" target="_blank" rel="noopener noreferrer" class="provider-quick-btn" title="Buscar en Apple TV">
+          <span>🍏</span> <span>Apple TV</span>
+        </a>
+      `;
+    }
+
+    const renderProviders = (data) => {
+      if (!providersListEl) return;
+      if (providersBadgeEl) {
+        providersBadgeEl.textContent = data && data.country ? `Streaming en ${data.country}` : 'Streaming oficial';
+      }
+      if (!data || !data.providers || data.providers.length === 0) {
+        providersListEl.innerHTML = `
+          <div class="movie-providers-empty-note" style="grid-column: 1 / -1;">
+            No se detectó suscripción activa en streaming para esta región. Puedes consultar directamente con los accesos rápidos abajo 👇
+          </div>
+        `;
+        return;
+      }
+
+      providersListEl.innerHTML = data.providers.map(p => `
+        <a href="${data.link || `https://www.google.com/search?q=donde+ver+${encodeURIComponent(movie.title)}`}" target="_blank" rel="noopener noreferrer" class="provider-card-pill" title="Ver en ${window.Utils.sanitizeHTML(p.name)}">
+          ${p.logo ? `<img src="${p.logo}" class="provider-card-logo" alt="${window.Utils.sanitizeHTML(p.name)}">` : '<span style="font-size: 1.2rem;">📺</span>'}
+          <div class="provider-card-meta">
+            <span class="provider-card-name">${window.Utils.sanitizeHTML(p.name)}</span>
+            <span class="provider-card-type">${p.type}</span>
+          </div>
+        </a>
+      `).join('');
+    };
+
+    if (providersListEl) {
+      if (movie.watchProviders && movie.watchProviders.providers && movie.watchProviders.providers.length > 0) {
+        renderProviders(movie.watchProviders);
+      } else if (movie.tmdbId) {
+        providersListEl.innerHTML = '<span style="font-size: 0.78rem; color: var(--color-text-muted); grid-column: 1 / -1;">Consultando disponibilidad en streaming...</span>';
+        window.MediaService.getMovieWatchProviders(movie.tmdbId).then(data => {
+          if (data && data.providers && data.providers.length > 0) {
+            movie.watchProviders = data;
+            this.storage.saveMovie(movie);
+            renderProviders(data);
+          } else {
+            renderProviders(null);
+          }
+        });
+      } else {
+        renderProviders(null);
+      }
     }
 
     const synEl = document.getElementById('movie-view-synopsis');
