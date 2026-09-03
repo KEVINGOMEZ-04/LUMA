@@ -524,20 +524,23 @@
           </div>
         </div>
 
-        <!-- Buscador TMDb + Botón Añadir Película -->
-        <div class="movie-search-action-row">
-          <div class="movie-search-bar-wrap">
-            <span class="movie-search-input-icon">🔍</span>
-            <input type="text" id="movie-search-input" class="movie-search-input-field" placeholder="Buscar película en TMDb..." autocomplete="off">
-            <button type="button" id="btn-clear-movie-search" class="btn-clear-movie-input" style="display: none;">✕</button>
+        <!-- Contenedor del Buscador y Resultados Flotantes -->
+        <div class="movie-search-section-wrap">
+          <!-- Buscador TMDb + Botón Buscar -->
+          <div class="movie-search-action-row">
+            <div class="movie-search-bar-wrap">
+              <span class="movie-search-input-icon">🔍</span>
+              <input type="text" id="movie-search-input" class="movie-search-input-field" placeholder="Buscar película en TMDb..." autocomplete="off">
+              <button type="button" id="btn-clear-movie-search" class="btn-clear-movie-input" style="display: none;">✕</button>
+            </div>
+            <button type="button" id="btn-search-movie" class="btn-add-movie-purple" title="Buscar en TMDb">
+              <span>Buscar</span> <span>🔍</span>
+            </button>
           </div>
-          <button type="button" id="btn-search-movie" class="btn-add-movie-purple" title="Buscar en TMDb">
-            <span>Buscar</span> <span>🔍</span>
-          </button>
-        </div>
 
-        <!-- Resultados en Vivo de TMDb (Dropdown) -->
-        <div id="movie-live-search-results" class="movie-live-results-dropdown" style="display: none;"></div>
+          <!-- Resultados en Vivo de TMDb (Dropdown Flotante Directo) -->
+          <div id="movie-live-search-results" class="movie-live-results-dropdown" style="display: none;"></div>
+        </div>
 
         <!-- Filtros Rápidos (Chips con Scroll Horizontal) -->
         <div class="movie-filter-chips-scroll" id="movie-filter-chips">
