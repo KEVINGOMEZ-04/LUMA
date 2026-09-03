@@ -555,30 +555,165 @@
         <div class="movie-collab-feed" id="movies-collab-feed"></div>
       </section>
 
-      <!-- 5. SECCIÓN SERIES -->
+      <!-- 5. SECCIÓN SERIES (PANTALLA 1: BIBLIOTECA DE MARATONES) -->
       <section id="section-series" class="luma-section" role="tabpanel">
-        <div class="luma-section-header">
-          <h2 class="luma-section-title"><span>📺</span> Series</h2>
-        </div>
+        <!-- Hero de Series -->
+        <div class="series-hero-container">
+          <div class="series-hero-badge">
+            <span>📺 MARATONES DEL GRUPO</span>
+          </div>
+          <h1 class="series-hero-title">Series</h1>
+          <p class="series-hero-subtitle">“Cada capítulo nos acerca a la próxima aventura.”</p>
 
-        <div class="trail-controls">
-          <button type="button" class="btn-primary" id="btn-new-series"><span>+ Añadir Serie</span> 📺</button>
-          <form id="series-search-form" class="media-search">
-            <input id="series-search-input" class="form-control" placeholder="Buscar serie en TMDb (ej. Arcane, Stranger Things)..." required>
-            <button type="submit" class="btn-secondary">Buscar</button>
-          </form>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <select id="filter-series-status" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-              <option value="all">Todas las series</option>
-              <option value="Viendo">🍿 Viendo actualmente</option>
-              <option value="Completada">✨ Completadas</option>
-              <option value="Por ver">🌱 Por ver</option>
-            </select>
+          <!-- Tarjeta de Estadísticas del Grupo -->
+          <div class="series-stats-card">
+            <div class="series-stat-item">
+              <span class="series-stat-value" id="stat-series-count">18</span>
+              <span class="series-stat-label">Series</span>
+            </div>
+            <div class="series-stat-divider"></div>
+            <div class="series-stat-item">
+              <span class="series-stat-value text-purple" id="stat-series-watching">9</span>
+              <span class="series-stat-label">Viendo</span>
+            </div>
+            <div class="series-stat-divider"></div>
+            <div class="series-stat-item">
+              <span class="series-stat-value text-emerald" id="stat-series-completed">7</span>
+              <span class="series-stat-label">Completadas</span>
+            </div>
           </div>
         </div>
 
-        <div id="series-search-results" style="margin-bottom: 1.5rem;"></div>
-        <div class="series-grid" id="series-grid-list"></div>
+        <!-- Buscador TMDb en Vivo -->
+        <div class="series-search-section-wrap">
+          <div class="series-search-action-row">
+            <div class="series-search-bar-wrap">
+              <span class="series-search-icon">🔍</span>
+              <input type="text" id="series-search-input" class="series-search-input" placeholder="Buscar serie en TMDb..." autocomplete="off">
+              <button type="button" id="series-search-clear-btn" class="series-search-clear-btn" style="display: none;" title="Limpiar">✕</button>
+            </div>
+            <button type="button" id="series-search-submit-btn" class="btn-series-search-action">
+              <span>Buscar</span> <span>🔍</span>
+            </button>
+          </div>
+
+          <!-- Resultados flotantes de búsqueda TMDb -->
+          <div id="series-live-search-results" class="series-live-search-results" style="display: none;"></div>
+        </div>
+
+        <!-- Filtros Chips Horizontales -->
+        <div class="series-filter-chips-wrap" id="series-filter-chips">
+          <button type="button" class="series-filter-chip active" data-filter="all">Todas</button>
+          <button type="button" class="series-filter-chip" data-filter="Viendo">📺 Viendo actualmente</button>
+          <button type="button" class="series-filter-chip" data-filter="Completada">✨ Completadas</button>
+          <button type="button" class="series-filter-chip" data-filter="Por ver">🌱 Por ver</button>
+          <button type="button" class="series-filter-chip" data-filter="Favorita">⭐ Favoritas</button>
+        </div>
+
+        <!-- Lista de Tarjetas de Series (Maratones) -->
+        <div class="series-collab-feed" id="series-feed-list"></div>
+      </section>
+
+      <!-- 5.1 SECCIÓN DETALLE DE SERIE (PANTALLA 2: PANTALLA COMPLETA INDEPENDIENTE) -->
+      <section id="section-series-detail" class="luma-section" role="tabpanel" style="display: none;">
+        <!-- Barra Superior de Navegación -->
+        <div class="series-detail-topbar">
+          <button type="button" id="btn-back-to-series" class="btn-back-series" onclick="window.app.backToSeriesList()">
+            <span class="back-arrow">←</span> <span>Volver a series</span>
+          </button>
+        </div>
+
+        <!-- Hero Superior de la Serie -->
+        <div class="series-detail-hero">
+          <div class="series-detail-hero-content">
+            <div class="series-detail-poster-wrap">
+              <img id="series-detail-poster" src="" alt="Poster" class="series-detail-poster-img">
+            </div>
+            <div class="series-detail-meta-box">
+              <div class="series-detail-header-badges">
+                <span id="series-detail-platform-badge" class="series-platform-pill">Netflix</span>
+                <span id="series-detail-status-pill" class="series-status-pill">📺 Viendo</span>
+              </div>
+              <h1 id="series-detail-title" class="series-detail-title">Arcane</h1>
+              <div class="series-detail-specs-row">
+                <span id="series-detail-years">2021–2024</span> • 
+                <span id="series-detail-seasons-count">2 temporadas</span> • 
+                <span id="series-detail-genres">Animación, Acción</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 Tarjetas de Información Elevadas -->
+          <div class="series-info-cards-grid">
+            <div class="series-info-card">
+              <span class="series-info-card-icon">⭐</span>
+              <div class="series-info-card-val" id="series-detail-group-rating">9.5/10</div>
+              <div class="series-info-card-label">Calificación del grupo</div>
+            </div>
+            <div class="series-info-card">
+              <span class="series-info-card-icon">👥</span>
+              <div class="series-info-card-val" id="series-detail-members-watching">3/5</div>
+              <div class="series-info-card-label">Integrantes viéndola</div>
+            </div>
+            <div class="series-info-card">
+              <span class="series-info-card-icon">📈</span>
+              <div class="series-info-card-val" id="series-detail-group-progress">67%</div>
+              <div class="series-info-card-label">Progreso del grupo</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sinopsis con Ver Más -->
+        <div class="series-detail-synopsis-section">
+          <h3 class="series-subheading">Sinopsis</h3>
+          <p id="series-detail-overview" class="series-synopsis-text clamped"></p>
+          <button type="button" id="btn-series-overview-toggle" class="btn-series-toggle-more">Ver más</button>
+        </div>
+
+        <!-- Selector de Temporadas (Scroll Horizontal) -->
+        <div class="series-seasons-selector-wrap">
+          <h3 class="series-subheading">Temporadas</h3>
+          <div class="series-seasons-scroll" id="series-seasons-tabs"></div>
+        </div>
+
+        <!-- Barra de Progreso Dinámica de la Temporada -->
+        <div class="series-season-progress-box">
+          <div class="series-progress-info-row">
+            <span class="series-progress-text" id="series-season-progress-label">Temp. 1 · Cap. 4 / 9</span>
+            <span class="series-progress-percent" id="series-season-progress-percent">44%</span>
+          </div>
+          <div class="series-progress-bar-track">
+            <div class="series-progress-bar-fill" id="series-season-progress-fill" style="width: 44%;"></div>
+          </div>
+        </div>
+
+        <!-- Lista Horizontal de Capítulos de la Temporada -->
+        <div class="series-episodes-section">
+          <h3 class="series-subheading">Capítulos</h3>
+          <div class="series-episodes-list" id="series-episodes-list"></div>
+        </div>
+
+        <!-- Sección de Comentarios del Grupo (Foro de Discusión) -->
+        <div class="series-comments-forum-wrap">
+          <div class="series-comments-forum-header">
+            <h3 class="series-subheading" style="margin: 0;">💬 Comentarios del grupo</h3>
+            <span class="series-comments-count-pill" id="series-comments-counter">2 comentarios</span>
+          </div>
+
+          <!-- Lista de Comentarios Ordenados por Más Recientes -->
+          <div class="series-comments-list" id="series-comments-list"></div>
+
+          <!-- Formulario Fijo para Escribir Comentario -->
+          <form id="form-add-series-comment" class="series-comment-post-form">
+            <input type="text" id="input-series-comment-text" class="series-comment-input" placeholder="Escribe tu opinión del capítulo..." required autocomplete="off">
+            <button type="submit" class="btn-send-comment-icon" title="Enviar opinión">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </form>
+        </div>
       </section>
 
       <!-- 6. SECCIÓN NOTAS COLABORATIVAS -->
@@ -2090,7 +2225,9 @@
   <script src="js/gdrive.js"></script>
   <script src="js/media.js"></script>
   <script src="js/presence.js"></script>
-  <script src="js/animations.js"></script>
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
 </body>
