@@ -398,6 +398,7 @@
           { seasonNumber: 1, name: 'Temporada 1', episodeCount: 9 },
           { seasonNumber: 2, name: 'Temporada 2', episodeCount: 9 }
         ],
+        seasonEpisodes: (typeof window !== 'undefined' && window.SERIES_PRELOADED_EPISODES?.['ser_1']) || null,
         userProgress: {
           'usr_me': {
             userId: 'usr_me',
@@ -490,6 +491,7 @@
           { seasonNumber: 3, name: 'Temporada 3', episodeCount: 8 },
           { seasonNumber: 4, name: 'Temporada 4', episodeCount: 9 }
         ],
+        seasonEpisodes: (typeof window !== 'undefined' && window.SERIES_PRELOADED_EPISODES?.['ser_2']) || null,
         userProgress: {
           'usr_me': {
             userId: 'usr_me',
@@ -546,6 +548,7 @@
           { seasonNumber: 3, name: 'Temporada 3', episodeCount: 8 },
           { seasonNumber: 4, name: 'Temporada 4', episodeCount: 8 }
         ],
+        seasonEpisodes: (typeof window !== 'undefined' && window.SERIES_PRELOADED_EPISODES?.['ser_3']) || null,
         userProgress: {
           'usr_me': {
             userId: 'usr_me',
@@ -1161,11 +1164,32 @@
       const data = this.getGroupData();
       let seriesList = data.series || [];
 
-      // Migración si las series guardadas previamente son del formato antiguo
-      if (seriesList.length > 0 && !seriesList[0].seasons) {
-        const defaultSeries = window.CONFIG?.defaultData?.series || [];
-        if (defaultSeries.length > 0) {
-          seriesList = JSON.parse(JSON.stringify(defaultSeries));
+      // Migración si las series guardadas previamente son del formato antiguo o no tienen las temporadas y episodios precargados
+      const preloaded = (typeof window !== 'undefined' && window.SERIES_PRELOADED_EPISODES) || {};
+      const needsMigration = !Array.isArray(seriesList) || seriesList.length === 0 ||
+        !seriesList[0].seasons || !seriesList[0].seasonEpisodes ||
+        (preloaded['ser_1'] && !seriesList[0].seasonEpisodes['1']);
+
+      if (needsMigration) {
+        seriesList = JSON.parse(JSON.stringify(DEFAULT_DATA.series));
+        // Inyectar episodios precargados
+        seriesList.forEach(s => {
+          if (preloaded[s.id]) {
+            s.seasonEpisodes = preloaded[s.id];
+          }
+        });
+        data.series = seriesList;
+        this.saveGroupData(null, data);
+      } else {
+        // Asegurar que cada serie tenga sus episodios precargados si están disponibles
+        let updated = false;
+        seriesList.forEach(s => {
+          if (!s.seasonEpisodes && preloaded[s.id]) {
+            s.seasonEpisodes = preloaded[s.id];
+            updated = true;
+          }
+        });
+        if (updated) {
           data.series = seriesList;
           this.saveGroupData(null, data);
         }
@@ -1174,7 +1198,11 @@
     }
 
     getSeriesById(id) {
-      return this.getSeries().find(s => s.id === id || s.tmdbId === id);
+      if (!id) return this.getSeries()[0];
+      const list = this.getSeries();
+      const idStr = String(id).toLowerCase();
+      const found = list.find(s => String(s.id).toLowerCase() === idStr || String(s.tmdbId) === idStr);
+      return found || list[0];
     }
 
     saveSeries(series) {
