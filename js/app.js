@@ -4497,11 +4497,28 @@ class LumaApp {
 
   // --- PANTALLA 2: DETALLE DE LA SERIE (PANTALLA COMPLETA) ---
   async openSeriesDetail(seriesId) {
-    const series = this.storage.getSeriesById(seriesId);
+    let series = this.storage.getSeriesById(seriesId);
+    if (!series) {
+      const allSeries = this.storage.getSeries();
+      series = allSeries.find(s => String(s.id) === String(seriesId) || String(s.tmdbId) === String(seriesId)) || allSeries[0];
+    }
     if (!series) return;
 
-    this.activeSeriesId = seriesId;
+    this.activeSeriesId = series.id;
     const currentUser = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+
+    // Si la serie no tiene temporadas, crearlas a partir de seasonEpisodes o por defecto
+    if (!series.seasons || series.seasons.length === 0) {
+      if (series.seasonEpisodes) {
+        series.seasons = Object.keys(series.seasonEpisodes).map(num => ({
+          seasonNumber: parseInt(num),
+          name: `Temporada ${num}`,
+          episodeCount: series.seasonEpisodes[num].length
+        }));
+      } else {
+        series.seasons = [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: 9 }];
+      }
+    }
 
     // Temporada 1 seleccionada por defecto al abrir
     this.activeSeriesSeason = (series.seasons && series.seasons.length > 0) ? series.seasons[0].seasonNumber : 1;
@@ -4509,26 +4526,15 @@ class LumaApp {
     // Cambiar vistas: Ocultar biblioteca y mostrar detalle
     const biblioSec = document.getElementById('section-series');
     const detailSec = document.getElementById('section-series-detail');
-    if (biblioSec) biblioSec.style.display = 'none';
+    if (biblioSec) {
+      biblioSec.style.display = 'none';
+      biblioSec.classList.remove('active');
+    }
     if (detailSec) {
       detailSec.style.display = 'block';
       detailSec.classList.add('active');
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Cargar detalles extendidos de TMDb si faltan temporadas
-    if ((!series.seasons || series.seasons.length === 0) && series.tmdbId) {
-      const details = await window.MediaService.getSeriesDetails(series.tmdbId);
-      if (details) {
-        series.seasons = details.seasons;
-        series.platform = series.platform || details.platform;
-        series.years = series.years || details.years;
-        series.genres = series.genres || details.genres;
-        series.numberOfSeasons = details.numberOfSeasons;
-        series.totalEpisodes = details.totalEpisodes;
-        this.storage.saveSeries(series);
-      }
-    }
 
     // Hero superior
     const posterEl = document.getElementById('series-detail-poster');
@@ -4571,7 +4577,7 @@ class LumaApp {
 
     // Progreso promedio del grupo
     let totalPctSum = 0;
-    const totalSeriesEpisodes = series.totalEpisodes || (series.seasons ? series.seasons.reduce((acc, s) => acc + s.episodeCount, 0) : 10);
+    const totalSeriesEpisodes = series.totalEpisodes || (series.seasons ? series.seasons.reduce((acc, s) => acc + (s.episodeCount || 0), 0) : 10);
     watchingUsers.forEach(u => {
       const watchedCount = Object.keys(u.watchedEpisodes || {}).length;
       totalPctSum += (watchedCount / (totalSeriesEpisodes || 1)) * 100;
@@ -4625,15 +4631,33 @@ class LumaApp {
       }
     }
 
-    // Selector de Temporadas (Scroll Horizontal)
+    // 1. Selector de Temporadas (Scroll Horizontal) - INMEDIATO
     this.renderSeriesSeasonTabs(series);
 
-    // Renderizar capítulos de la temporada activa (por defecto T1)
+    // 2. Renderizar capítulos de la temporada activa (por defecto T1) - INMEDIATO
     const activeSeason = this.activeSeriesSeason || 1;
     this.renderSeriesEpisodes(series, activeSeason);
 
-    // Renderizar sección de comentarios del grupo
+    // 3. Renderizar sección de comentarios del grupo - INMEDIATO
     this.renderSeriesComments(series);
+
+    // 4. En segundo plano: Si faltan temporadas en TMDb, actualizar
+    if ((!series.seasons || series.seasons.length <= 1) && series.tmdbId) {
+      window.MediaService.getSeriesDetails(series.tmdbId).then(details => {
+        if (details && details.seasons && details.seasons.length > 0) {
+          series.seasons = details.seasons;
+          series.platform = series.platform || details.platform;
+          series.years = series.years || details.years;
+          series.genres = series.genres || details.genres;
+          series.numberOfSeasons = details.numberOfSeasons;
+          series.totalEpisodes = details.totalEpisodes;
+          this.storage.saveSeries(series);
+          if (this.activeSeriesId === series.id) {
+            this.renderSeriesSeasonTabs(series);
+          }
+        }
+      }).catch(() => {});
+    }
   }
 
   backToSeriesList() {
@@ -4655,18 +4679,28 @@ class LumaApp {
     const tabsContainer = document.getElementById('series-seasons-tabs');
     if (!tabsContainer) return;
 
-    const seasons = series.seasons && series.seasons.length > 0
-      ? series.seasons
-      : [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: series.totalEpisodes || 9 }];
+    let seasons = series.seasons;
+    if (!seasons || seasons.length === 0) {
+      if (series.seasonEpisodes) {
+        seasons = Object.keys(series.seasonEpisodes).map(num => ({
+          seasonNumber: parseInt(num),
+          name: `Temporada ${num}`,
+          episodeCount: series.seasonEpisodes[num].length
+        }));
+      } else {
+        seasons = [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: 9 }];
+      }
+    }
 
     if (!this.activeSeriesSeason) this.activeSeriesSeason = seasons[0].seasonNumber;
 
     tabsContainer.innerHTML = seasons.map(s => {
       const isActive = s.seasonNumber === this.activeSeriesSeason;
+      const count = s.episodeCount || (series.seasonEpisodes?.[s.seasonNumber]?.length) || 8;
       return `
         <button type="button" class="series-season-tab ${isActive ? 'active' : ''}" onclick="window.app.selectSeriesSeason(${s.seasonNumber})">
           <span class="series-season-tab-title">T${s.seasonNumber}</span>
-          <span class="series-season-tab-eps">${s.episodeCount} cap</span>
+          <span class="series-season-tab-eps">${count} cap</span>
         </button>
       `;
     }).join('');
@@ -4683,12 +4717,32 @@ class LumaApp {
 
   async renderSeriesEpisodes(series, seasonNumber) {
     const episodesListEl = document.getElementById('series-episodes-list');
-    const progressLabel = document.getElementById('series-season-progress-label');
-    const progressPercent = document.getElementById('series-season-progress-percent');
-    const progressFill = document.getElementById('series-season-progress-fill');
-
     if (!episodesListEl) return;
 
+    // Buscar episodios en:
+    // 1) series.seasonEpisodes[seasonNumber]
+    // 2) Memoria caché en this.seriesEpisodesCache
+    // 3) window.SERIES_PRELOADED_EPISODES
+    this.seriesEpisodesCache = this.seriesEpisodesCache || {};
+    const cacheKey = `${series.tmdbId || series.id}_s${seasonNumber}`;
+    let episodes = (series.seasonEpisodes && series.seasonEpisodes[seasonNumber]) || this.seriesEpisodesCache[cacheKey];
+
+    if (!episodes && window.SERIES_PRELOADED_EPISODES) {
+      const matchKey = series.id || series.tmdbId;
+      episodes = window.SERIES_PRELOADED_EPISODES[matchKey]?.[seasonNumber] || window.SERIES_PRELOADED_EPISODES[String(series.tmdbId)]?.[seasonNumber];
+      if (episodes) {
+        if (!series.seasonEpisodes) series.seasonEpisodes = {};
+        series.seasonEpisodes[seasonNumber] = episodes;
+      }
+    }
+
+    // Si ya los tenemos disponibles, renderizar al instante
+    if (episodes && episodes.length > 0) {
+      this._renderEpisodesDOM(series, seasonNumber, episodes);
+      return;
+    }
+
+    // Si no los tenemos, mostrar spinner mientras consulta TMDb
     episodesListEl.innerHTML = `
       <div style="text-align: center; padding: 2rem; color: #CBD5E1; font-size: 0.85rem;">
         <div style="font-size: 1.5rem; margin-bottom: 0.35rem; animation: spin 1s infinite linear;">⏳</div>
@@ -4696,30 +4750,44 @@ class LumaApp {
       </div>
     `;
 
-    // Obtener episodios de TMDb (con caché en memoria)
-    this.seriesEpisodesCache = this.seriesEpisodesCache || {};
-    const cacheKey = `${series.tmdbId || series.id}_s${seasonNumber}`;
-    let episodes = this.seriesEpisodesCache[cacheKey];
-
-    if (!episodes && series.tmdbId) {
-      episodes = await window.MediaService.getSeasonEpisodes(series.tmdbId, seasonNumber);
-      if (episodes && episodes.length > 0) {
-        this.seriesEpisodesCache[cacheKey] = episodes;
+    if (series.tmdbId) {
+      try {
+        episodes = await window.MediaService.getSeasonEpisodes(series.tmdbId, seasonNumber);
+        if (episodes && episodes.length > 0) {
+          this.seriesEpisodesCache[cacheKey] = episodes;
+          if (!series.seasonEpisodes) series.seasonEpisodes = {};
+          series.seasonEpisodes[seasonNumber] = episodes;
+          this.storage.saveSeries(series);
+        }
+      } catch (e) {
+        console.warn('Error cargando episodios de TMDb:', e);
       }
     }
 
-    // Fallback si no hay conexión o no es de TMDb
+    // Fallback descriptivo si no hay conexión o no es de TMDb
     if (!episodes || episodes.length === 0) {
-      const seasonObj = (series.seasons || []).find(s => s.seasonNumber === seasonNumber) || { episodeCount: 9 };
-      episodes = Array.from({ length: seasonObj.episodeCount }, (_, i) => ({
+      const seasonObj = (series.seasons || []).find(s => s.seasonNumber === seasonNumber) || { episodeCount: 8 };
+      const epCount = seasonObj.episodeCount || 8;
+      episodes = Array.from({ length: epCount }, (_, i) => ({
         episodeNumber: i + 1,
         seasonNumber,
         name: `Capítulo ${i + 1}`,
-        overview: 'Disfruta de este emocionante episodio con el grupo.',
+        overview: `Capítulo ${i + 1} de la Temporada ${seasonNumber} de ${series.title}. Continúa disfrutando del maratón con el grupo.`,
         duration: '42 min',
         still: series.backdrop || series.poster || 'assets/icon.png'
       }));
     }
+
+    this._renderEpisodesDOM(series, seasonNumber, episodes);
+  }
+
+  _renderEpisodesDOM(series, seasonNumber, episodes) {
+    const episodesListEl = document.getElementById('series-episodes-list');
+    const progressLabel = document.getElementById('series-season-progress-label');
+    const progressPercent = document.getElementById('series-season-progress-percent');
+    const progressFill = document.getElementById('series-season-progress-fill');
+
+    if (!episodesListEl) return;
 
     const currentUser = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
     const userProgress = series.userProgress?.[currentUser.id] || {};
@@ -4768,10 +4836,10 @@ class LumaApp {
               <span class="series-ep-runtime-pill">⏱ ${ep.duration || '42 min'}</span>
             </div>
 
-            <!-- Datos del Capítulo -->
+            <!-- Datos del Capítulo con Sinopsis Completa y Legible -->
             <div class="series-ep-info-box">
               <h4 class="series-ep-title">${window.Utils.sanitizeHTML(ep.name)}</h4>
-              <p class="series-ep-overview">${window.Utils.sanitizeHTML(ep.overview)}</p>
+              <p class="series-ep-overview">${window.Utils.sanitizeHTML(ep.overview || 'Sin sinopsis disponible.')}</p>
             </div>
           </div>
 
@@ -4779,7 +4847,7 @@ class LumaApp {
           ${allWatchedUsers.length > 0 ? `
             <div class="series-ep-participants-row">
               <div class="series-ep-avatars-stack">${watchedAvatarsHtml}</div>
-              <span class="series-ep-names-label">${window.Utils.sanitizeHTML(watchedNamesText)}</span>
+              <span class="series-ep-names-label">${window.Utils.sanitizeHTML(watchedNamesText)} ya lo vieron</span>
             </div>
           ` : ''}
 
