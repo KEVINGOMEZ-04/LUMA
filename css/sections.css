@@ -5680,7 +5680,7 @@
 
 .series-season-tab {
   flex-shrink: 0;
-  padding: 0.65rem 1.15rem;
+  padding: 0.75rem 1.25rem;
   background: rgba(14, 19, 36, 0.85);
   border: 1px solid rgba(109, 92, 255, 0.28);
   border-radius: 18px;
@@ -5690,8 +5690,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.15rem;
-  min-width: 80px;
+  gap: 0.2rem;
+  min-width: 125px;
 }
 
 .series-season-tab:hover {
@@ -5720,6 +5720,30 @@
 
 .series-season-tab.active .series-season-tab-eps {
   color: #EDE9FE;
+}
+
+.series-episode-card.is-current-target {
+  border: 2px solid #8B5CF6 !important;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35);
+  position: relative;
+}
+
+.series-ep-target-badge {
+  position: absolute;
+  top: -10px;
+  right: 14px;
+  background: linear-gradient(135deg, #8B5CF6, #6D5CFF);
+  color: #FFFFFF;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.22rem 0.7rem;
+  border-radius: 20px;
+  box-shadow: 0 3px 10px rgba(109, 92, 255, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  z-index: 2;
+  letter-spacing: 0.2px;
 }
 
 /* Barra de Progreso Dinámica de la Temporada */
@@ -6428,6 +6452,12 @@
   box-shadow: 0 6px 20px rgba(109, 92, 255, 0.2);
 }
 
+[data-theme="light"] .series-episode-card.is-current-target {
+  border: 2px solid #7C3AED !important;
+  background: #FAF5FF !important;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15) !important;
+}
+
 [data-theme="light"] .series-ep-number {
   color: #64748B;
 }
@@ -6437,7 +6467,7 @@
 }
 
 [data-theme="light"] .series-ep-overview {
-  color: #64748B;
+  color: #475569 !important;
 }
 
 [data-theme="light"] .series-ep-participants-row {

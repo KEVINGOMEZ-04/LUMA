@@ -749,12 +749,22 @@
         }]
       };
 
+      const preloaded = (typeof window !== 'undefined' && window.SERIES_PRELOADED_EPISODES) || {};
+      const cleanSeries = JSON.parse(JSON.stringify(DEFAULT_DATA.series)).map(s => ({
+        ...s,
+        status: 'Por ver',
+        userProgress: {},
+        comments: [],
+        ratings: {},
+        seasonEpisodes: preloaded[s.id] || s.seasonEpisodes || null
+      }));
+
       const groups = this.getGroups();
       groups.push(newGroup);
       this.saveGroups(groups);
       this.setActiveGroupId(newGroup.id);
       this.saveGroupData(newGroup.id, {
-        memories: [], songs: [], movies: [], series: [], goals: [], notes: []
+        memories: [], songs: [], movies: [], series: cleanSeries, goals: [], notes: []
       });
 
       return newGroup;
@@ -1165,10 +1175,17 @@
       let seriesList = data.series;
       const preloaded = (typeof window !== 'undefined' && window.SERIES_PRELOADED_EPISODES) || {};
 
-      // 1. Si no existe ninguna lista de series en el grupo, inicializar con DEFAULT_DATA
+      // 1. Si no existe ninguna lista de series en el grupo, inicializar limpio
       if (!Array.isArray(seriesList) || seriesList.length === 0) {
+        const isMainGroup = (this.getActiveGroupId() === DEFAULT_INITIAL_GROUP_ID);
         seriesList = JSON.parse(JSON.stringify(DEFAULT_DATA.series));
         seriesList.forEach(s => {
+          if (!isMainGroup) {
+            s.userProgress = {};
+            s.status = 'Por ver';
+            s.comments = [];
+            s.ratings = {};
+          }
           if (preloaded[s.id]) {
             s.seasonEpisodes = preloaded[s.id];
           }
@@ -1179,11 +1196,15 @@
       }
 
       // 2. Si ya hay series creadas por el usuario, PRESERVARLAS SIEMPRE (jamás reiniciar la lista).
-      // Solo nos aseguramos de que tengan sus temporadas y episodios enriquecidos si están en el catálogo.
+      // Aseguramos de que tengan sus temporadas, sinopsis y episodios enriquecidos.
       let updated = false;
       seriesList.forEach(s => {
         if (!s.id) {
           s.id = 'ser_' + Date.now().toString(36);
+          updated = true;
+        }
+        if (!s.synopsis && s.overview) {
+          s.synopsis = s.overview;
           updated = true;
         }
         // Inyectar episodios precargados si no los tiene
@@ -1201,7 +1222,12 @@
               episodeCount: s.seasonEpisodes[num].length
             }));
           } else {
-            s.seasons = [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: s.totalEpisodes || 10 }];
+            const numSeas = s.numberOfSeasons || 1;
+            s.seasons = Array.from({ length: numSeas }, (_, i) => ({
+              seasonNumber: i + 1,
+              name: `Temporada ${i + 1}`,
+              episodeCount: 10
+            }));
           }
           updated = true;
         }

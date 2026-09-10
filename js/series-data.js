@@ -437,3 +437,172 @@ window.SERIES_PRELOADED_EPISODES = {
 window.SERIES_PRELOADED_EPISODES['94605'] = window.SERIES_PRELOADED_EPISODES['ser_1'];
 window.SERIES_PRELOADED_EPISODES['66732'] = window.SERIES_PRELOADED_EPISODES['ser_2'];
 window.SERIES_PRELOADED_EPISODES['76479'] = window.SERIES_PRELOADED_EPISODES['ser_3'];
+
+window.SERIES_PRELOADED_EPISODES['1399'] = {
+  "1": [
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  1,
+        "name":  "Se acerca el invierno",
+        "overview":  "El Lord Ned Stark está preocupado por los perturbantes reportes de un desertor del Nights Watch; El Rey Robert y los Lannisters llegan a Winterfell; el exiliado Viserys Targaryen forja una nueva y poderosa alianza.",
+        "duration":  "62 min",
+        "still":  "https://image.tmdb.org/t/p/w500/o4IX9Mm0kpLITVANJMx7inyEUaY.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  2,
+        "name":  "El camino real",
+        "overview":  "Cuando Bran sobrevive milagrosamente a su caída de la torre, Cersei y Jaime conspiran para asegurar su silencio; Jon Snow y Tyrion se dirigen a El Muro; al convertirse en la mano derecha del rey, Ned deja Winterfell con sus hijas Sansa y Arya.",
+        "duration":  "56 min",
+        "still":  "https://image.tmdb.org/t/p/w500/l0GJx3IR8YasbztTJi5uK0XqkEo.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  3,
+        "name":  "Lord Nieve",
+        "overview":  "Jon impresiona a Tyrion en Castle Black; Ned se enfrenta a su pasado y a su futuro en Kings Landing; En el camino a Vaes Dothrak, Daenerys se pelea con Viserys.",
+        "duration":  "58 min",
+        "still":  "https://image.tmdb.org/t/p/w500/8HjOlb4slc1xusMgOtoNpxuTgSI.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  4,
+        "name":  "Tullidos, bastardos y cosas rotas",
+        "overview":  "Ned busca pistas sobre la muerte de su predecesor, y descubre uno de los bastardos del Rey Robert; Jon toma medidas para proteger a Sam de los abusos en Castle Black; Tyrion es atrapado en el lugar equivocado.",
+        "duration":  "56 min",
+        "still":  "https://image.tmdb.org/t/p/w500/Ai2UPMWv38xGjOgNBuA1o8w8dUI.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  5,
+        "name":  "El lobo y el león",
+        "overview":  "Ned rechaza una orden del Rey. Un prisionero Tyrion ayuda a Catelyn y logra escapar de un encuentro muy peligroso, pero es recibido con la fría hermana de Catelyn en el Eyrie. Arya oye por casualidad un complot contra su padre.",
+        "duration":  "55 min",
+        "still":  "https://image.tmdb.org/t/p/w500/u7e1qSWE6v8jfY9vGNrckX47DGN.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  6,
+        "name":  "Una corona de oro",
+        "overview":  "Ned emite un decreto que podría tener consecuencias a largo plazo a través de los Siete Reinados. En el Eyrie, Tyrion confiesa sus crímenes y demanda que Lysa lo juzgue en combate. Viserys recibe de Drogo su pago final para Daenerys.",
+        "duration":  "53 min",
+        "still":  "https://image.tmdb.org/t/p/w500/eU7iftaj8ZTy4WADhEURDM75CSv.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  7,
+        "name":  "Ganas o mueres",
+        "overview":  "Ned confronta a Cersei sobre sus secretos. Con el destino del perdido Benjen en su mente, Jon hace sus votos del Nights Watch, aunque no con la asignación que deseaba. Drogo promete llevar a los Dorthraki al Kings Landing.",
+        "duration":  "58 min",
+        "still":  "https://image.tmdb.org/t/p/w500/o6ldSDhIINGNKZR62mHf2m64dD.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  8,
+        "name":  "Por el lado de la punta",
+        "overview":  "Cuando capturan a Ned, Syrio y Arya se enfrentan a guardias Lannister mientras Cersei manipula a Sansa. Robb reúne los aliados de su padre y se dirige hacia la guerra. Tyrion forma una alianza con las tribus de las colinas y se reúne con su padre.",
+        "duration":  "59 min",
+        "still":  "https://image.tmdb.org/t/p/w500/hH0U1QISWGGjoFutvCLdw28MGiq.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  9,
+        "name":  "Baelor",
+        "overview":  "Con Sansa en peligro, Ned toma una importante decisión. Tyrion adquiere una amante y es forzado por su padre a pelear en el frente. Robb toma un preciado prisionero. Jon descubre un oscuro secreto sobre Maester Aemon. Dany ve su reino en peligro.",
+        "duration":  "57 min",
+        "still":  "https://image.tmdb.org/t/p/w500/fAmBhmw1pQc6fucrdmnRM5FOpXD.jpg"
+    },
+    {
+        "seasonNumber":  1,
+        "episodeNumber":  10,
+        "name":  "Fuego y sangre",
+        "overview":  "La trágica noticia se esparce en los Siete Reinos. Bran y Rickon comparten un sueño profético, Catelyn interroga a Jaime acerca de la caída de su hijo y el destino de Robb cambia para siempre. Del otro lado del mar, Dany paga un terrible precio por su amor pero encuentra una nueva esperanza.",
+        "duration":  "53 min",
+        "still":  "https://image.tmdb.org/t/p/w500/y1BXkhEqBQS3ewQeqqdHpjhTts0.jpg"
+    }
+]
+,
+  "2": [
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  1,
+        "name":  "El Norte no olvida",
+        "overview":  "Tyrion llega para salvar la corona de Joffrey de viejas y nuevas amenazas. Daenerys busca agua y aliados en el Desierto Rojo. Jon Nieve y los miembros de la Guardia de la Noche se enfrentan a los salvajos más allá del Muro.",
+        "duration":  "53 min",
+        "still":  "https://image.tmdb.org/t/p/w500/gGHtlTvHpSGZ8DIrxMyK3Ewkc1Y.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  2,
+        "name":  "Las tierras de la noche",
+        "overview":  "Arya comparte un secreto con un recluta familiar. Un explorador regresa para darle noticias inesperadas a Dany. Theon vuelve a casa en las Islas del Hierro y a su familia verdadera. Tyrion imparte justicia y Jon es testigo de un terrible crímen.",
+        "duration":  "54 min",
+        "still":  "https://image.tmdb.org/t/p/w500/3EW7wYNXUVaHT4XRuIoNFrqhZh5.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  3,
+        "name":  "Lo que está muerto no puede morir",
+        "overview":  "Tyrion desenmascara a un espía. Catelyn conoce a los nuevos reyes. Bran sueña y Theon se ahoga.",
+        "duration":  "53 min",
+        "still":  "https://image.tmdb.org/t/p/w500/neKkHgfX7dgi4E47GKT7bYciq93.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  4,
+        "name":  "Jardín de huesos",
+        "overview":  "Catelyn intenta salvar a los reyes de ellos mismos. Tyrion practica la coerción. Robb conoce a alguien que viene del extranjero fuera de las puertas de la salvación. Dany encuentra un aliado. Melisandre arroja una gran nube sobre Bastión de Tormentas.",
+        "duration":  "51 min",
+        "still":  "https://image.tmdb.org/t/p/w500/5LhAdNG7NGipDOv2dF9ZPMAe2qh.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  5,
+        "name":  "El fantasma de Harrenhal",
+        "overview":  "La rivalidad entre los Baratheon termina. Tyrion conoce el arma secreta de Cersei. Dany sufre una perdida. Arya cobra una deuda que desconocia tener. Jon y la Guardia de la Noche encuentran una fortaleza antigua y conocen una leyenda.",
+        "duration":  "55 min",
+        "still":  "https://image.tmdb.org/t/p/w500/h7HHSQtEyf7cNBYR2G9DjQ78EgV.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  6,
+        "name":  "Los dioses antiguos y nuevos",
+        "overview":  "Theon completa su golpe maestro. En Desembarco del Rey, los Lannister se despiden de Myrcella sin perder tiempo para que no corra peligro. Arya se enfrenta cara a cara con un visitante sorpresa. Robb y Catelyn reciben noticias cruciales.",
+        "duration":  "54 min",
+        "still":  "https://image.tmdb.org/t/p/w500/zUgvLgKhI7XbjU4cAW9qffL6ImQ.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  7,
+        "name":  "Un hombre sin honor",
+        "overview":  "Jaime conoce a un pariente lejano. Dany recibe una invitación a la Casa de los Eternos. Theon lidera una reunión de búsqueda. Jon pierde su rumbo en territorio salvaje. Cersei aconseja a Sansa.",
+        "duration":  "56 min",
+        "still":  "https://image.tmdb.org/t/p/w500/oB8TBIIf0MT4W3oqZKEANHdS8rj.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  8,
+        "name":  "Un príncipe de Invernalia",
+        "overview":  "En Invernalia, Theon recibe un visitante. Arya llama a Jaquen para pagar su deuda final de una forma desagradable. Robb es traicionado. Tyrion y Varys encuentran algo en común. Dany ignora el consejo de Jorah. Stannis y Davos se acercan a su destino.",
+        "duration":  "54 min",
+        "still":  "https://image.tmdb.org/t/p/w500/4W90HbZcVG54m8HoxaZmXc8rzjy.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  9,
+        "name":  "Aguasnegras",
+        "overview":  "Tyrion y los Lannister pelean por sus vidas mientras Stannis lleva a cabo el asalto a Desembarco del Rey.",
+        "duration":  "55 min",
+        "still":  "https://image.tmdb.org/t/p/w500/rX44Vfd0iiZDIJWHYZg9j4yLSP9.jpg"
+    },
+    {
+        "seasonNumber":  2,
+        "episodeNumber":  10,
+        "name":  "Valar Morghulis",
+        "overview":  "Joffrey reparte premios a sus súbditos. Mientras, Theon pone a sus hombres en acción. Luwin ofrece un consejo final. Arya recibe un regalo de parte de Jaquen. Jon se prueba a sí mismo ante Qhorin.",
+        "duration":  "64 min",
+        "still":  "https://image.tmdb.org/t/p/w500/u46jn12qEyaCOe1oqJBwPvL5d7R.jpg"
+    }
+]
+
+};
