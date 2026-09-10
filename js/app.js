@@ -4138,9 +4138,9 @@ class LumaApp {
       return false;
     }).length;
 
-    if (statCount) statCount.textContent = seriesList.length || 18;
-    if (statWatching) statWatching.textContent = watchingCount || 9;
-    if (statCompleted) statCompleted.textContent = completedCount || 7;
+    if (statCount) statCount.textContent = seriesList.length;
+    if (statWatching) statWatching.textContent = watchingCount;
+    if (statCompleted) statCompleted.textContent = completedCount;
 
     // 2. Filtros Rápidos
     const activeFilter = this.activeSeriesFilter || 'all';
@@ -4288,9 +4288,9 @@ class LumaApp {
     const chipsContainer = document.getElementById('series-filter-chips');
     if (!chipsContainer) return;
 
-    chipsContainer.querySelectorAll('.series-filter-chip').forEach(chip => {
+    chipsContainer.querySelectorAll('.movie-filter-chip, .series-filter-chip').forEach(chip => {
       chip.onclick = () => {
-        chipsContainer.querySelectorAll('.series-filter-chip').forEach(c => c.classList.remove('active'));
+        chipsContainer.querySelectorAll('.movie-filter-chip, .series-filter-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
         this.activeSeriesFilter = chip.dataset.filter || 'all';
         this.renderSeries();
@@ -4298,102 +4298,134 @@ class LumaApp {
     });
   }
 
+  closeSeriesSearchResults() {
+    const resultsBox = document.getElementById('series-live-search-results');
+    if (resultsBox) resultsBox.style.display = 'none';
+  }
+
   initSeriesLiveSearch() {
-    const input = document.getElementById('series-search-input');
+    const searchInput = document.getElementById('series-search-input');
     const submitBtn = document.getElementById('series-search-submit-btn');
     const clearBtn = document.getElementById('series-search-clear-btn');
     const resultsBox = document.getElementById('series-live-search-results');
 
-    if (!input || !resultsBox) return;
+    if (!searchInput || !resultsBox) return;
 
     let debounceTimer = null;
 
-    const performSearch = async (val) => {
-      const q = (val || '').trim();
-      if (!q) {
+    const executeSearch = async (forcedQuery) => {
+      const query = (typeof forcedQuery === 'string' ? forcedQuery : (searchInput ? searchInput.value : '')).trim();
+      if (!query) {
+        if (searchInput) searchInput.focus();
+        window.Utils.showToast('Escribe el título de una serie para buscar en TMDb 📺', 'info');
         resultsBox.style.display = 'none';
-        resultsBox.innerHTML = '';
-        if (clearBtn) clearBtn.style.display = 'none';
         return;
       }
-      if (clearBtn) clearBtn.style.display = 'block';
 
-      resultsBox.style.display = 'block';
+      if (clearBtn) clearBtn.style.display = 'block';
+      resultsBox.style.display = 'flex';
       resultsBox.innerHTML = `
-        <div style="text-align: center; padding: 1.5rem; color: #CBD5E1; font-size: 0.85rem;">
+        <div style="color: var(--color-text-secondary, #94A3B8); padding: 1.25rem; text-align: center; font-size: 0.85rem;">
           <div style="font-size: 1.5rem; margin-bottom: 0.35rem; animation: spin 1s infinite linear;">🔍</div>
-          <span>Buscando maratones en TMDb...</span>
+          <span>Buscando "<strong>${window.Utils.sanitizeHTML(query)}</strong>" en TMDb...</span>
         </div>
       `;
 
       try {
-        const results = await window.MediaService.searchSeries(q);
-        if (results.length === 0) {
+        const results = await window.MediaService.searchSeries(query);
+        if (!results || results.length === 0) {
           resultsBox.innerHTML = `
-            <div class="series-live-search-header">
-              <span>Resultados para "${window.Utils.sanitizeHTML(q)}"</span>
-              <button type="button" class="series-live-search-header-close" id="btn-close-series-search">✕ Cerrar</button>
+            <div class="movie-results-header">
+              <span>📺 Búsqueda de Series TMDb</span>
+              <button type="button" class="btn-close-movie-results" onclick="window.app.closeSeriesSearchResults()">✕ Cerrar</button>
             </div>
-            <div style="text-align: center; padding: 1.5rem; color: #94A3B8; font-size: 0.85rem;">
-              No se encontraron series para "${window.Utils.sanitizeHTML(q)}".
+            <div style="color: var(--color-text-muted, #94A3B8); padding: 1.5rem; text-align: center; font-size: 0.85rem;">
+              No se encontraron series para "<strong>${window.Utils.sanitizeHTML(query)}</strong>".
             </div>
           `;
-          document.getElementById('btn-close-series-search')?.addEventListener('click', () => {
-            resultsBox.style.display = 'none';
-          });
           return;
         }
 
         resultsBox.innerHTML = `
-          <div class="series-live-search-header">
-            <span>${results.length} serie${results.length > 1 ? 's' : ''} en TMDb</span>
-            <button type="button" class="series-live-search-header-close" id="btn-close-series-search">✕ Cerrar</button>
+          <div class="movie-results-header">
+            <span>📺 ${results.length} serie${results.length > 1 ? 's' : ''} en TMDb</span>
+            <button type="button" class="btn-close-movie-results" onclick="window.app.closeSeriesSearchResults()">✕ Cerrar</button>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            ${results.map(s => `
-              <div class="series-search-result-item">
-                <img src="${s.poster || 'assets/icon.png'}" class="series-result-poster" alt="${window.Utils.sanitizeHTML(s.title)}">
-                <div class="series-result-info">
-                  <h4 class="series-result-title">${window.Utils.sanitizeHTML(s.title)}</h4>
-                  <div class="series-result-meta">${s.year || 'TMDb'} • ⭐ ${s.voteAverage}</div>
-                </div>
-                <button type="button" class="btn-series-add-inline" onclick="window.app.addSeriesFromSearch(${s.tmdbId})">
-                  <span>+ Añadir</span>
-                </button>
+          ${results.map(s => `
+            <div class="movie-live-result-item" onclick="window.app.addSeriesFromSearch(${s.tmdbId})">
+              <img src="${s.poster || 'assets/icon.png'}" class="movie-live-poster" alt="${window.Utils.sanitizeHTML(s.title)}" loading="lazy">
+              <div class="movie-live-meta">
+                <div class="movie-live-title" title="${window.Utils.sanitizeHTML(s.title)}">${window.Utils.sanitizeHTML(s.title)}</div>
+                <div class="movie-live-sub">${s.year || 'TMDb'} • ⭐ ${s.voteAverage || '8.5'}</div>
               </div>
-            `).join('')}
-          </div>
+              <button type="button" class="btn-movie-add-inline" onclick="event.stopPropagation(); window.app.addSeriesFromSearch(${s.tmdbId})">
+                + Añadir
+              </button>
+            </div>
+          `).join('')}
         `;
-
-        document.getElementById('btn-close-series-search')?.addEventListener('click', () => {
-          resultsBox.style.display = 'none';
-        });
       } catch (err) {
         console.warn('Error en búsqueda de series:', err);
-        resultsBox.innerHTML = '<div style="padding: 1rem; color: #EF4444; font-size: 0.85rem;">Error al consultar TMDb.</div>';
+        resultsBox.innerHTML = `
+          <div class="movie-results-header">
+            <span>⚠️ Error</span>
+            <button type="button" class="btn-close-movie-results" onclick="window.app.closeSeriesSearchResults()">✕ Cerrar</button>
+          </div>
+          <div style="padding: 1rem; color: #EF4444; font-size: 0.85rem; text-align: center;">Error al consultar TMDb.</div>
+        `;
       }
     };
 
-    input.oninput = (e) => {
-      clearTimeout(debounceTimer);
-      const val = e.target.value;
-      debounceTimer = setTimeout(() => performSearch(val), 350);
-    };
-
-    if (submitBtn) {
-      submitBtn.onclick = () => performSearch(input.value);
+    if (submitBtn && !submitBtn.dataset.bound) {
+      submitBtn.dataset.bound = 'true';
+      submitBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        executeSearch();
+      };
     }
 
-    if (clearBtn) {
-      clearBtn.onclick = () => {
-        input.value = '';
-        performSearch('');
-        input.focus();
+    if (!searchInput.dataset.bound) {
+      searchInput.dataset.bound = 'true';
+
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          clearTimeout(debounceTimer);
+          executeSearch();
+        }
+      });
+
+      searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        if (clearBtn) clearBtn.style.display = query.length > 0 ? 'block' : 'none';
+
+        clearTimeout(debounceTimer);
+        if (query.length < 2) {
+          resultsBox.style.display = 'none';
+          return;
+        }
+
+        debounceTimer = setTimeout(() => {
+          executeSearch(query);
+        }, 350);
+      });
+    }
+
+    if (clearBtn && !clearBtn.dataset.bound) {
+      clearBtn.dataset.bound = 'true';
+      clearBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        resultsBox.style.display = 'none';
+        searchInput.focus();
       };
     }
 
     document.addEventListener('click', (e) => {
-      const wrap = document.querySelector('.series-search-section-wrap');
+      const wrap = searchInput.closest('.movie-search-section-wrap');
       if (wrap && !wrap.contains(e.target)) {
         resultsBox.style.display = 'none';
       }
@@ -4433,7 +4465,8 @@ class LumaApp {
       priority: 5,
       numberOfSeasons: details.numberOfSeasons,
       totalEpisodes: details.totalEpisodes,
-      seasons: details.seasons,
+      seasons: details.seasons || [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: 10 }],
+      seasonEpisodes: {},
       userProgress: {
         [user.id]: {
           userId: user.id,
@@ -4450,12 +4483,21 @@ class LumaApp {
       comments: []
     };
 
+    // Precargar temporada 1 si es posible
+    try {
+      const s1Eps = await window.MediaService.getSeasonEpisodes(details.tmdbId, 1);
+      if (s1Eps && s1Eps.length > 0) {
+        newSeries.seasonEpisodes[1] = s1Eps;
+      }
+    } catch (e) {
+      console.warn('No se pudieron precargar episodios T1:', e);
+    }
+
     this.storage.saveSeries(newSeries);
     window.Utils.showToast(`¡"${newSeries.title}" añadida a las maratones del grupo! 📺`, 'success');
 
     // Cerrar buscador y renderizar
-    const resultsBox = document.getElementById('series-live-search-results');
-    if (resultsBox) resultsBox.style.display = 'none';
+    this.closeSeriesSearchResults();
     const input = document.getElementById('series-search-input');
     if (input) input.value = '';
 

@@ -1162,17 +1162,12 @@
 
     getSeries() {
       const data = this.getGroupData();
-      let seriesList = data.series || [];
-
-      // Migración si las series guardadas previamente son del formato antiguo o no tienen las temporadas y episodios precargados
+      let seriesList = data.series;
       const preloaded = (typeof window !== 'undefined' && window.SERIES_PRELOADED_EPISODES) || {};
-      const needsMigration = !Array.isArray(seriesList) || seriesList.length === 0 ||
-        !seriesList[0].seasons || !seriesList[0].seasonEpisodes ||
-        (preloaded['ser_1'] && !seriesList[0].seasonEpisodes['1']);
 
-      if (needsMigration) {
+      // 1. Si no existe ninguna lista de series en el grupo, inicializar con DEFAULT_DATA
+      if (!Array.isArray(seriesList) || seriesList.length === 0) {
         seriesList = JSON.parse(JSON.stringify(DEFAULT_DATA.series));
-        // Inyectar episodios precargados
         seriesList.forEach(s => {
           if (preloaded[s.id]) {
             s.seasonEpisodes = preloaded[s.id];
@@ -1180,19 +1175,41 @@
         });
         data.series = seriesList;
         this.saveGroupData(null, data);
-      } else {
-        // Asegurar que cada serie tenga sus episodios precargados si están disponibles
-        let updated = false;
-        seriesList.forEach(s => {
-          if (!s.seasonEpisodes && preloaded[s.id]) {
-            s.seasonEpisodes = preloaded[s.id];
-            updated = true;
-          }
-        });
-        if (updated) {
-          data.series = seriesList;
-          this.saveGroupData(null, data);
+        return seriesList;
+      }
+
+      // 2. Si ya hay series creadas por el usuario, PRESERVARLAS SIEMPRE (jamás reiniciar la lista).
+      // Solo nos aseguramos de que tengan sus temporadas y episodios enriquecidos si están en el catálogo.
+      let updated = false;
+      seriesList.forEach(s => {
+        if (!s.id) {
+          s.id = 'ser_' + Date.now().toString(36);
+          updated = true;
         }
+        // Inyectar episodios precargados si no los tiene
+        const matchKey = s.id || String(s.tmdbId);
+        if (!s.seasonEpisodes && (preloaded[matchKey] || preloaded[String(s.tmdbId)])) {
+          s.seasonEpisodes = preloaded[matchKey] || preloaded[String(s.tmdbId)];
+          updated = true;
+        }
+        // Garantizar que tenga array de seasons válido
+        if (!s.seasons || s.seasons.length === 0) {
+          if (s.seasonEpisodes) {
+            s.seasons = Object.keys(s.seasonEpisodes).map(num => ({
+              seasonNumber: parseInt(num),
+              name: `Temporada ${num}`,
+              episodeCount: s.seasonEpisodes[num].length
+            }));
+          } else {
+            s.seasons = [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: s.totalEpisodes || 10 }];
+          }
+          updated = true;
+        }
+      });
+
+      if (updated) {
+        data.series = seriesList;
+        this.saveGroupData(null, data);
       }
       return seriesList;
     }
