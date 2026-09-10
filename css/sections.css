@@ -5997,9 +5997,9 @@
 .btn-ep-watch-upto {
   flex: 1.3;
   height: 38px;
-  background: linear-gradient(135deg, #6D5CFF, #4F46E5);
-  color: #FFFFFF;
-  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(109, 92, 255, 0.1);
+  color: #C4B5FD;
+  border: 1.5px solid rgba(167, 139, 250, 0.4);
   border-radius: var(--radius-full);
   font-size: 0.78rem;
   font-weight: 700;
@@ -6009,12 +6009,23 @@
   justify-content: center;
   gap: 0.35rem;
   transition: all var(--transition-fast);
-  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.35);
 }
 
 .btn-ep-watch-upto:hover {
-  background: linear-gradient(135deg, #7C6DFF, #5B52F2);
+  background: rgba(109, 92, 255, 0.2);
+  border-color: #8B5CF6;
   transform: scale(1.02);
+}
+
+.btn-ep-watch-upto.is-active {
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5) !important;
+  color: #FFFFFF !important;
+  border-color: #6D5CFF !important;
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.35);
+}
+
+.btn-ep-watch-upto.is-active:hover {
+  background: linear-gradient(135deg, #7C6DFF, #5B52F2) !important;
 }
 
 /* --- FORO DE COMENTARIOS DE LA SERIE --- */
@@ -6477,6 +6488,24 @@
 
 [data-theme="light"] .series-ep-avatar {
   border-color: #FFFFFF;
+}
+
+[data-theme="light"] .btn-ep-watch-upto {
+  background: #FFFFFF;
+  color: #6D5CFF;
+  border: 1.5px solid rgba(109, 92, 255, 0.45);
+}
+
+[data-theme="light"] .btn-ep-watch-upto:hover {
+  background: #F5F3FF;
+  border-color: #6D5CFF;
+}
+
+[data-theme="light"] .btn-ep-watch-upto.is-active {
+  background: linear-gradient(135deg, #6D5CFF, #4F46E5) !important;
+  color: #FFFFFF !important;
+  border-color: #6D5CFF !important;
+  box-shadow: 0 4px 14px rgba(109, 92, 255, 0.25);
 }
 
 [data-theme="light"] .series-comments-forum-wrap {

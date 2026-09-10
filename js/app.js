@@ -4917,9 +4917,20 @@ class LumaApp {
       const watchedAvatarsHtml = allWatchedUsers.map(u => `
         <img src="${u.userAvatar || 'assets/icon.png'}" class="series-ep-avatar" alt="${window.Utils.sanitizeHTML(u.userName || 'Amigo')}" title="${window.Utils.sanitizeHTML(u.userName || 'Amigo')} ya lo vio">
       `).join('');
-      const watchedNamesText = allWatchedUsers.map(u => u.userName || 'Amigo').join(', ');
+
+      // Formato del texto: 1 persona "Nombre ya lo vio", varios "Ya lo vieron"
+      let watchedText = '';
+      if (allWatchedUsers.length === 1) {
+        watchedText = `${window.Utils.sanitizeHTML(allWatchedUsers[0].userName || 'Usuario')} ya lo vio`;
+      } else if (allWatchedUsers.length > 1) {
+        watchedText = 'Ya lo vieron';
+      }
 
       const formattedEpNum = ep.episodeNumber < 10 ? `0${ep.episodeNumber}` : `${ep.episodeNumber}`;
+
+      // Comprobar si este capítulo es el punto seleccionado como "Visto hasta aquí"
+      const lastWatched = userProgress.lastWatched || { season: 1, episode: 0 };
+      const isUpToActive = (lastWatched.season === seasonNumber && lastWatched.episode === ep.episodeNumber);
 
       return `
         <div class="series-episode-card ${isWatched ? 'is-watched' : ''} ${isTarget ? 'is-current-target' : ''}" id="series-ep-card-${seasonNumber}-${ep.episodeNumber}" data-ep="${ep.episodeNumber}">
@@ -4952,7 +4963,7 @@ class LumaApp {
           ${allWatchedUsers.length > 0 ? `
             <div class="series-ep-participants-row">
               <div class="series-ep-avatars-stack">${watchedAvatarsHtml}</div>
-              <span class="series-ep-names-label">${window.Utils.sanitizeHTML(watchedNamesText)} ya lo vieron</span>
+              <span class="series-ep-names-label">${watchedText}</span>
             </div>
           ` : ''}
 
@@ -4961,8 +4972,8 @@ class LumaApp {
             <button type="button" class="btn-ep-watch-single ${isWatched ? 'is-watched' : ''}" onclick="window.app.toggleEpisodeWatched('${series.id}', ${seasonNumber}, ${ep.episodeNumber})">
               <span>${isWatched ? '✓ Visto' : 'Visto'}</span>
             </button>
-            <button type="button" class="btn-ep-watch-upto" onclick="window.app.watchEpisodesUpTo('${series.id}', ${seasonNumber}, ${ep.episodeNumber})">
-              <span>Visto hasta aquí</span> <span>✓</span>
+            <button type="button" class="btn-ep-watch-upto ${isUpToActive ? 'is-active' : ''}" onclick="window.app.watchEpisodesUpTo('${series.id}', ${seasonNumber}, ${ep.episodeNumber})">
+              <span>${isUpToActive ? 'Visto hasta aquí ✓' : 'Visto hasta aquí'}</span>
             </button>
           </div>
         </div>
