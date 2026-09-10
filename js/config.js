@@ -46,7 +46,7 @@ window.CONFIG = {
     { id: 'cine', label: 'Cine', icon: '🎬' },
     { id: 'series', label: 'Series', icon: '📺' },
     { id: 'notas', label: 'Notas', icon: '📝' },
-    { id: 'objetivos', label: 'Objetivos', icon: '✨' }
+    { id: 'mensajes', label: 'Mensajes', icon: '💬' }
   ],
 
   // Claves de LocalStorage

@@ -211,13 +211,13 @@
             <div class="quick-action-icon-box teal">📺</div>
             <span>Series</span>
           </a>
-          <a href="#objetivos" class="quick-action-pill" id="action-btn-stats">
-            <div class="quick-action-icon-box purple">📊</div>
-            <span>Stats</span>
+          <a href="#notas" class="quick-action-pill" id="action-btn-notas">
+            <div class="quick-action-icon-box purple">📝</div>
+            <span>Tablero</span>
           </a>
-          <a href="#objetivos" class="quick-action-pill" id="action-btn-objetivos">
-            <div class="quick-action-icon-box orange">🎯</div>
-            <span>Objetivos</span>
+          <a href="#mensajes" class="quick-action-pill" id="action-btn-mensajes">
+            <div class="quick-action-icon-box orange">💬</div>
+            <span>Mensajes</span>
           </a>
         </div>
 
@@ -227,8 +227,8 @@
             <h3 class="section-block-title">
               <span>📊</span> Resumen del grupo
             </h3>
-            <a href="#objetivos" class="section-block-link" id="btn-refresh-insights">
-              Ver todo ➔
+            <a href="#mensajes" class="section-block-link" id="btn-refresh-insights">
+              Abrir Chat ➔
             </a>
           </div>
 
@@ -283,13 +283,13 @@
               </div>
             </div>
 
-            <!-- 6. Objetivos -->
-            <div class="insight-metric-card">
-              <div class="insight-icon-box rose">🎯</div>
+            <!-- 6. Chat Grupal -->
+            <div class="insight-metric-card" onclick="location.hash='#mensajes'" style="cursor: pointer;">
+              <div class="insight-icon-box rose">💬</div>
               <div>
-                <div class="insight-metric-title">Objetivos</div>
-                <div class="insight-metric-value" id="home-insight-stat-goals">0% (0/1)</div>
-                <div class="insight-metric-desc" id="home-insight-desc-goals">Completados</div>
+                <div class="insight-metric-title">Chat Grupal</div>
+                <div class="insight-metric-value" id="home-insight-stat-messages">0 msgs</div>
+                <div class="insight-metric-desc" id="home-insight-desc-messages">Activo en tiempo real</div>
               </div>
             </div>
           </div>
@@ -627,9 +627,12 @@
       <!-- 5.1 SECCIÓN DETALLE DE SERIE (PANTALLA 2: PANTALLA COMPLETA INDEPENDIENTE) -->
       <section id="section-series-detail" class="luma-section" role="tabpanel" style="display: none;">
         <!-- Barra Superior de Navegación -->
-        <div class="series-detail-topbar">
+        <div class="series-detail-topbar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" id="btn-back-to-series" class="btn-back-series" onclick="window.app.backToSeriesList()">
             <span class="back-arrow">←</span> <span>Volver a series</span>
+          </button>
+          <button type="button" id="btn-series-share-to-chat" class="btn-secondary" style="border-radius: var(--radius-full); font-size: 0.78rem; padding: 0.35rem 0.85rem; border-color: rgba(109, 92, 255, 0.4); color: #C4B5FD;">
+            <span>💬 Compartir en chat</span>
           </button>
         </div>
 
@@ -749,40 +752,149 @@
         <div class="notes-board-grid" id="notes-grid-list"></div>
       </section>
 
-      <!-- 7. SECCIÓN OBJETIVOS COMPARTIDOS -->
-      <section id="section-objetivos" class="luma-section" role="tabpanel">
-        <div class="luma-section-header">
-          <h2 class="luma-section-title"><span>🎯</span> Objetivos Compartidos</h2>
-        </div>
+      <!-- 7. SECCIÓN CHAT GRUPAL (MENSAJES) -->
+      <section id="section-mensajes" class="luma-section chat-section-view" role="tabpanel">
+        <div class="chat-container-card">
+          <!-- CABECERA DEL CHAT -->
+          <div class="chat-header-bar">
+            <div class="chat-header-info">
+              <div class="chat-group-avatar-wrap">
+                <span class="chat-group-avatar-emoji" id="chat-header-group-icon">🌟</span>
+              </div>
+              <div class="chat-group-meta">
+                <h3 class="chat-group-title" id="chat-header-group-name">LUMA Grupo</h3>
+                <div class="chat-group-status-line">
+                  <span class="chat-online-dot"></span>
+                  <span class="chat-group-members-count" id="chat-header-members-count">Grupo activo</span>
+                </div>
+              </div>
+            </div>
 
-        <!-- 4-Card Stats Banner de ATRIA -->
-        <div class="dreams-stats-banner" id="goals-stats-container">
-          <div class="dream-stat-box"><span class="dream-stat-label">Total de Metas</span><div class="dream-stat-value" id="stat-goals-total">0</div></div>
-          <div class="dream-stat-box"><span class="dream-stat-label">Cumplidos</span><div class="dream-stat-value" style="color: var(--color-success);" id="stat-goals-completed">0</div></div>
-          <div class="dream-stat-box"><span class="dream-stat-label">Pendientes</span><div class="dream-stat-value" style="color: var(--color-primary);" id="stat-goals-pending">0</div></div>
-          <div class="dream-stat-box"><span class="dream-stat-label">% Cumplido</span><div class="dream-stat-value" style="color: var(--color-gold);" id="stat-goals-pct">0 %</div></div>
-        </div>
-
-        <div class="trail-controls">
-          <button type="button" class="btn-primary" id="btn-new-goal"><span>+ Nuevo Objetivo</span> 🌟</button>
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-            <select id="filter-goals-category" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-              <option value="all">🏷️ Todas las categorías</option>
-              <option value="Viajes">✈️ Viajes</option>
-              <option value="Hogar">🏡 Hogar</option>
-              <option value="Eventos">🎉 Eventos</option>
-              <option value="Compras">🛍️ Compras</option>
-              <option value="General">✨ General</option>
-            </select>
-            <select id="filter-goals-status" class="form-control" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
-              <option value="all">🌱 Todos los estados</option>
-              <option value="Pendiente">🌱 Pendientes</option>
-              <option value="Cumplido">🌟 Cumplidos</option>
-            </select>
+            <!-- Acciones de Cabecera: Galería Multimedia y Buscar -->
+            <div class="chat-header-actions">
+              <button type="button" class="btn-chat-header-action" id="btn-chat-toggle-search" title="Buscar en mensajes">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+              <button type="button" class="btn-chat-header-action" id="btn-chat-open-media" title="Archivos y multimedia compartida">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div id="goals-grid-list"></div>
+          <!-- BARRA DE BÚSQUEDA DEL CHAT (COLAPSABLE) -->
+          <div class="chat-search-bar-wrap" id="chat-search-bar-wrap" style="display: none;">
+            <input type="text" id="input-chat-search" class="chat-search-input" placeholder="Buscar mensajes o enlaces..." autocomplete="off">
+            <button type="button" class="btn-chat-search-close" id="btn-chat-search-close" title="Cerrar búsqueda">✕</button>
+          </div>
+
+          <!-- BANNER DE MENSAJE FIJADO (PINNED MESSAGE) -->
+          <div class="chat-pinned-banner" id="chat-pinned-banner" style="display: none;">
+            <div class="chat-pinned-icon">📌</div>
+            <div class="chat-pinned-content" id="chat-pinned-content">
+              <span class="chat-pinned-label">Mensaje fijado</span>
+              <p class="chat-pinned-text" id="chat-pinned-text">...</p>
+            </div>
+            <button type="button" class="btn-chat-pinned-unpin" id="btn-chat-pinned-unpin" title="Desfijar mensaje">✕</button>
+          </div>
+
+          <!-- FLUJO DE MENSAJES CON SCROLL -->
+          <div class="chat-messages-viewport" id="chat-messages-scroll">
+            <div class="chat-messages-list" id="chat-messages-list">
+              <!-- Mensajes renderizados dinámicamente -->
+            </div>
+          </div>
+
+          <!-- BOTÓN FLOTANTE BAJAR AL ÚLTIMO MENSAJE -->
+          <button type="button" class="btn-chat-scroll-bottom" id="btn-chat-scroll-bottom" style="display: none;" title="Bajar al último mensaje">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <polyline points="19 12 12 19 5 12"></polyline>
+            </svg>
+            <span class="chat-unread-badge" id="chat-unread-badge" style="display: none;">1</span>
+          </button>
+
+          <!-- BANNER FLOTANTE DE RESPUESTA ACTIVA (REPLY TO) -->
+          <div class="chat-reply-bar" id="chat-reply-bar" style="display: none;">
+            <div class="chat-reply-bar-indicator"></div>
+            <div class="chat-reply-bar-details">
+              <span class="chat-reply-bar-name" id="chat-reply-bar-name">Respondiendo a Usuario</span>
+              <p class="chat-reply-bar-snippet" id="chat-reply-bar-snippet">Contenido del mensaje...</p>
+            </div>
+            <button type="button" class="btn-chat-reply-cancel" id="btn-chat-reply-cancel" title="Cancelar respuesta">✕</button>
+          </div>
+
+          <!-- POPUP DE OPCIONES DE ADJUNTAR (+) -->
+          <div class="chat-attach-menu" id="chat-attach-menu" style="display: none;">
+            <button type="button" class="chat-attach-opt-btn" id="btn-chat-opt-poll">
+              <span class="chat-attach-opt-icon">📊</span>
+              <span>Crear Encuesta</span>
+            </button>
+            <button type="button" class="chat-attach-opt-btn" id="btn-chat-opt-photo">
+              <span class="chat-attach-opt-icon">📷</span>
+              <span>Enviar Foto</span>
+            </button>
+            <button type="button" class="chat-attach-opt-btn" id="btn-chat-opt-movie">
+              <span class="chat-attach-opt-icon">🎬</span>
+              <span>Compartir Película</span>
+            </button>
+            <button type="button" class="chat-attach-opt-btn" id="btn-chat-opt-series">
+              <span class="chat-attach-opt-icon">📺</span>
+              <span>Compartir Serie</span>
+            </button>
+            <button type="button" class="chat-attach-opt-btn" id="btn-chat-opt-music">
+              <span class="chat-attach-opt-icon">🎵</span>
+              <span>Compartir Música</span>
+            </button>
+          </div>
+
+          <!-- INPUT DE ARCHIVO OCULTO PARA FOTOS -->
+          <input type="file" id="input-chat-photo-file" accept="image/*" style="display: none;">
+
+          <!-- SELECTOR RÁPIDO DE EMOJIS (POPUP) -->
+          <div class="chat-emoji-picker-menu" id="chat-emoji-picker-menu" style="display: none;">
+            <span class="chat-emoji-item" data-emoji="❤️">❤️</span>
+            <span class="chat-emoji-item" data-emoji="😂">😂</span>
+            <span class="chat-emoji-item" data-emoji="🍿">🍿</span>
+            <span class="chat-emoji-item" data-emoji="🔥">🔥</span>
+            <span class="chat-emoji-item" data-emoji="✨">✨</span>
+            <span class="chat-emoji-item" data-emoji="👏">👏</span>
+            <span class="chat-emoji-item" data-emoji="😍">😍</span>
+            <span class="chat-emoji-item" data-emoji="🎉">🎉</span>
+            <span class="chat-emoji-item" data-emoji="😮">😮</span>
+            <span class="chat-emoji-item" data-emoji="🥺">🥺</span>
+            <span class="chat-emoji-item" data-emoji="🍕">🍕</span>
+            <span class="chat-emoji-item" data-emoji="☕">☕</span>
+          </div>
+
+          <!-- BARRA INFERIOR DE ENTRADA (DOCK) -->
+          <form id="form-chat-send" class="chat-input-dock">
+            <button type="button" class="btn-chat-dock-action" id="btn-chat-attach-toggle" title="Adjuntar contenido y encuestas">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+            <button type="button" class="btn-chat-dock-action" id="btn-chat-emoji-toggle" title="Emojis">
+              😊
+            </button>
+            <div class="chat-input-field-wrap">
+              <input type="text" id="input-chat-message-text" class="chat-input-control" placeholder="Escribe un mensaje al grupo..." autocomplete="off">
+            </div>
+            <button type="submit" class="btn-chat-dock-send" id="btn-chat-send" title="Enviar mensaje">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </form>
+        </div>
       </section>
 
     </main>
@@ -797,7 +909,7 @@
         <img src="assets/nav/nav-memories.png" class="bottom-nav-img-icon" alt="Recuerdos" width="22" height="22" style="width:22px;height:22px;max-width:22px;max-height:22px;object-fit:contain;" />
         <span class="bottom-nav-label">Recuerdos</span>
       </a>
-      <a href="#notas" class="bottom-nav-item" id="bottom-tab-mensajes">
+      <a href="#mensajes" class="bottom-nav-item" id="bottom-tab-mensajes">
         <div style="position: relative; display: inline-flex; align-items: center; justify-content: center;">
           <img src="assets/nav/nav-messages.png" class="bottom-nav-img-icon" alt="Mensajes" width="22" height="22" style="width:22px;height:22px;max-width:22px;max-height:22px;object-fit:contain;" />
           <span class="nav-msg-badge-dot"></span>
@@ -2211,9 +2323,9 @@
           <div class="create-sheet-icon orange">📝</div>
           <span>Escribir Nota</span>
         </button>
-        <button type="button" class="create-sheet-btn" id="btn-sheet-create-goal">
-          <div class="create-sheet-icon rose">🎯</div>
-          <span>Nuevo Objetivo</span>
+        <button type="button" class="create-sheet-btn" id="btn-sheet-open-chat" onclick="location.hash='#mensajes'; window.app.closeAllModals();">
+          <div class="create-sheet-icon rose">💬</div>
+          <span>Chat Grupal</span>
         </button>
       </div>
     </div>
@@ -2224,6 +2336,76 @@
     <button type="button" class="btn-lightbox-close" data-close-modal="modal-lightbox">✕</button>
     <img src="" id="lightbox-img" class="lightbox-img-element" alt="Vista ampliada" style="display: none;">
     <video src="" id="lightbox-video" class="lightbox-img-element" controls playsinline style="display: none; max-width: 90vw; max-height: 85vh; border-radius: var(--radius-lg);"></video>
+  </div>
+
+  <!-- 18. MODAL CREAR ENCUESTA EN EL CHAT -->
+  <div id="modal-create-poll" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title">📊 Crear Encuesta Grupal</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-create-poll">✕</button>
+      </div>
+      <form id="form-create-poll" class="chat-poll-form">
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label class="form-label" for="input-poll-question">Pregunta de la encuesta</label>
+          <input type="text" id="input-poll-question" class="form-control" placeholder="Ej: ¿Qué película o serie vemos hoy?" required autocomplete="off">
+        </div>
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <label class="form-label">Opciones</label>
+          <div id="poll-options-inputs-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <input type="text" class="form-control poll-opt-input" placeholder="Opción 1 (ej: Inception)" required autocomplete="off">
+            <input type="text" class="form-control poll-opt-input" placeholder="Opción 2 (ej: Arcane)" required autocomplete="off">
+          </div>
+          <button type="button" class="btn-secondary" id="btn-add-poll-option" style="margin-top: 0.6rem; font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+            + Añadir otra opción
+          </button>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem;">
+          <button type="button" class="btn-secondary" data-close-modal="modal-create-poll">Cancelar</button>
+          <button type="submit" class="btn-primary">Publicar Encuesta 🚀</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 19. MODAL COMPARTIR CONTENIDO EN EL CHAT (SELECTOR RÁPIDO) -->
+  <div id="modal-chat-share-picker" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="chat-share-picker-title">🎬 Compartir en el Chat</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-chat-share-picker">✕</button>
+      </div>
+      <!-- Pestañas de tipo de contenido -->
+      <div class="chat-share-tabs" id="chat-share-tabs">
+        <button type="button" class="chat-share-tab-btn is-active" data-tab="movies">Películas</button>
+        <button type="button" class="chat-share-tab-btn" data-tab="series">Series</button>
+        <button type="button" class="chat-share-tab-btn" data-tab="songs">Música</button>
+      </div>
+      <!-- Lista de elementos a elegir -->
+      <div class="chat-share-items-list" id="chat-share-items-list">
+        <!-- Renderizado dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 20. MODAL MULTIMEDIA Y ARCHIVOS COMPARTIDOS DEL CHAT -->
+  <div id="modal-chat-media" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🗂️ Multimedia y Enlaces del Grupo</h3>
+        <button type="button" class="btn-modal-close" data-close-modal="modal-chat-media">✕</button>
+      </div>
+      <!-- Pestañas de filtro de multimedia -->
+      <div class="chat-share-tabs" id="chat-media-tabs">
+        <button type="button" class="chat-share-tab-btn is-active" data-filter="photos">📷 Fotos</button>
+        <button type="button" class="chat-share-tab-btn" data-filter="cine_series">🎬 Cine & Series</button>
+        <button type="button" class="chat-share-tab-btn" data-filter="music">🎵 Música</button>
+        <button type="button" class="chat-share-tab-btn" data-filter="polls">📊 Encuestas</button>
+      </div>
+      <div class="chat-media-gallery-grid" id="chat-media-gallery-container">
+        <!-- Elementos multimedia renderizados dinámicamente -->
+      </div>
+    </div>
   </div>
 
   <!-- Firebase SDKs -->

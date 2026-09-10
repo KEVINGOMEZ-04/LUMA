@@ -579,6 +579,22 @@
       }
     ],
 
+    messages: [
+      {
+        id: 'msg_welcome',
+        senderId: 'sys_luma',
+        senderName: 'LUMA 🌟',
+        senderAvatar: 'assets/icon.png',
+        text: '¡Bienvenidos al chat grupal de LUMA! Aquí pueden charlar, coordinar maratones, compartir música y crear encuestas en tiempo real.',
+        type: 'system',
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        reactions: { '✨': ['usr_kevin'] },
+        isPinned: false
+      }
+    ],
+
+    polls: [],
+
     notes: [
       {
         id: 'note_1',
@@ -764,7 +780,7 @@
       this.saveGroups(groups);
       this.setActiveGroupId(newGroup.id);
       this.saveGroupData(newGroup.id, {
-        memories: [], songs: [], movies: [], series: cleanSeries, goals: [], notes: []
+        memories: [], songs: [], movies: [], series: cleanSeries, goals: [], notes: [], messages: [], polls: []
       });
 
       return newGroup;
@@ -830,7 +846,7 @@
         groups.push(group);
         this.saveGroups(groups);
         this.saveGroupData(group.id, {
-          memories: [], songs: [], movies: [], series: [], goals: [], notes: []
+          memories: [], songs: [], movies: [], series: [], goals: [], notes: [], messages: [], polls: []
         });
       } else {
         if (!group.members) group.members = [];
@@ -883,14 +899,16 @@
         return this.memoryCache[gid];
       }
       const raw = localStorage.getItem(window.CONFIG.storageKeys.groupData + gid);
-      if (!raw) return { memories: [], songs: [], movies: [], series: [], goals: [], notes: [] };
+      if (!raw) return { memories: [], songs: [], movies: [], series: [], goals: [], notes: [], messages: [], polls: [] };
       try {
         const parsed = JSON.parse(raw);
+        if (!parsed.messages) parsed.messages = [];
+        if (!parsed.polls) parsed.polls = [];
         if (!this.memoryCache) this.memoryCache = {};
         this.memoryCache[gid] = parsed;
         return parsed;
       } catch (_) {
-        return { memories: [], songs: [], movies: [], series: [], goals: [], notes: [] };
+        return { memories: [], songs: [], movies: [], series: [], goals: [], notes: [], messages: [], polls: [] };
       }
     }
 
@@ -1077,6 +1095,7 @@
       data.movies = (data.movies || []).filter(m => m.id !== id);
       this.saveGroupData(null, data);
     }
+    rateMovie(movieId, score) { return this.rateMovieScore(movieId, score); }
     rateMovieScore(movieId, score) {
       const data = this.getGroupData();
       const movie = (data.movies || []).find(m => m.id === movieId);
@@ -1461,6 +1480,164 @@
       this.saveGroupData(null, data);
       this.notify('series');
       return { success: true, groupRating: series.groupRating, myRating: series.ratings[uid].score };
+    }
+
+    // ==========================================
+    // --- CHAT GRUPAL / MENSAJES MULTIGRUPO ---
+    // ==========================================
+    getMessages(groupId) {
+      const data = this.getGroupData(groupId);
+      return data.messages || [];
+    }
+
+    sendMessage(message) {
+      const data = this.getGroupData();
+      if (!data.messages) data.messages = [];
+      const user = this.getUserProfile() || { id: 'usr_me', name: 'Usuario' };
+
+      const newMsg = {
+        id: message.id || window.Utils.generateId(),
+        senderId: message.senderId || user.id,
+        senderName: message.senderName || user.name,
+        senderAvatar: message.senderAvatar || user.avatar || '',
+        text: message.text || '',
+        type: message.type || 'text', // 'text' | 'image' | 'share_movie' | 'share_series' | 'share_music' | 'share_memory' | 'poll' | 'system'
+        payload: message.payload || null,
+        replyTo: message.replyTo || null,
+        timestamp: message.timestamp || new Date().toISOString(),
+        reactions: message.reactions || {},
+        isPinned: !!message.isPinned
+      };
+
+      data.messages.push(newMsg);
+      this.saveGroupData(null, data);
+      this.notify('chatMessages');
+      return newMsg;
+    }
+
+    addSystemMessage(text, payload = null) {
+      return this.sendMessage({
+        senderId: 'sys_luma',
+        senderName: 'LUMA 🌟',
+        senderAvatar: 'assets/icon.png',
+        text: text,
+        type: 'system',
+        payload: payload
+      });
+    }
+
+    toggleMessageReaction(messageId, emoji) {
+      const data = this.getGroupData();
+      if (!data.messages) return null;
+      const user = this.getUserProfile() || { id: 'usr_me', name: 'Usuario' };
+      const msg = data.messages.find(m => m.id === messageId);
+      if (!msg) return null;
+
+      if (!msg.reactions) msg.reactions = {};
+      if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+
+      const uidIdx = msg.reactions[emoji].indexOf(user.id);
+      if (uidIdx >= 0) {
+        msg.reactions[emoji].splice(uidIdx, 1);
+        if (msg.reactions[emoji].length === 0) {
+          delete msg.reactions[emoji];
+        }
+      } else {
+        msg.reactions[emoji].push(user.id);
+      }
+
+      this.saveGroupData(null, data);
+      this.notify('chatMessages');
+      return msg;
+    }
+
+    setPinnedMessage(messageId) {
+      const data = this.getGroupData();
+      if (!data.messages) return null;
+      
+      let pinnedMsg = null;
+      data.messages.forEach(m => {
+        if (m.id === messageId) {
+          m.isPinned = !m.isPinned;
+          if (m.isPinned) pinnedMsg = m;
+        } else {
+          m.isPinned = false; // Solo 1 mensaje fijado a la vez
+        }
+      });
+
+      this.saveGroupData(null, data);
+      this.notify('chatMessages');
+      return pinnedMsg;
+    }
+
+    getPinnedMessage() {
+      const msgs = this.getMessages();
+      return msgs.find(m => m.isPinned) || null;
+    }
+
+    deleteMessage(messageId) {
+      const data = this.getGroupData();
+      if (!data.messages) return;
+      data.messages = data.messages.filter(m => m.id !== messageId);
+      this.saveGroupData(null, data);
+      this.notify('chatMessages');
+    }
+
+    // --- ENCUESTAS EN EL CHAT ---
+    createPoll({ question, options }) {
+      const user = this.getUserProfile() || { id: 'usr_me', name: 'Usuario' };
+      const pollId = 'poll_' + window.Utils.generateId();
+      const pollPayload = {
+        id: pollId,
+        question: question.trim(),
+        options: options.map((opt, idx) => ({
+          id: idx,
+          text: opt.trim(),
+          votes: [] // array de userIds
+        })),
+        createdBy: user.id,
+        creatorName: user.name,
+        createdAt: new Date().toISOString(),
+        totalVotes: 0
+      };
+
+      return this.sendMessage({
+        senderId: user.id,
+        senderName: user.name,
+        senderAvatar: user.avatar || '',
+        text: `📊 Encuesta: ${question}`,
+        type: 'poll',
+        payload: pollPayload
+      });
+    }
+
+    votePoll(messageId, optionId) {
+      const data = this.getGroupData();
+      if (!data.messages) return null;
+      const user = this.getUserProfile() || { id: 'usr_me', name: 'Usuario' };
+      const msg = data.messages.find(m => m.id === messageId && m.type === 'poll' && m.payload);
+      if (!msg) return null;
+
+      const poll = msg.payload;
+      if (!poll.options) return null;
+
+      // Quitar voto anterior del usuario en todas las opciones (voto único por usuario)
+      poll.options.forEach(opt => {
+        opt.votes = (opt.votes || []).filter(uid => uid !== user.id);
+      });
+
+      // Añadir voto a la opción seleccionada
+      const targetOpt = poll.options.find(opt => opt.id === optionId);
+      if (targetOpt) {
+        targetOpt.votes.push(user.id);
+      }
+
+      // Calcular total de votos
+      poll.totalVotes = poll.options.reduce((acc, opt) => acc + opt.votes.length, 0);
+
+      this.saveGroupData(null, data);
+      this.notify('chatMessages');
+      return msg;
     }
 
     getGoals() { return this.getGroupData().goals || []; }
