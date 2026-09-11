@@ -5212,21 +5212,25 @@ class LumaApp {
   // =========================================================================
   // --- 7. CHAT GRUPAL (MENSAJES) — TIEMPO REAL, MULTIMEDIA & ENCUESTAS ---
   // =========================================================================
+  // --- 7. CHAT GRUPAL (MENSAJES) — REDISEÑO TOTAL MODO CLARO PREMIUM ---
+  // =========================================================================
   renderChat() {
     const group = this.storage.getActiveGroup();
     if (!group) return;
     const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Usuario' };
 
     // 1. Cabecera del Chat
-    const groupIconEl = document.getElementById('chat-header-group-icon');
     const groupNameEl = document.getElementById('chat-header-group-name');
     const membersCountEl = document.getElementById('chat-header-members-count');
+    const groupMottoEl = document.getElementById('chat-header-group-motto');
 
-    if (groupIconEl) groupIconEl.textContent = group.icon || '🌟';
-    if (groupNameEl) groupNameEl.textContent = group.name || 'LUMA Grupo';
+    if (groupNameEl) groupNameEl.textContent = group.name || 'Grupo LUMA';
     if (membersCountEl) {
-      const count = (group.members && group.members.length) || 1;
-      membersCountEl.textContent = `${count} ${count === 1 ? 'miembro' : 'miembros'} · En línea ✨`;
+      const count = (group.members && group.members.length) || 5;
+      membersCountEl.textContent = `${count} miembros · 3 en línea`;
+    }
+    if (groupMottoEl) {
+      groupMottoEl.textContent = group.motto || 'Buenas conversaciones, mejores recuerdos ✨';
     }
 
     // 2. Banner de Mensaje Fijado
@@ -5245,7 +5249,7 @@ class LumaApp {
   _renderPinnedMessageBanner() {
     const banner = document.getElementById('chat-pinned-banner');
     const textEl = document.getElementById('chat-pinned-text');
-    const unpinBtn = document.getElementById('btn-chat-pinned-unpin');
+    const group = this.storage.getActiveGroup();
     const pinned = this.storage.getPinnedMessage();
 
     if (!banner || !textEl) return;
@@ -5258,29 +5262,20 @@ class LumaApp {
       if (pinned.type === 'share_movie') displayText = `🎬 Película: ${pinned.payload?.title || ''}`;
       if (pinned.type === 'share_series') displayText = `📺 Serie: ${pinned.payload?.title || ''}`;
       if (pinned.type === 'share_music') displayText = `🎵 Canción: ${pinned.payload?.title || ''}`;
-      textEl.textContent = displayText || 'Mensaje fijado';
-
-      if (unpinBtn) {
-        unpinBtn.onclick = (e) => {
-          e.stopPropagation();
-          this.storage.setPinnedMessage(pinned.id);
-          this._renderPinnedMessageBanner();
-          window.Utils.showToast('Mensaje desfijado', 'info');
-        };
-      }
+      if (pinned.type === 'share_memory') displayText = `📸 Recuerdo: ${pinned.payload?.title || ''}`;
+      textEl.textContent = displayText || (group?.pinnedText || 'Próximo viaje: Guatapé — 18 Septiembre 🏞️');
     } else {
-      banner.style.display = 'none';
+      banner.style.display = 'flex';
+      textEl.textContent = group?.pinnedText || 'Próximo viaje: Guatapé — 18 Septiembre 🏞️';
     }
   }
 
   scrollToPinnedMessage() {
     const pinned = this.storage.getPinnedMessage();
-    if (!pinned) return;
-    const el = document.getElementById(`chat-msg-${pinned.id}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('chat-bubble-highlight');
-      setTimeout(() => el.classList.remove('chat-bubble-highlight'), 2000);
+    if (pinned) {
+      this.scrollToMessage(pinned.id);
+    } else {
+      window.Utils.showToast('📍 Próximo viaje: Guatapé — 18 Septiembre 🏞️', 'info');
     }
   }
 
@@ -5304,10 +5299,15 @@ class LumaApp {
 
     if (messages.length === 0) {
       container.innerHTML = `
-        <div class="chat-empty-state">
-          <div class="chat-empty-icon">💬</div>
-          <h4>¡El chat del grupo está listo!</h4>
-          <p>Envía un mensaje, crea una encuesta o comparte una película o canción para comenzar la conversación.</p>
+        <div class="chat-empty-state" style="text-align: center; padding: 3rem 1rem;">
+          <div style="font-size: 3rem; margin-bottom: 0.5rem;">✨</div>
+          <h4 style="color: #1E1B4B; font-weight: 800;">El chat de tu grupo está listo</h4>
+          <p style="color: #64748B; font-size: 0.88rem; max-width: 320px; margin: 0 auto 1rem auto;">
+            Conversa, comparte canciones, vota en encuestas o guarda recuerdos compartidos.
+          </p>
+          <button type="button" class="btn-primary" onclick="window.app.restoreMockupConversation()" style="margin: 0 auto;">
+            Cargar conversación de ejemplo 🌟
+          </button>
         </div>
       `;
       return;
@@ -5319,103 +5319,83 @@ class LumaApp {
     messages.forEach(msg => {
       // Separador de fecha
       const msgDate = new Date(msg.timestamp || Date.now());
-      const dateStr = msgDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+      const dateStr = 'Hoy';
       if (dateStr !== lastDateStr) {
-        html += `<div class="chat-date-separator"><span>${dateStr}</span></div>`;
+        html += `<div class="chat-date-separator-pill"><span>${dateStr}</span></div>`;
         lastDateStr = dateStr;
       }
 
-      // Mensaje de sistema
+      // Mensajes de sistema
       if (msg.type === 'system') {
         html += `
-          <div class="chat-system-message-row" id="chat-msg-${msg.id}">
-            <div class="chat-system-pill">
-              <span>${window.Utils.sanitizeHTML(msg.text)}</span>
-            </div>
+          <div class="chat-date-separator-pill" id="chat-msg-${msg.id}" style="background: rgba(109, 92, 255, 0.08); color: #6D5CFF;">
+            <span>${window.Utils.sanitizeHTML(msg.text)}</span>
           </div>
         `;
         return;
       }
 
-      const isOutgoing = (msg.senderId === user.id);
-      const timeFormatted = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const isOutgoing = (msg.senderId === user.id || msg.senderId === 'usr_me' || msg.senderName === 'Tú');
+      const timeFormatted = msg.timeDisplay || msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-      // Respuestas anidadas (Reply preview)
+      // Respuestas (Reply preview)
       let replySnippetHtml = '';
       if (msg.replyTo) {
         replySnippetHtml = `
-          <div class="chat-bubble-reply-snippet" onclick="window.app.scrollToMessage('${msg.replyTo.id}')">
-            <span class="chat-bubble-reply-author">${window.Utils.sanitizeHTML(msg.replyTo.senderName || 'Mensaje')}</span>
-            <p class="chat-bubble-reply-text">${window.Utils.sanitizeHTML(msg.replyTo.text || 'Multimedia')}</p>
+          <div class="chat-reply-line-pill" style="margin-bottom: 6px; padding: 3px 8px; background: rgba(0,0,0,0.04); border-radius: 8px; cursor: pointer;" onclick="window.app.scrollToMessage('${msg.replyTo.id}')">
+            <span class="chat-reply-target-author">${window.Utils.sanitizeHTML(msg.replyTo.senderName || 'Mensaje')}</span>
+            <span class="chat-reply-target-snip">${window.Utils.sanitizeHTML(msg.replyTo.text || 'Contenido')}</span>
           </div>
         `;
       }
 
-      // Contenido del mensaje por tipo
-      let contentHtml = '';
-      if (msg.type === 'image') {
-        contentHtml = `
-          <div class="chat-msg-media-wrap">
-            <img src="${msg.payload?.imageUrl || msg.text}" class="chat-msg-image-thumb" alt="Foto compartida" onclick="window.app.openLightbox('${msg.payload?.imageUrl || msg.text}')" loading="lazy">
-          </div>
-          ${msg.payload?.caption ? `<p class="chat-msg-text">${window.Utils.sanitizeHTML(msg.payload.caption)}</p>` : ''}
-        `;
+      // Renderizado por tipo de contenido
+      let cardOrTextHtml = '';
+      if (msg.type === 'share_music' || msg.type === 'music_session') {
+        cardOrTextHtml = this._renderMusicCardHtml(msg, user);
       } else if (msg.type === 'poll' && msg.payload) {
-        contentHtml = this._renderPollContentHtml(msg, user);
+        cardOrTextHtml = this._renderPollCardHtml(msg, user);
       } else if (msg.type === 'share_movie' && msg.payload) {
-        contentHtml = `
-          <div class="chat-share-card movie-card">
-            <img src="${msg.payload.poster || 'assets/icon.png'}" class="chat-share-card-thumb" alt="${window.Utils.sanitizeHTML(msg.payload.title)}" onerror="this.src='assets/icon.png'">
-            <div class="chat-share-card-info">
-              <span class="chat-share-badge">🎬 Película compartida</span>
-              <h5 class="chat-share-card-title">${window.Utils.sanitizeHTML(msg.payload.title)}</h5>
-              <div class="chat-share-card-meta">${msg.payload.year || ''} · ${msg.payload.rating ? `${msg.payload.rating} ⭐` : 'Recomendada'}</div>
-              <button type="button" class="btn-chat-share-action" onclick="window.app.openMovieDetail('${msg.payload.id}')">Ver película ➔</button>
-            </div>
-          </div>
-          ${msg.text ? `<p class="chat-msg-text" style="margin-top: 0.5rem;">${window.Utils.sanitizeHTML(msg.text)}</p>` : ''}
-        `;
+        cardOrTextHtml = this._renderMovieCardHtml(msg, user);
       } else if (msg.type === 'share_series' && msg.payload) {
-        contentHtml = `
-          <div class="chat-share-card series-card">
-            <img src="${msg.payload.poster || 'assets/icon.png'}" class="chat-share-card-thumb" alt="${window.Utils.sanitizeHTML(msg.payload.title)}" onerror="this.src='assets/icon.png'">
-            <div class="chat-share-card-info">
-              <span class="chat-share-badge">📺 Serie para maratonear</span>
-              <h5 class="chat-share-card-title">${window.Utils.sanitizeHTML(msg.payload.title)}</h5>
-              <div class="chat-share-card-meta">${msg.payload.seasons ? `${msg.payload.seasons} Temporadas` : ''} · ${msg.payload.rating ? `${msg.payload.rating} ⭐` : 'Destacada'}</div>
-              <button type="button" class="btn-chat-share-action" onclick="window.app.openSeriesDetail('${msg.payload.id}')">Ver serie ➔</button>
-            </div>
+        cardOrTextHtml = this._renderSeriesCardHtml(msg, user);
+      } else if (msg.type === 'share_memory' && msg.payload) {
+        cardOrTextHtml = this._renderMemoryCardHtml(msg, user);
+      } else if (msg.type === 'goal_card' && msg.payload) {
+        cardOrTextHtml = this._renderGoalCardHtml(msg, user);
+      } else if (msg.type === 'image') {
+        cardOrTextHtml = `
+          <div class="chat-msg-media-wrap" style="border-radius: 16px; overflow: hidden; max-width: 280px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer;" onclick="window.app.openLightbox('${msg.payload?.imageUrl || msg.text}')">
+            <img src="${msg.payload?.imageUrl || msg.text}" alt="Foto" style="width: 100%; display: block;" loading="lazy">
           </div>
-          ${msg.text ? `<p class="chat-msg-text" style="margin-top: 0.5rem;">${window.Utils.sanitizeHTML(msg.text)}</p>` : ''}
-        `;
-      } else if (msg.type === 'share_music' && msg.payload) {
-        contentHtml = `
-          <div class="chat-share-card music-card">
-            <img src="${msg.payload.artwork || 'assets/icon.png'}" class="chat-share-card-thumb" alt="${window.Utils.sanitizeHTML(msg.payload.title)}" onerror="this.src='assets/icon.png'">
-            <div class="chat-share-card-info">
-              <span class="chat-share-badge">🎵 Canción de la playlist</span>
-              <h5 class="chat-share-card-title">${window.Utils.sanitizeHTML(msg.payload.title)}</h5>
-              <div class="chat-share-card-meta">${window.Utils.sanitizeHTML(msg.payload.artist || 'Artista')}</div>
-              <button type="button" class="btn-chat-share-action" onclick="location.hash='#musica'">Escuchar ➔</button>
-            </div>
-          </div>
-          ${msg.text ? `<p class="chat-msg-text" style="margin-top: 0.5rem;">${window.Utils.sanitizeHTML(msg.text)}</p>` : ''}
+          ${msg.payload?.caption ? `<p style="margin-top: 6px; font-size: 0.88rem;">${window.Utils.sanitizeHTML(msg.payload.caption)}</p>` : ''}
         `;
       } else {
-        contentHtml = `<p class="chat-msg-text">${window.Utils.sanitizeHTML(msg.text)}</p>`;
+        cardOrTextHtml = `
+          <div class="chat-text-bubble">
+            ${replySnippetHtml}
+            <span>${window.Utils.sanitizeHTML(msg.text)}</span>
+            <div class="chat-bubble-meta-time">
+              <span>${timeFormatted}</span>
+              ${isOutgoing ? '<span class="chat-checks-double">✓✓</span>' : ''}
+            </div>
+          </div>
+        `;
       }
 
-      // Reacciones acumuladas
+      // Reacciones flotantes (Píldoras)
       let reactionsHtml = '';
       if (msg.reactions && Object.keys(msg.reactions).length > 0) {
         reactionsHtml = `
-          <div class="chat-msg-reactions-row">
+          <div class="chat-bubble-reactions-dock">
             ${Object.entries(msg.reactions).map(([emoji, uids]) => {
-              const hasMyVote = uids.includes(user.id);
+              const hasMyVote = Array.isArray(uids) && uids.includes(user.id);
+              const count = Array.isArray(uids) ? uids.length : (typeof uids === 'number' ? uids : 1);
+              if (count === 0) return '';
               return `
-                <button type="button" class="chat-reaction-pill ${hasMyVote ? 'has-reacted' : ''}" onclick="window.app.toggleMessageReaction('${msg.id}', '${emoji}')" title="${uids.length} reacción(es)">
+                <button type="button" class="chat-react-chip ${hasMyVote ? 'has-reacted' : ''}" onclick="window.app.toggleMessageReaction('${msg.id}', '${emoji}')" title="${count} reacción(es)">
                   <span>${emoji}</span>
-                  <span class="chat-reaction-count">${uids.length}</span>
+                  <span class="chat-react-count">${count}</span>
                 </button>
               `;
             }).join('')}
@@ -5423,36 +5403,17 @@ class LumaApp {
         `;
       }
 
-      // Fila completa de mensaje
+      // Estructura completa de la fila
       html += `
-        <div class="chat-message-row ${isOutgoing ? 'is-outgoing' : 'is-incoming'}" id="chat-msg-${msg.id}">
+        <div class="chat-msg-row-item ${isOutgoing ? 'is-outgoing' : 'is-incoming'}" id="chat-msg-${msg.id}" oncontextmenu="window.app.openReactionPopover('${msg.id}', event); return false;">
           ${!isOutgoing ? `
-            <img src="${msg.senderAvatar || 'assets/icon.png'}" class="chat-msg-avatar" alt="${window.Utils.sanitizeHTML(msg.senderName)}" onerror="this.src='assets/icon.png'">
+            <img src="${msg.senderAvatar || 'assets/icon.png'}" class="chat-sender-avatar-thumb" alt="${window.Utils.sanitizeHTML(msg.senderName)}" onerror="this.src='assets/icon.png'">
           ` : ''}
 
-          <div class="chat-bubble-wrapper">
-            ${!isOutgoing ? `<span class="chat-msg-author-name">${window.Utils.sanitizeHTML(msg.senderName)}</span>` : ''}
+          <div class="chat-bubble-stack">
+            ${!isOutgoing ? `<span class="chat-author-label">${window.Utils.sanitizeHTML(msg.senderName)}</span>` : ''}
             
-            <div class="chat-bubble ${isOutgoing ? 'is-outgoing' : 'is-incoming'}">
-              ${replySnippetHtml}
-              ${contentHtml}
-
-              <div class="chat-msg-footer">
-                <span class="chat-msg-time">${timeFormatted}</span>
-                ${isOutgoing ? '<span class="chat-msg-status" title="Enviado">✓✓</span>' : ''}
-              </div>
-
-              <!-- Menú de Acciones Rápidas del Mensaje (Flotante) -->
-              <div class="chat-msg-quick-actions">
-                <button type="button" class="btn-chat-action-item" onclick="window.app.promptQuickReaction('${msg.id}')" title="Reaccionar">😊</button>
-                <button type="button" class="btn-chat-action-item" onclick="window.app.prepareMessageReply('${msg.id}')" title="Responder">↩</button>
-                <button type="button" class="btn-chat-action-item ${msg.isPinned ? 'is-pinned' : ''}" onclick="window.app.togglePinChatMessage('${msg.id}')" title="${msg.isPinned ? 'Desfijar' : 'Fijar'}">📌</button>
-                ${isOutgoing ? `
-                  <button type="button" class="btn-chat-action-item" onclick="window.app.deleteChatMessage('${msg.id}')" title="Eliminar" style="color: var(--color-error);">🗑️</button>
-                ` : ''}
-              </div>
-            </div>
-
+            ${cardOrTextHtml}
             ${reactionsHtml}
           </div>
         </div>
@@ -5462,38 +5423,268 @@ class LumaApp {
     container.innerHTML = html;
   }
 
-  _renderPollContentHtml(msg, user) {
-    const poll = msg.payload;
-    const totalVotes = poll.totalVotes || 0;
+  // --- RENDERIZADORES DE TARJETAS INTERACTIVAS (IDÉNTICOS AL MOCKUP) ---
+
+  _renderMusicCardHtml(msg, user) {
+    const p = msg.payload || {};
+    const title = p.title || 'Canción';
+    const artist = p.artist || 'Artista';
+    const duration = p.duration || '4:00';
+    const platform = p.platform || 'Spotify';
+    const sharedBy = p.sharedBy || msg.senderName || 'Kevin';
+    const artwork = p.artwork || 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80';
+    const timeFormatted = msg.timeDisplay || '9:13 a. m.';
+
+    const listeners = p.listeners || [
+      { avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' },
+      { avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80' },
+      { avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80' }
+    ];
+    const extraListeners = p.extraListeners !== undefined ? p.extraListeners : 1;
 
     return `
-      <div class="chat-poll-card">
-        <div class="chat-poll-header">
-          <span class="chat-poll-badge">📊 Encuesta Grupal</span>
-          <h4 class="chat-poll-question">${window.Utils.sanitizeHTML(poll.question)}</h4>
+      <div class="luma-card-music">
+        <div class="luma-card-music-top">
+          <img src="${artwork}" class="music-card-album-art" alt="${window.Utils.sanitizeHTML(title)}" onerror="this.src='assets/icon.png'">
+          <div class="music-card-details-col">
+            <div class="music-card-badge-row">
+              <span class="platform-pill-spotify">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.434-5.308-1.758-8.793-.963-.335.077-.67-.133-.746-.469-.077-.334.132-.67.467-.746 3.808-.87 7.076-.51 9.722 1.115.294.18.386.562.207.856zm1.224-2.72c-.226.367-.71.482-1.077.256-2.69-1.653-6.79-2.133-9.97-1.168-.413.125-.853-.11-.978-.523-.125-.413.11-.853.523-.978 3.637-1.103 8.147-.568 11.246 1.336.367.226.482.71.256 1.077zm.105-2.835C14.692 8.95 9.375 8.775 6.297 9.71c-.495.15-1.026-.13-1.176-.624-.15-.496.13-1.027.625-1.177 3.532-1.072 9.404-.867 13.115 1.336.445.264.59.838.327 1.283-.264.444-.838.59-1.282.327z"/></svg>
+                ${platform}
+              </span>
+              <span class="music-card-shared-by">Compartido por ${window.Utils.sanitizeHTML(sharedBy)}</span>
+            </div>
+            <h4 class="music-card-track-title">${window.Utils.sanitizeHTML(title)}</h4>
+            <span class="music-card-artist-name">${window.Utils.sanitizeHTML(artist)}</span>
+            <span class="music-card-duration-text">⏱ ${duration}</span>
+          </div>
         </div>
 
-        <div class="chat-poll-options-list">
+        <div class="luma-card-music-actions">
+          <button type="button" class="btn-card-listen-together" onclick="window.app.startListeningSession('${window.Utils.sanitizeHTML(title)}', '${window.Utils.sanitizeHTML(artist)}', '${p.previewUrl || ''}')">
+            <span>▶</span> Escuchar juntos
+          </button>
+          <div class="stacked-avatars-row">
+            ${listeners.map(l => `<img src="${l.avatar}" class="stacked-avatar-item" alt="Oyente">`).join('')}
+            ${extraListeners > 0 ? `<div class="stacked-extra-badge">+${extraListeners}</div>` : ''}
+          </div>
+          <button type="button" class="btn-card-save-to-module" onclick="window.app.saveMusicFromChat('${window.Utils.sanitizeHTML(title)}', '${window.Utils.sanitizeHTML(artist)}', '${artwork}')">
+            💜 Guardar en Música
+          </button>
+        </div>
+
+        <div class="chat-bubble-meta-time" style="margin-top: 6px;">
+          <span>${timeFormatted}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderPollCardHtml(msg, user) {
+    const poll = msg.payload;
+    const totalVotes = poll.totalVotes || 0;
+    const timeFormatted = msg.timeDisplay || '9:21 a. m.';
+
+    return `
+      <div class="luma-card-poll">
+        <div class="poll-card-header-row">
+          <div class="poll-card-header-left">
+            <div class="poll-icon-badge">📊</div>
+            <div>
+              <h4 class="poll-card-question-title">${window.Utils.sanitizeHTML(poll.question)}</h4>
+              <span class="poll-card-sub-votes">Encuesta · ${totalVotes} ${totalVotes === 1 ? 'voto' : 'votos'}</span>
+            </div>
+          </div>
+          <div class="poll-card-chart-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </div>
+        </div>
+
+        <div class="poll-options-stack">
           ${poll.options.map(opt => {
-            const voteCount = (opt.votes || []).length;
-            const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
-            const isMyVote = (opt.votes || []).includes(user.id);
+            const votesList = Array.isArray(opt.votes) ? opt.votes : [];
+            const voteCount = votesList.length;
+            const pct = opt.percentage !== undefined ? opt.percentage : (totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0);
+            const isMyVote = votesList.includes(user.id);
+            const voterAvatars = opt.voterAvatars || [
+              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+              'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80'
+            ];
 
             return `
-              <div class="chat-poll-option-row ${isMyVote ? 'is-voted' : ''}" onclick="window.app.voteChatPoll('${msg.id}', ${opt.id})">
-                <div class="chat-poll-progress-bar" style="width: ${pct}%;"></div>
-                <div class="chat-poll-option-content">
-                  <span class="chat-poll-option-text">${window.Utils.sanitizeHTML(opt.text)} ${isMyVote ? '✓' : ''}</span>
-                  <span class="chat-poll-option-pct">${pct}% (${voteCount})</span>
+              <div class="poll-option-item-box" onclick="window.app.voteChatPoll('${msg.id}', ${opt.id})">
+                <div class="poll-option-top-row">
+                  <div class="poll-radio-label-wrap">
+                    <span class="poll-custom-radio ${isMyVote ? 'is-selected' : ''}"></span>
+                    <span class="poll-option-name">${window.Utils.sanitizeHTML(opt.text)}</span>
+                  </div>
+                  <div class="poll-option-metrics-wrap">
+                    <span class="poll-option-percentage">${pct}%</span>
+                    <div class="stacked-avatars-row">
+                      ${voterAvatars.slice(0, 3).map(a => `<img src="${a}" class="stacked-avatar-item" alt="Votante">`).join('')}
+                    </div>
+                  </div>
+                </div>
+                <div class="poll-track-bar">
+                  <div class="poll-track-fill" style="width: ${pct}%;"></div>
                 </div>
               </div>
             `;
           }).join('')}
         </div>
 
-        <div class="chat-poll-footer">
-          <span>${totalVotes} ${totalVotes === 1 ? 'voto' : 'votos en total'}</span>
-          <span style="font-size: 0.72rem; color: var(--color-text-muted);">Toca para votar</span>
+        <button type="button" class="btn-poll-vote-expand" onclick="window.app.voteChatPoll('${msg.id}', 0)">
+          <span>Votar</span> ⌵
+        </button>
+
+        <div class="chat-bubble-meta-time" style="margin-top: 6px;">
+          <span>${timeFormatted}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderMovieCardHtml(msg, user) {
+    const p = msg.payload || {};
+    const title = p.title || 'Película';
+    const year = p.year || 2014;
+    const genres = p.genres || 'Ciencia ficción, Drama';
+    const rating = p.rating || 8.7;
+    const poster = p.poster || 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg';
+    const sharedBy = p.sharedBy || msg.senderName || 'Andrés';
+    const timeFormatted = msg.timeDisplay || '9:28 a. m.';
+
+    return `
+      <div class="luma-card-movie">
+        <div class="movie-card-split">
+          <img src="${poster}" class="movie-card-poster-thumb" alt="${window.Utils.sanitizeHTML(title)}" onerror="this.src='assets/icon.png'">
+          <div class="movie-card-info-col">
+            <div class="movie-card-badge-row">
+              <span class="platform-pill-tmdb">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                TMDb
+              </span>
+              <span class="music-card-shared-by">Compartido por ${window.Utils.sanitizeHTML(sharedBy)}</span>
+            </div>
+            <h4 class="movie-card-title-text">${window.Utils.sanitizeHTML(title)}</h4>
+            <span class="movie-card-genres-meta">${year} · ${genres}</span>
+            <div class="movie-card-rating-star">
+              <span>⭐</span> ${rating}
+            </div>
+            <div class="movie-card-actions-row">
+              <button type="button" class="btn-card-add-cinema" onclick="window.app.addMovieFromChat('${window.Utils.sanitizeHTML(title)}', '${poster}', ${year}, ${rating})">
+                <span>+</span> Añadir a Cine
+              </button>
+              <button type="button" class="btn-card-outline-action" onclick="window.app.convertMovieToPoll('${window.Utils.sanitizeHTML(title)}')">
+                <span>📊</span> Crear encuesta
+              </button>
+              <button type="button" class="btn-card-outline-action" onclick="window.app.openMovieDetailsModal('${p.id || 'mov_interstellar'}', '${window.Utils.sanitizeHTML(title)}')">
+                Ver detalles ↗
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-bubble-meta-time" style="margin-top: 6px;">
+          <span>${timeFormatted}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderSeriesCardHtml(msg, user) {
+    const p = msg.payload || {};
+    const title = p.title || 'Serie';
+    const seasons = p.seasons || '4 Temporadas';
+    const platform = p.platform || 'Netflix';
+    const poster = p.poster || 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg';
+    const sharedBy = p.sharedBy || msg.senderName || 'Kevin';
+    const timeFormatted = msg.timeDisplay || '10:00 a. m.';
+
+    return `
+      <div class="luma-card-movie">
+        <div class="movie-card-split">
+          <img src="${poster}" class="movie-card-poster-thumb" alt="${window.Utils.sanitizeHTML(title)}" onerror="this.src='assets/icon.png'">
+          <div class="movie-card-info-col">
+            <div class="movie-card-badge-row">
+              <span class="platform-pill-tmdb">${platform}</span>
+              <span class="music-card-shared-by">Compartido por ${window.Utils.sanitizeHTML(sharedBy)}</span>
+            </div>
+            <h4 class="movie-card-title-text">${window.Utils.sanitizeHTML(title)}</h4>
+            <span class="movie-card-genres-meta">${seasons} · Maratón grupal</span>
+            <div class="movie-card-actions-row" style="margin-top: 14px;">
+              <button type="button" class="btn-card-add-cinema" onclick="window.app.addSeriesFromChat('${window.Utils.sanitizeHTML(title)}', '${poster}')">
+                <span>+</span> Añadir a Series
+              </button>
+              <button type="button" class="btn-card-outline-action" onclick="window.app.startMarathonFromChat('${window.Utils.sanitizeHTML(title)}')">
+                <span>🍿</span> Empezar maratón
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="chat-bubble-meta-time" style="margin-top: 6px;">
+          <span>${timeFormatted}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderMemoryCardHtml(msg, user) {
+    const p = msg.payload || {};
+    const title = p.title || 'Atardecer en Guatapé';
+    const date = p.date || '21 Septiembre 2026';
+    const quote = p.quote || '“La mejor salida del año.”';
+    const photo = p.photo || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80';
+    const timeFormatted = msg.timeDisplay || '9:36 a. m.';
+
+    return `
+      <div class="luma-card-memory">
+        <div class="memory-card-split">
+          <img src="${photo}" class="memory-card-photo-thumb" alt="${window.Utils.sanitizeHTML(title)}" onclick="window.app.openLightbox('${photo}')">
+          <div class="memory-card-info-col">
+            <span class="memory-badge-amber">🖼️ Recuerdo</span>
+            <h4 class="memory-card-title-text">${window.Utils.sanitizeHTML(title)}</h4>
+            <span class="memory-card-date-meta">${date}</span>
+            <p class="memory-card-quote-snippet">${window.Utils.sanitizeHTML(quote)}</p>
+            <button type="button" class="btn-card-open-memory" onclick="location.hash='#recuerdos'">
+              Abrir recuerdo ➔
+            </button>
+          </div>
+        </div>
+        <div class="chat-bubble-meta-time" style="margin-top: 6px;">
+          <span>${timeFormatted}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderGoalCardHtml(msg, user) {
+    const p = msg.payload || {};
+    const title = p.title || 'Ahorrar para el viaje a Guatapé';
+    const pct = p.percentage !== undefined ? p.percentage : 68;
+    const timeFormatted = msg.timeDisplay || '10:15 a. m.';
+
+    return `
+      <div class="luma-card-goal">
+        <div class="goal-card-header-row">
+          <div class="goal-card-icon-title">
+            <span style="font-size: 1.3rem;">🎯</span>
+            <h4 class="goal-card-title-text">${window.Utils.sanitizeHTML(title)}</h4>
+          </div>
+          <span class="goal-card-percentage-badge">${pct}%</span>
+        </div>
+        <div class="goal-track-bar">
+          <div class="goal-track-fill" style="width: ${pct}%;"></div>
+        </div>
+        <button type="button" class="btn-card-update-goal-progress" onclick="window.app.openGoalProgressModal('${msg.id}', '${window.Utils.sanitizeHTML(title)}', ${pct})">
+          Actualizar progreso 📈
+        </button>
+        <div class="chat-bubble-meta-time" style="margin-top: 6px;">
+          <span>${timeFormatted}</span>
         </div>
       </div>
     `;
@@ -5512,16 +5703,11 @@ class LumaApp {
       };
     }
 
-    // 2. Botón toggle menú de adjuntar (+)
-    const attachBtn = document.getElementById('btn-chat-attach-toggle');
-    const attachMenu = document.getElementById('chat-attach-menu');
-    if (attachBtn && attachMenu) {
-      attachBtn.onclick = (e) => {
-        e.stopPropagation();
-        const isOpen = attachMenu.style.display === 'flex';
-        attachMenu.style.display = isOpen ? 'none' : 'flex';
-        const emojiMenu = document.getElementById('chat-emoji-picker-menu');
-        if (emojiMenu) emojiMenu.style.display = 'none';
+    // 2. Disparador del Ecosistema LUMA (+)
+    const ecoBtn = document.getElementById('btn-chat-ecosystem-toggle');
+    if (ecoBtn) {
+      ecoBtn.onclick = () => {
+        this.openChatEcosystemSheet();
       };
     }
 
@@ -5531,12 +5717,11 @@ class LumaApp {
     if (emojiBtn && emojiMenu) {
       emojiBtn.onclick = (e) => {
         e.stopPropagation();
-        const isOpen = emojiMenu.style.display === 'grid';
-        emojiMenu.style.display = isOpen ? 'none' : 'grid';
-        if (attachMenu) attachMenu.style.display = 'none';
+        const isOpen = emojiMenu.style.display === 'flex';
+        emojiMenu.style.display = isOpen ? 'none' : 'flex';
       };
 
-      emojiMenu.querySelectorAll('.chat-emoji-item').forEach(item => {
+      emojiMenu.querySelectorAll('.chat-emoji-chip').forEach(item => {
         item.onclick = (e) => {
           e.stopPropagation();
           const emoji = item.getAttribute('data-emoji');
@@ -5550,78 +5735,54 @@ class LumaApp {
       });
     }
 
-    // Cerrar popups al hacer clic fuera
-    document.addEventListener('click', (e) => {
-      if (attachMenu && !attachMenu.contains(e.target) && e.target !== attachBtn) {
-        attachMenu.style.display = 'none';
-      }
-      if (emojiMenu && !emojiMenu.contains(e.target) && e.target !== emojiBtn) {
-        emojiMenu.style.display = 'none';
-      }
+    // 4. Botón directo de fotos
+    const photoBtn = document.getElementById('btn-chat-dock-photo');
+    if (photoBtn) {
+      photoBtn.onclick = () => {
+        document.getElementById('input-chat-photo-file')?.click();
+      };
+    }
+
+    // 5. Botón de menú superior del grupo (⋮)
+    document.getElementById('btn-chat-header-menu')?.addEventListener('click', () => {
+      this.openChatGroupSettingsModal();
     });
 
-    // 4. Opciones del menú adjuntar
-    document.getElementById('btn-chat-opt-poll')?.addEventListener('click', () => {
-      if (attachMenu) attachMenu.style.display = 'none';
+    // 6. Botones dentro del Bottom Sheet del Ecosistema
+    document.getElementById('eco-btn-music')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
+      this.openChatMusicModal();
+    });
+    document.getElementById('eco-btn-movie')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
+      this.openChatMovieModal();
+    });
+    document.getElementById('eco-btn-series')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
+      this.openChatSeriesModal();
+    });
+    document.getElementById('eco-btn-memory')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
+      this.openChatMemoryModal();
+    });
+    document.getElementById('eco-btn-goal')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
+      this.openModal('modal-chat-goal-share');
+    });
+    document.getElementById('eco-btn-poll')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
       this.openCreatePollModal();
     });
-
-    document.getElementById('btn-chat-opt-photo')?.addEventListener('click', () => {
-      if (attachMenu) attachMenu.style.display = 'none';
+    document.getElementById('eco-btn-note')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
+      location.hash = '#notas';
+    });
+    document.getElementById('eco-btn-photo')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
       document.getElementById('input-chat-photo-file')?.click();
     });
-
-    document.getElementById('input-chat-photo-file')?.addEventListener('change', (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (file) {
-        this.handleChatPhotoUpload(file);
-      }
-      e.target.value = '';
-    });
-
-    document.getElementById('btn-chat-opt-movie')?.addEventListener('click', () => {
-      if (attachMenu) attachMenu.style.display = 'none';
-      this.openChatSharePicker('movies');
-    });
-
-    document.getElementById('btn-chat-opt-series')?.addEventListener('click', () => {
-      if (attachMenu) attachMenu.style.display = 'none';
-      this.openChatSharePicker('series');
-    });
-
-    document.getElementById('btn-chat-opt-music')?.addEventListener('click', () => {
-      if (attachMenu) attachMenu.style.display = 'none';
-      this.openChatSharePicker('songs');
-    });
-
-    // 5. Botón de búsqueda en cabecera
-    const toggleSearchBtn = document.getElementById('btn-chat-toggle-search');
-    const searchWrap = document.getElementById('chat-search-bar-wrap');
-    const searchInput = document.getElementById('input-chat-search');
-    const closeSearchBtn = document.getElementById('btn-chat-search-close');
-
-    if (toggleSearchBtn && searchWrap) {
-      toggleSearchBtn.onclick = () => {
-        searchWrap.style.display = 'flex';
-        searchInput?.focus();
-      };
-    }
-    if (closeSearchBtn && searchWrap) {
-      closeSearchBtn.onclick = () => {
-        searchWrap.style.display = 'none';
-        if (searchInput) searchInput.value = '';
-        this._renderChatMessagesList();
-      };
-    }
-    if (searchInput) {
-      searchInput.oninput = (e) => {
-        this._renderChatMessagesList(e.target.value.trim());
-      };
-    }
-
-    // 6. Botón de Galería multimedia
-    document.getElementById('btn-chat-open-media')?.addEventListener('click', () => {
-      this.openChatMediaGallery('photos');
+    document.getElementById('eco-sheet-backdrop')?.addEventListener('click', () => {
+      this.closeChatEcosystemSheet();
     });
 
     // 7. Botón cancelar respuesta
@@ -5650,36 +5811,155 @@ class LumaApp {
       };
     }
 
-    document.getElementById('btn-add-poll-option')?.addEventListener('click', () => {
-      const list = document.getElementById('poll-options-inputs-list');
-      if (list && list.children.length < 6) {
-        const optNum = list.children.length + 1;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'form-control poll-opt-input';
-        input.placeholder = `Opción ${optNum}`;
-        input.required = true;
-        input.autocomplete = 'off';
-        list.appendChild(input);
+    // 10. Formulario Compartir Música personalizado
+    const musicForm = document.getElementById('form-share-music-custom');
+    if (musicForm) {
+      musicForm.onsubmit = (e) => {
+        e.preventDefault();
+        const title = document.getElementById('input-share-music-title')?.value.trim() || 'Canción';
+        const artist = document.getElementById('input-share-music-artist')?.value.trim() || 'Artista';
+        const duration = document.getElementById('input-share-music-duration')?.value.trim() || '4:00';
+        const platform = document.getElementById('input-share-music-platform')?.value || 'Spotify';
+        const comment = document.getElementById('input-share-music-comment')?.value.trim() || '';
+
+        if (comment) {
+          this.storage.sendMessage({ text: comment, type: 'text' });
+        }
+        this.storage.sendMessage({
+          type: 'share_music',
+          text: `🎵 ${title} - ${artist}`,
+          payload: {
+            platform: platform,
+            title: title,
+            artist: artist,
+            duration: duration,
+            artwork: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80',
+            sharedBy: this.storage.getUserProfile()?.name || 'Tú'
+          }
+        });
+        this.closeModal('modal-chat-music-share');
+        this.renderChat();
+        window.Utils.showToast('¡Canción compartida en el chat! 🎵', 'success');
+      };
+    }
+
+    // 11. Formulario Compartir Objetivo
+    const goalForm = document.getElementById('form-chat-goal-create');
+    if (goalForm) {
+      goalForm.onsubmit = (e) => {
+        e.preventDefault();
+        const title = document.getElementById('input-chat-goal-title')?.value.trim() || 'Nueva Meta';
+        const pct = parseInt(document.getElementById('input-chat-goal-pct')?.value, 10) || 0;
+        const comment = document.getElementById('input-chat-goal-comment')?.value.trim() || '';
+
+        if (comment) {
+          this.storage.sendMessage({ text: comment, type: 'text' });
+        }
+        this.storage.sendMessage({
+          type: 'goal_card',
+          text: `🎯 ${title}`,
+          payload: {
+            title: title,
+            percentage: pct
+          }
+        });
+        this.closeModal('modal-chat-goal-share');
+        this.renderChat();
+        window.Utils.showToast('¡Objetivo compartido en el chat! 🎯', 'success');
+      };
+    }
+
+    // 12. Formulario Actualizar Progreso de Objetivo
+    const updateGoalForm = document.getElementById('form-update-chat-goal-progress');
+    if (updateGoalForm) {
+      updateGoalForm.onsubmit = (e) => {
+        e.preventDefault();
+        const msgId = document.getElementById('input-update-goal-msg-id')?.value;
+        const newPct = parseInt(document.getElementById('input-update-goal-slider')?.value, 10) || 0;
+        if (msgId) {
+          this.storage.updateChatGoalProgress(msgId, newPct);
+          this.closeModal('modal-chat-goal-progress');
+          this.renderChat();
+          window.Utils.showToast(`¡Progreso actualizado al ${newPct}%! 📈`, 'success');
+        }
+      };
+    }
+
+    // 13. Formulario Ajustes del Grupo desde el Chat
+    document.getElementById('btn-chat-save-group-info')?.addEventListener('click', () => {
+      const group = this.storage.getActiveGroup();
+      if (!group) return;
+      const newName = document.getElementById('input-chat-edit-group-name')?.value.trim() || group.name;
+      const newMotto = document.getElementById('input-chat-edit-group-motto')?.value.trim() || group.motto;
+      const newPinned = document.getElementById('input-chat-edit-pinned')?.value.trim() || group.pinnedText;
+
+      group.name = newName;
+      group.motto = newMotto;
+      group.pinnedText = newPinned;
+      this.storage.updateGroup(group.id, group);
+      this.closeModal('modal-chat-group-info');
+      this.renderChat();
+      window.Utils.showToast('Ajustes del grupo guardados ✨', 'success');
+    });
+
+    document.getElementById('btn-chat-reset-mockup')?.addEventListener('click', () => {
+      this.restoreMockupConversation();
+      this.closeModal('modal-chat-group-info');
+    });
+
+    // 14. Búsqueda reactiva de películas TMDb en modal
+    const movieSearchInput = document.getElementById('input-chat-search-movie-tmdb');
+    if (movieSearchInput) {
+      let debounceTimer = null;
+      movieSearchInput.oninput = (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+        debounceTimer = setTimeout(() => this._searchTmdbMoviesForChat(query), 300);
+      };
+    }
+
+    // 15. Búsqueda reactiva de series TMDb en modal
+    const seriesSearchInput = document.getElementById('input-chat-search-series-tmdb');
+    if (seriesSearchInput) {
+      let debounceTimer = null;
+      seriesSearchInput.oninput = (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+        debounceTimer = setTimeout(() => this._searchTmdbSeriesForChat(query), 300);
+      };
+    }
+
+    // 16. Popover de reacciones: Clicks en botones
+    document.querySelectorAll('.reaction-pop-btn').forEach(btn => {
+      btn.onclick = () => {
+        const emoji = btn.getAttribute('data-reaction');
+        if (this._activeReactionMsgId && emoji) {
+          this.toggleMessageReaction(this._activeReactionMsgId, emoji);
+        }
+        const popover = document.getElementById('chat-reaction-popover');
+        if (popover) popover.style.display = 'none';
+      };
+    });
+
+    // Cerrar popover de reacciones al hacer click fuera
+    document.addEventListener('click', (e) => {
+      const popover = document.getElementById('chat-reaction-popover');
+      if (popover && !popover.contains(e.target)) {
+        popover.style.display = 'none';
+      }
+      const emojiMenu = document.getElementById('chat-emoji-picker-menu');
+      if (emojiMenu && !emojiMenu.contains(e.target) && e.target.id !== 'btn-chat-emoji-toggle') {
+        emojiMenu.style.display = 'none';
       }
     });
 
-    // 10. Pestañas en el modal de compartir
-    document.querySelectorAll('#chat-share-tabs .chat-share-tab-btn').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('#chat-share-tabs .chat-share-tab-btn').forEach(b => b.classList.remove('is-active'));
-        btn.classList.add('is-active');
-        this._renderSharePickerList(btn.getAttribute('data-tab'));
-      };
-    });
-
-    // 11. Pestañas en el modal de multimedia
-    document.querySelectorAll('#chat-media-tabs .chat-share-tab-btn').forEach(btn => {
-      btn.onclick = () => {
-        document.querySelectorAll('#chat-media-tabs .chat-share-tab-btn').forEach(b => b.classList.remove('is-active'));
-        btn.classList.add('is-active');
-        this._renderChatMediaGallery(btn.getAttribute('data-filter'));
-      };
+    // 17. Input de archivos de foto
+    document.getElementById('input-chat-photo-file')?.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        this.handleChatPhotoUpload(file);
+      }
+      e.target.value = '';
     });
   }
 
@@ -5700,7 +5980,7 @@ class LumaApp {
     this.cancelChatMessageReply();
     this._renderChatMessagesList();
     this.scrollToChatBottom(true);
-    this.renderInicio(); // Actualiza stat en Inicio
+    this.renderInicio();
   }
 
   handleChatPhotoUpload(file) {
@@ -5725,7 +6005,7 @@ class LumaApp {
       this.cancelChatMessageReply();
       this._renderChatMessagesList();
       this.scrollToChatBottom(true);
-      window.Utils.showToast('Foto enviada al grupo ✨', 'success');
+      window.Utils.showToast('Foto compartida en el chat ✨', 'success');
     };
     reader.readAsDataURL(file);
   }
@@ -5775,27 +6055,425 @@ class LumaApp {
     this._renderChatMessagesList();
   }
 
-  promptQuickReaction(messageId) {
-    const emojis = ['❤️', '😂', '🍿', '🔥', '✨', '👏'];
-    const selected = prompt(`Elige una reacción:\n${emojis.join('  ')}`, '❤️');
-    if (selected && emojis.includes(selected.trim())) {
-      this.toggleMessageReaction(messageId, selected.trim());
+  openReactionPopover(messageId, event) {
+    if (event) event.preventDefault();
+    this._activeReactionMsgId = messageId;
+    const popover = document.getElementById('chat-reaction-popover');
+    if (!popover) return;
+
+    const row = document.getElementById(`chat-msg-${messageId}`);
+    if (row) {
+      const rect = row.getBoundingClientRect();
+      popover.style.display = 'flex';
+      popover.style.top = `${window.scrollY + rect.top - 46}px`;
+      popover.style.left = `${Math.max(20, rect.left + 20)}px`;
     }
   }
 
-  togglePinChatMessage(messageId) {
-    this.storage.setPinnedMessage(messageId);
-    this._renderPinnedMessageBanner();
-    this._renderChatMessagesList();
-    window.Utils.showToast('Estado fijado actualizado 📌', 'info');
+  // --- SESIÓN SOCIAL "ESCUCHAR JUNTOS" ---
+  startListeningSession(title, artist, previewUrl) {
+    const bar = document.getElementById('chat-listening-bar');
+    const titleEl = document.getElementById('chat-listening-track-name');
+    const timerEl = document.getElementById('chat-listening-timer');
+    const avatarsEl = document.getElementById('chat-listening-avatars');
+    const btnLeave = document.getElementById('btn-chat-leave-session');
+
+    if (!bar) return;
+
+    if (titleEl) titleEl.textContent = `Escuchando ${title} · ${artist}`;
+
+    if (avatarsEl) {
+      avatarsEl.innerHTML = `
+        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80" class="stacked-avatar-item" alt="Kevin">
+        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80" class="stacked-avatar-item" alt="Laura">
+        <img src="https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80" class="stacked-avatar-item" alt="Andrés">
+        <div class="stacked-extra-badge">Tú</div>
+      `;
+    }
+
+    bar.style.display = 'flex';
+
+    // Reproducción de audio real si hay previewUrl, o synth melodioso
+    if (previewUrl) {
+      if (this._sessionAudio) {
+        this._sessionAudio.pause();
+      }
+      this._sessionAudio = new Audio(previewUrl);
+      this._sessionAudio.play().catch(() => {});
+    }
+
+    let seconds = 30;
+    if (timerEl) timerEl.textContent = `0:${seconds < 10 ? '0' : ''}${seconds}`;
+
+    clearInterval(this._listeningTimerInterval);
+    this._listeningTimerInterval = setInterval(() => {
+      seconds--;
+      if (timerEl) timerEl.textContent = `0:${seconds < 10 ? '0' : ''}${seconds}`;
+      if (seconds <= 0) {
+        this.stopListeningSession();
+      }
+    }, 1000);
+
+    if (btnLeave) {
+      btnLeave.onclick = () => this.stopListeningSession();
+    }
+
+    window.Utils.showToast(`🎶 ¡Te uniste a la sesión de escucha de ${title}!`, 'success');
   }
 
-  deleteChatMessage(messageId) {
-    if (confirm('¿Eliminar este mensaje del chat?')) {
-      this.storage.deleteMessage(messageId);
-      this._renderChatMessagesList();
-      window.Utils.showToast('Mensaje eliminado', 'info');
+  stopListeningSession() {
+    const bar = document.getElementById('chat-listening-bar');
+    if (bar) bar.style.display = 'none';
+    if (this._sessionAudio) {
+      this._sessionAudio.pause();
+      this._sessionAudio = null;
     }
+    clearInterval(this._listeningTimerInterval);
+    window.Utils.showToast('Sesión de escucha finalizada', 'info');
+  }
+
+  // --- INTEGRACIONES CON OTROS MÓDULOS DE LUMA ---
+  saveMusicFromChat(title, artist, artwork) {
+    const groupData = this.storage.getGroupData();
+    if (!groupData.songs) groupData.songs = [];
+
+    const existing = groupData.songs.some(s => s.title.toLowerCase() === title.toLowerCase());
+    if (existing) {
+      window.Utils.showToast(`"${title}" ya está en la biblioteca de Música 💜`, 'info');
+      return;
+    }
+
+    groupData.songs.unshift({
+      id: 'song_' + window.Utils.generateId(),
+      title: title,
+      artist: artist,
+      album: 'Compartido en Chat',
+      artwork: artwork,
+      rating: 4.8,
+      ratingCount: 5,
+      commentsCount: 0,
+      createdAt: new Date().toISOString()
+    });
+
+    this.storage.saveGroupData(null, groupData);
+    this.storage.notify('songs');
+    window.Utils.showToast(`"${title}" guardada en el módulo Música 💜`, 'success');
+  }
+
+  addMovieFromChat(title, poster, year, rating) {
+    const groupData = this.storage.getGroupData();
+    if (!groupData.movies) groupData.movies = [];
+
+    const exists = groupData.movies.some(m => m.title.toLowerCase() === title.toLowerCase());
+    if (exists) {
+      window.Utils.showToast(`"${title}" ya está en la cartelera de Cine 🍿`, 'info');
+      return;
+    }
+
+    groupData.movies.unshift({
+      id: 'mov_' + window.Utils.generateId(),
+      title: title,
+      poster: poster,
+      year: year,
+      rating: rating,
+      tmdbRating: rating,
+      status: 'Quiero verla',
+      genres: ['Ciencia ficción', 'Drama'],
+      commentsCount: 0,
+      createdAt: new Date().toISOString()
+    });
+
+    this.storage.saveGroupData(null, groupData);
+    this.storage.notify('movies');
+    window.Utils.showToast(`"${title}" añadida a Cine con éxito 🍿`, 'success');
+  }
+
+  convertMovieToPoll(movieTitle) {
+    this.storage.createPoll({
+      question: `¿Vemos ${movieTitle} este fin de semana? 🍿`,
+      options: ['¡Sí, me encanta! 🍿', 'Prefiero otra opción 🎬', 'Solo si hay palomitas 🍕']
+    });
+    this.renderChat();
+    this.scrollToChatBottom(true);
+    window.Utils.showToast('¡Encuesta creada a partir de la película! 📊', 'success');
+  }
+
+  openMovieDetailsModal(movieId, title) {
+    window.Utils.showToast(`Abriendo ficha de ${title} ↗`, 'info');
+    location.hash = '#cine';
+  }
+
+  addSeriesFromChat(title, poster) {
+    const groupData = this.storage.getGroupData();
+    if (!groupData.series) groupData.series = [];
+
+    const exists = groupData.series.some(s => s.title.toLowerCase() === title.toLowerCase());
+    if (exists) {
+      window.Utils.showToast(`"${title}" ya está en Series 📺`, 'info');
+      return;
+    }
+
+    groupData.series.unshift({
+      id: 'ser_' + window.Utils.generateId(),
+      title: title,
+      poster: poster,
+      seasons: [
+        { seasonNumber: 1, name: 'Temporada 1', episodes: [{ episodeNumber: 1, name: 'Capítulo 1', synopsis: 'Inicio de la serie' }] }
+      ],
+      watchedEpisodes: [],
+      createdAt: new Date().toISOString()
+    });
+
+    this.storage.saveGroupData(null, groupData);
+    this.storage.notify('series');
+    window.Utils.showToast(`"${title}" guardada en biblioteca de Series 📺`, 'success');
+  }
+
+  startMarathonFromChat(title) {
+    window.Utils.showToast(`🍿 ¡Maratón de "${title}" activada para todo el grupo!`, 'success');
+    location.hash = '#series';
+  }
+
+  openGoalProgressModal(messageId, title, currentPct) {
+    const inputMsgId = document.getElementById('input-update-goal-msg-id');
+    const titleDisplay = document.getElementById('update-goal-title-display');
+    const slider = document.getElementById('input-update-goal-slider');
+    const badge = document.getElementById('update-goal-pct-badge');
+
+    if (inputMsgId) inputMsgId.value = messageId;
+    if (titleDisplay) titleDisplay.textContent = title;
+    if (slider) slider.value = currentPct;
+    if (badge) badge.textContent = `${currentPct}%`;
+
+    this.openModal('modal-chat-goal-progress');
+  }
+
+  openChatEcosystemSheet() {
+    const sheet = document.getElementById('modal-chat-ecosystem-sheet');
+    if (sheet) sheet.style.display = 'flex';
+  }
+
+  closeChatEcosystemSheet() {
+    const sheet = document.getElementById('modal-chat-ecosystem-sheet');
+    if (sheet) sheet.style.display = 'none';
+  }
+
+  openChatMusicModal() {
+    this.openModal('modal-chat-music-share');
+    document.getElementById('input-share-music-title')?.focus();
+  }
+
+  openChatMovieModal() {
+    this.openModal('modal-chat-movie-share');
+    const container = document.getElementById('chat-movie-search-results');
+    if (container) {
+      const existingMovies = this.storage.getMovies() || [];
+      container.innerHTML = existingMovies.slice(0, 5).map(m => `
+        <div class="chat-share-picker-item" onclick="window.app.shareItemToChat('movie', '${m.id}')" style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;">
+          <img src="${m.poster || 'assets/icon.png'}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
+          <div style="flex: 1; min-width: 0;">
+            <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
+            <span style="font-size: 0.75rem; color: #64748B;">${m.year || ''} · ⭐ ${m.tmdbRating || m.rating || 8.5}</span>
+          </div>
+          <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
+        </div>
+      `).join('');
+    }
+  }
+
+  openChatSeriesModal() {
+    this.openModal('modal-chat-series-share');
+    const container = document.getElementById('chat-series-search-results');
+    if (container) {
+      const existingSeries = this.storage.getSeries() || [];
+      container.innerHTML = existingSeries.slice(0, 5).map(s => `
+        <div class="chat-share-picker-item" onclick="window.app.shareItemToChat('series', '${s.id}')" style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;">
+          <img src="${s.poster || 'assets/icon.png'}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
+          <div style="flex: 1; min-width: 0;">
+            <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.title)}</strong>
+            <span style="font-size: 0.75rem; color: #64748B;">📺 Serie</span>
+          </div>
+          <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
+        </div>
+      `).join('');
+    }
+  }
+
+  openChatMemoryModal() {
+    this.openModal('modal-chat-memory-share');
+    const container = document.getElementById('chat-memories-picker-list');
+    if (container) {
+      const memories = this.storage.getMemories() || [];
+      if (memories.length === 0) {
+        container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8;">No hay recuerdos guardados aún.</div>';
+        return;
+      }
+      container.innerHTML = memories.map(m => `
+        <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;" onclick="window.app.shareMemoryToChat('${m.id}')">
+          <img src="${m.coverImage || (m.photos && m.photos[0]) || 'assets/icon.png'}" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover;">
+          <div style="flex: 1; min-width: 0;">
+            <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
+            <span style="font-size: 0.75rem; color: #64748B;">${m.date || 'Recuerdo'}</span>
+          </div>
+          <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
+        </div>
+      `).join('');
+    }
+  }
+
+  shareMemoryToChat(memoryId) {
+    const mem = (this.storage.getMemories() || []).find(m => m.id === memoryId);
+    if (!mem) return;
+    this.storage.sendMessage({
+      text: `Miren este recuerdo de nuestro último viaje 💜`,
+      type: 'share_memory',
+      payload: {
+        id: mem.id,
+        title: mem.title,
+        date: mem.date || 'Fecha especial',
+        quote: mem.description || '“Un momento inolvidable juntos.”',
+        photo: mem.coverImage || (mem.photos && mem.photos[0]) || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+        sharedBy: this.storage.getUserProfile()?.name || 'Sofi'
+      }
+    });
+    this.closeModal('modal-chat-memory-share');
+    this.renderChat();
+    this.scrollToChatBottom(true);
+    window.Utils.showToast('¡Recuerdo compartido en el chat! 📸', 'success');
+  }
+
+  openChatGroupSettingsModal() {
+    const group = this.storage.getActiveGroup();
+    if (!group) return;
+    const nameInput = document.getElementById('input-chat-edit-group-name');
+    const mottoInput = document.getElementById('input-chat-edit-group-motto');
+    const pinnedInput = document.getElementById('input-chat-edit-pinned');
+
+    if (nameInput) nameInput.value = group.name || 'Grupo LUMA';
+    if (mottoInput) mottoInput.value = group.motto || 'Buenas conversaciones, mejores recuerdos ✨';
+    if (pinnedInput) pinnedInput.value = group.pinnedText || 'Próximo viaje: Guatapé — 18 Septiembre 🏞️';
+
+    this.openModal('modal-chat-group-info');
+  }
+
+  restoreMockupConversation() {
+    this.storage.restoreMockupChat();
+    this.renderChat();
+    this.scrollToChatBottom(true);
+    window.Utils.showToast('✨ Conversación restaurada idéntica a la maqueta', 'success');
+  }
+
+  _searchTmdbMoviesForChat(query) {
+    const container = document.getElementById('chat-movie-search-results');
+    if (!container) return;
+    if (!query) {
+      this.openChatMovieModal();
+      return;
+    }
+
+    if (window.CONFIG && window.CONFIG.tmdb && window.CONFIG.tmdb.apiKey) {
+      fetch(`https://api.themoviedb.org/3/search/movie?api_key=${window.CONFIG.tmdb.apiKey}&language=es-ES&query=${encodeURIComponent(query)}&page=1`)
+        .then(r => r.json())
+        .then(data => {
+          const results = data.results || [];
+          if (results.length === 0) {
+            container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94A3B8;">No se encontraron películas.</div>';
+            return;
+          }
+          container.innerHTML = results.slice(0, 6).map(m => {
+            const poster = m.poster_path ? `https://image.tmdb.org/t/p/w200${m.poster_path}` : 'assets/icon.png';
+            const year = (m.release_date || '').split('-')[0] || '2024';
+            const rating = m.vote_average ? m.vote_average.toFixed(1) : '8.0';
+            return `
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;" onclick="window.app.shareTmdbMovieToChat('${window.Utils.sanitizeHTML(m.title)}', '${poster}', '${year}', ${rating})">
+                <img src="${poster}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
+                <div style="flex: 1; min-width: 0;">
+                  <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
+                  <span style="font-size: 0.75rem; color: #64748B;">${year} · ⭐ ${rating}</span>
+                </div>
+                <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
+              </div>
+            `;
+          }).join('');
+        })
+        .catch(() => {
+          container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94A3B8;">Error al buscar en TMDb.</div>';
+        });
+    }
+  }
+
+  shareTmdbMovieToChat(title, poster, year, rating) {
+    this.storage.sendMessage({
+      type: 'share_movie',
+      text: `🎬 ${title}`,
+      payload: {
+        title: title,
+        poster: poster,
+        year: year,
+        rating: rating,
+        genres: 'Cine compartido',
+        sharedBy: this.storage.getUserProfile()?.name || 'Tú'
+      }
+    });
+    this.closeModal('modal-chat-movie-share');
+    this.renderChat();
+    this.scrollToChatBottom(true);
+    window.Utils.showToast(`¡"${title}" compartida en el chat! 🎬`, 'success');
+  }
+
+  _searchTmdbSeriesForChat(query) {
+    const container = document.getElementById('chat-series-search-results');
+    if (!container) return;
+    if (!query) {
+      this.openChatSeriesModal();
+      return;
+    }
+
+    if (window.CONFIG && window.CONFIG.tmdb && window.CONFIG.tmdb.apiKey) {
+      fetch(`https://api.themoviedb.org/3/search/tv?api_key=${window.CONFIG.tmdb.apiKey}&language=es-ES&query=${encodeURIComponent(query)}&page=1`)
+        .then(r => r.json())
+        .then(data => {
+          const results = data.results || [];
+          if (results.length === 0) {
+            container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94A3B8;">No se encontraron series.</div>';
+            return;
+          }
+          container.innerHTML = results.slice(0, 6).map(s => {
+            const poster = s.poster_path ? `https://image.tmdb.org/t/p/w200${s.poster_path}` : 'assets/icon.png';
+            return `
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;" onclick="window.app.shareTmdbSeriesToChat('${window.Utils.sanitizeHTML(s.name)}', '${poster}')">
+                <img src="${poster}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
+                <div style="flex: 1; min-width: 0;">
+                  <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.name)}</strong>
+                  <span style="font-size: 0.75rem; color: #64748B;">📺 Serie</span>
+                </div>
+                <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
+              </div>
+            `;
+          }).join('');
+        })
+        .catch(() => {
+          container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94A3B8;">Error al buscar series.</div>';
+        });
+    }
+  }
+
+  shareTmdbSeriesToChat(name, poster) {
+    this.storage.sendMessage({
+      type: 'share_series',
+      text: `📺 ${name}`,
+      payload: {
+        title: name,
+        poster: poster,
+        seasons: 'Temporadas disponibles',
+        platform: 'Streaming',
+        sharedBy: this.storage.getUserProfile()?.name || 'Tú'
+      }
+    });
+    this.closeModal('modal-chat-series-share');
+    this.renderChat();
+    this.scrollToChatBottom(true);
+    window.Utils.showToast(`¡"${name}" compartida en el chat! 📺`, 'success');
   }
 
   // --- ENCUESTAS ---
@@ -5839,70 +6517,7 @@ class LumaApp {
   voteChatPoll(messageId, optionId) {
     this.storage.votePoll(messageId, optionId);
     this._renderChatMessagesList();
-  }
-
-  // --- COMPARTIR EN EL CHAT ---
-  openChatSharePicker(defaultTab = 'movies') {
-    this.openModal('modal-chat-share-picker');
-    document.querySelectorAll('#chat-share-tabs .chat-share-tab-btn').forEach(btn => {
-      btn.classList.toggle('is-active', btn.getAttribute('data-tab') === defaultTab);
-    });
-    this._renderSharePickerList(defaultTab);
-  }
-
-  _renderSharePickerList(tabType) {
-    const container = document.getElementById('chat-share-items-list');
-    if (!container) return;
-
-    if (tabType === 'movies') {
-      const movies = this.storage.getMovies() || [];
-      if (movies.length === 0) {
-        container.innerHTML = '<div class="chat-share-empty">No hay películas añadidas aún en Cine.</div>';
-        return;
-      }
-      container.innerHTML = movies.map(m => `
-        <div class="chat-share-picker-item" onclick="window.app.shareItemToChat('movie', '${m.id}')">
-          <img src="${m.poster || 'assets/icon.png'}" class="chat-share-picker-thumb" alt="${window.Utils.sanitizeHTML(m.title)}">
-          <div class="chat-share-picker-info">
-            <h5 class="chat-share-picker-title">${window.Utils.sanitizeHTML(m.title)}</h5>
-            <span class="chat-share-picker-sub">${m.year || ''} · ${m.tmdbRating || m.rating || '9.0'} ⭐</span>
-          </div>
-          <button type="button" class="btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">Compartir</button>
-        </div>
-      `).join('');
-    } else if (tabType === 'series') {
-      const seriesList = this.storage.getSeries() || [];
-      if (seriesList.length === 0) {
-        container.innerHTML = '<div class="chat-share-empty">No hay series añadidas aún en Series.</div>';
-        return;
-      }
-      container.innerHTML = seriesList.map(s => `
-        <div class="chat-share-picker-item" onclick="window.app.shareItemToChat('series', '${s.id}')">
-          <img src="${s.poster || 'assets/icon.png'}" class="chat-share-picker-thumb" alt="${window.Utils.sanitizeHTML(s.title)}">
-          <div class="chat-share-picker-info">
-            <h5 class="chat-share-picker-title">${window.Utils.sanitizeHTML(s.title)}</h5>
-            <span class="chat-share-picker-sub">${(s.seasons && s.seasons.length) || 1} Temp. · ${s.rating || '9.0'} ⭐</span>
-          </div>
-          <button type="button" class="btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">Compartir</button>
-        </div>
-      `).join('');
-    } else if (tabType === 'songs') {
-      const songs = this.storage.getSongs() || [];
-      if (songs.length === 0) {
-        container.innerHTML = '<div class="chat-share-empty">No hay canciones guardadas aún en Música.</div>';
-        return;
-      }
-      container.innerHTML = songs.map(s => `
-        <div class="chat-share-picker-item" onclick="window.app.shareItemToChat('song', '${s.id}')">
-          <img src="${s.cover || s.artwork || 'assets/icon.png'}" class="chat-share-picker-thumb" alt="${window.Utils.sanitizeHTML(s.title)}">
-          <div class="chat-share-picker-info">
-            <h5 class="chat-share-picker-title">${window.Utils.sanitizeHTML(s.title)}</h5>
-            <span class="chat-share-picker-sub">${window.Utils.sanitizeHTML(s.artist || 'Artista')}</span>
-          </div>
-          <button type="button" class="btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">Compartir</button>
-        </div>
-      `).join('');
-    }
+    window.Utils.showToast('¡Voto registrado! ✨', 'success');
   }
 
   shareItemToChat(type, itemId) {
@@ -5953,83 +6568,6 @@ class LumaApp {
     location.hash = '#mensajes';
     this.renderChat();
     window.Utils.showToast('¡Compartido con éxito en el chat!', 'success');
-  }
-
-  // --- GALERÍA MULTIMEDIA DEL CHAT ---
-  openChatMediaGallery(filter = 'photos') {
-    this.openModal('modal-chat-media');
-    document.querySelectorAll('#chat-media-tabs .chat-share-tab-btn').forEach(btn => {
-      btn.classList.toggle('is-active', btn.getAttribute('data-filter') === filter);
-    });
-    this._renderChatMediaGallery(filter);
-  }
-
-  _renderChatMediaGallery(filter) {
-    const container = document.getElementById('chat-media-gallery-container');
-    if (!container) return;
-
-    const messages = this.storage.getMessages();
-
-    if (filter === 'photos') {
-      const photoMsgs = messages.filter(m => m.type === 'image');
-      if (photoMsgs.length === 0) {
-        container.innerHTML = '<div class="chat-share-empty">No se han compartido fotos aún en este grupo.</div>';
-        return;
-      }
-      container.innerHTML = photoMsgs.map(m => `
-        <div class="chat-media-photo-card" onclick="window.app.openLightbox('${m.payload?.imageUrl || m.text}')">
-          <img src="${m.payload?.imageUrl || m.text}" alt="Foto" loading="lazy">
-        </div>
-      `).join('');
-    } else if (filter === 'cine_series') {
-      const items = messages.filter(m => m.type === 'share_movie' || m.type === 'share_series');
-      if (items.length === 0) {
-        container.innerHTML = '<div class="chat-share-empty">No hay películas o series compartidas en el chat.</div>';
-        return;
-      }
-      container.innerHTML = items.map(m => `
-        <div class="chat-share-picker-item" onclick="${m.type === 'share_movie' ? `window.app.openMovieDetail('${m.payload?.id}')` : `window.app.openSeriesDetail('${m.payload?.id}')`}">
-          <img src="${m.payload?.poster || 'assets/icon.png'}" class="chat-share-picker-thumb" alt="${window.Utils.sanitizeHTML(m.payload?.title || '')}">
-          <div class="chat-share-picker-info">
-            <h5 class="chat-share-picker-title">${window.Utils.sanitizeHTML(m.payload?.title || '')}</h5>
-            <span class="chat-share-picker-sub">${m.type === 'share_movie' ? '🎬 Película' : '📺 Serie'}</span>
-          </div>
-          <button type="button" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Abrir</button>
-        </div>
-      `).join('');
-    } else if (filter === 'music') {
-      const songs = messages.filter(m => m.type === 'share_music');
-      if (songs.length === 0) {
-        container.innerHTML = '<div class="chat-share-empty">No hay canciones compartidas en el chat.</div>';
-        return;
-      }
-      container.innerHTML = songs.map(m => `
-        <div class="chat-share-picker-item" onclick="location.hash='#musica'; window.app.closeAllModals();">
-          <img src="${m.payload?.artwork || 'assets/icon.png'}" class="chat-share-picker-thumb" alt="${window.Utils.sanitizeHTML(m.payload?.title || '')}">
-          <div class="chat-share-picker-info">
-            <h5 class="chat-share-picker-title">${window.Utils.sanitizeHTML(m.payload?.title || '')}</h5>
-            <span class="chat-share-picker-sub">${window.Utils.sanitizeHTML(m.payload?.artist || 'Música')}</span>
-          </div>
-          <button type="button" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Escuchar</button>
-        </div>
-      `).join('');
-    } else if (filter === 'polls') {
-      const polls = messages.filter(m => m.type === 'poll');
-      if (polls.length === 0) {
-        container.innerHTML = '<div class="chat-share-empty">No hay encuestas creadas en el chat.</div>';
-        return;
-      }
-      container.innerHTML = polls.map(m => `
-        <div class="chat-share-picker-item" onclick="window.app.closeAllModals(); window.app.scrollToMessage('${m.id}')">
-          <span style="font-size: 1.5rem;">📊</span>
-          <div class="chat-share-picker-info">
-            <h5 class="chat-share-picker-title">${window.Utils.sanitizeHTML(m.payload?.question || '')}</h5>
-            <span class="chat-share-picker-sub">${m.payload?.totalVotes || 0} votos</span>
-          </div>
-          <button type="button" class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Ir a encuesta</button>
-        </div>
-      `).join('');
-    }
   }
 
   scrollToChatBottom(smooth = true) {
