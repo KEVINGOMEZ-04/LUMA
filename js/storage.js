@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LUMA 🌟 - Capa de Persistencia y Multi-Grupos
  */
 
@@ -24,6 +24,193 @@
     ]
   };
 
+
+  const MOCKUP_CHAT_MESSAGES = [
+      {
+        id: 'mock_msg_1',
+        senderId: 'usr_kevin',
+        senderName: 'Kevin',
+        senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+        text: '¿Qué tal si escuchamos esta canción? 👀',
+        type: 'text',
+        timestamp: '2026-09-11T09:12:00Z',
+        timeDisplay: '9:12 a. m.',
+        reactions: { '❤️': ['usr_sofi', 'usr_laura'], '🔥': ['usr_andres'] },
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_2',
+        senderId: 'usr_kevin',
+        senderName: 'Kevin',
+        senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+        type: 'share_music',
+        timestamp: '2026-09-11T09:13:00Z',
+        timeDisplay: '9:13 a. m.',
+        payload: {
+          platform: 'Spotify',
+          title: 'Sweater Weather',
+          artist: 'The Neighbourhood',
+          duration: '4:00',
+          artwork: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80',
+          previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/05/cf/48/05cf4867-b5bf-734f-0131-bb96dafead21/mzaf_12411036066270632599.plus.aac.p.m4a',
+          sharedBy: 'Kevin',
+          listeners: [
+            { name: 'Kevin', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' },
+            { name: 'Laura', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80' },
+            { name: 'Andrés', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80' }
+          ],
+          extraListeners: 1
+        },
+        reactions: { '❤️': ['usr_sofi', 'usr_laura', 'usr_andres'], '😮': ['usr_me'], '🎶': ['usr_kevin'] },
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_3',
+        senderId: 'usr_me',
+        senderName: 'Tú',
+        text: 'Uff sí, temazo! Me encanta 😍',
+        type: 'text',
+        timestamp: '2026-09-11T09:14:00Z',
+        timeDisplay: '9:14 a. m.',
+        reactions: { '❤️': ['usr_kevin'] },
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_4',
+        senderId: 'usr_laura',
+        senderName: 'Laura',
+        senderAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
+        text: '¿Qué vemos este sábado? 🍿',
+        type: 'text',
+        timestamp: '2026-09-11T09:20:00Z',
+        timeDisplay: '9:20 a. m.',
+        reactions: {},
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_5',
+        senderId: 'usr_laura',
+        senderName: 'Laura',
+        senderAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
+        type: 'poll',
+        timestamp: '2026-09-11T09:21:00Z',
+        timeDisplay: '9:21 a. m.',
+        payload: {
+          id: 'poll_sat_movie',
+          question: '¿Qué vemos este sábado?',
+          totalVotes: 3,
+          options: [
+            {
+              id: 0,
+              text: 'Interstellar',
+              percentage: 56,
+              votes: ['usr_kevin', 'usr_andres', 'usr_sofi'],
+              voterAvatars: [
+                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+                'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80'
+              ]
+            },
+            {
+              id: 1,
+              text: 'Arcane',
+              percentage: 25,
+              votes: ['usr_kevin', 'usr_laura'],
+              voterAvatars: [
+                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+                'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80'
+              ]
+            },
+            {
+              id: 2,
+              text: 'Shrek 2',
+              percentage: 19,
+              votes: ['usr_kevin', 'usr_andres'],
+              voterAvatars: [
+                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+                'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80'
+              ]
+            }
+          ]
+        },
+        reactions: { '👍': ['usr_kevin', 'usr_andres'], '❤️': ['usr_sofi'] },
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_6',
+        senderId: 'usr_me',
+        senderName: 'Tú',
+        text: 'Interstellar suena perfecto 🚀',
+        type: 'text',
+        timestamp: '2026-09-11T09:22:00Z',
+        timeDisplay: '9:22 a. m.',
+        reactions: { '❤️': ['usr_laura'] },
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_7',
+        senderId: 'usr_andres',
+        senderName: 'Andrés',
+        senderAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+        type: 'share_movie',
+        timestamp: '2026-09-11T09:28:00Z',
+        timeDisplay: '9:28 a. m.',
+        payload: {
+          id: 'mov_interstellar',
+          title: 'Interstellar',
+          year: 2014,
+          genres: 'Ciencia ficción, Drama',
+          rating: 8.7,
+          poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
+          sharedBy: 'Andrés'
+        },
+        reactions: { '🔥': ['usr_kevin', 'usr_laura', 'usr_sofi', 'usr_me'], '😄': ['usr_andres', 'usr_sofi'] },
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_8',
+        senderId: 'usr_sofi',
+        senderName: 'Sofi',
+        senderAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+        text: 'Miren este recuerdo de nuestro último viaje 💜',
+        type: 'text',
+        timestamp: '2026-09-11T09:35:00Z',
+        timeDisplay: '9:35 a. m.',
+        reactions: {},
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_9',
+        senderId: 'usr_sofi',
+        senderName: 'Sofi',
+        senderAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
+        type: 'share_memory',
+        timestamp: '2026-09-11T09:36:00Z',
+        timeDisplay: '9:36 a. m.',
+        payload: {
+          id: 'mem_1',
+          title: 'Atardecer en Guatapé',
+          date: '21 Septiembre 2026',
+          quote: '“La mejor salida del año.”',
+          photo: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+          sharedBy: 'Sofi'
+        },
+        reactions: { '❤️': ['usr_kevin', 'usr_laura', 'usr_andres', 'usr_sofi', 'usr_me'], '🥺': ['usr_me'] },
+        isPinned: false
+      },
+      {
+        id: 'mock_msg_10',
+        senderId: 'usr_me',
+        senderName: 'Tú',
+        text: 'Qué buena foto! 🥺💜',
+        type: 'text',
+        timestamp: '2026-09-11T09:37:00Z',
+        timeDisplay: '9:37 a. m.',
+        reactions: { '❤️': ['usr_sofi'] },
+        isPinned: false
+      }
+    ],
+;
   const DEMO_DATA = {
     memories: [
       {
@@ -579,192 +766,7 @@
       }
     ],
 
-    messages: [
-      {
-        id: 'mock_msg_1',
-        senderId: 'usr_kevin',
-        senderName: 'Kevin',
-        senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-        text: '¿Qué tal si escuchamos esta canción? 👀',
-        type: 'text',
-        timestamp: '2026-09-11T09:12:00Z',
-        timeDisplay: '9:12 a. m.',
-        reactions: { '❤️': ['usr_sofi', 'usr_laura'], '🔥': ['usr_andres'] },
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_2',
-        senderId: 'usr_kevin',
-        senderName: 'Kevin',
-        senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-        type: 'share_music',
-        timestamp: '2026-09-11T09:13:00Z',
-        timeDisplay: '9:13 a. m.',
-        payload: {
-          platform: 'Spotify',
-          title: 'Sweater Weather',
-          artist: 'The Neighbourhood',
-          duration: '4:00',
-          artwork: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80',
-          previewUrl: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/05/cf/48/05cf4867-b5bf-734f-0131-bb96dafead21/mzaf_12411036066270632599.plus.aac.p.m4a',
-          sharedBy: 'Kevin',
-          listeners: [
-            { name: 'Kevin', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' },
-            { name: 'Laura', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80' },
-            { name: 'Andrés', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80' }
-          ],
-          extraListeners: 1
-        },
-        reactions: { '❤️': ['usr_sofi', 'usr_laura', 'usr_andres'], '😮': ['usr_me'], '🎶': ['usr_kevin'] },
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_3',
-        senderId: 'usr_me',
-        senderName: 'Tú',
-        text: 'Uff sí, temazo! Me encanta 😍',
-        type: 'text',
-        timestamp: '2026-09-11T09:14:00Z',
-        timeDisplay: '9:14 a. m.',
-        reactions: { '❤️': ['usr_kevin'] },
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_4',
-        senderId: 'usr_laura',
-        senderName: 'Laura',
-        senderAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
-        text: '¿Qué vemos este sábado? 🍿',
-        type: 'text',
-        timestamp: '2026-09-11T09:20:00Z',
-        timeDisplay: '9:20 a. m.',
-        reactions: {},
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_5',
-        senderId: 'usr_laura',
-        senderName: 'Laura',
-        senderAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
-        type: 'poll',
-        timestamp: '2026-09-11T09:21:00Z',
-        timeDisplay: '9:21 a. m.',
-        payload: {
-          id: 'poll_sat_movie',
-          question: '¿Qué vemos este sábado?',
-          totalVotes: 3,
-          options: [
-            {
-              id: 0,
-              text: 'Interstellar',
-              percentage: 56,
-              votes: ['usr_kevin', 'usr_andres', 'usr_sofi'],
-              voterAvatars: [
-                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-                'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
-                'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80'
-              ]
-            },
-            {
-              id: 1,
-              text: 'Arcane',
-              percentage: 25,
-              votes: ['usr_kevin', 'usr_laura'],
-              voterAvatars: [
-                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-                'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80'
-              ]
-            },
-            {
-              id: 2,
-              text: 'Shrek 2',
-              percentage: 19,
-              votes: ['usr_kevin', 'usr_andres'],
-              voterAvatars: [
-                'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
-                'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80'
-              ]
-            }
-          ]
-        },
-        reactions: { '👍': ['usr_kevin', 'usr_andres'], '❤️': ['usr_sofi'] },
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_6',
-        senderId: 'usr_me',
-        senderName: 'Tú',
-        text: 'Interstellar suena perfecto 🚀',
-        type: 'text',
-        timestamp: '2026-09-11T09:22:00Z',
-        timeDisplay: '9:22 a. m.',
-        reactions: { '❤️': ['usr_laura'] },
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_7',
-        senderId: 'usr_andres',
-        senderName: 'Andrés',
-        senderAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
-        type: 'share_movie',
-        timestamp: '2026-09-11T09:28:00Z',
-        timeDisplay: '9:28 a. m.',
-        payload: {
-          id: 'mov_interstellar',
-          title: 'Interstellar',
-          year: 2014,
-          genres: 'Ciencia ficción, Drama',
-          rating: 8.7,
-          poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
-          sharedBy: 'Andrés'
-        },
-        reactions: { '🔥': ['usr_kevin', 'usr_laura', 'usr_sofi', 'usr_me'], '😄': ['usr_andres', 'usr_sofi'] },
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_8',
-        senderId: 'usr_sofi',
-        senderName: 'Sofi',
-        senderAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-        text: 'Miren este recuerdo de nuestro último viaje 💜',
-        type: 'text',
-        timestamp: '2026-09-11T09:35:00Z',
-        timeDisplay: '9:35 a. m.',
-        reactions: {},
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_9',
-        senderId: 'usr_sofi',
-        senderName: 'Sofi',
-        senderAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
-        type: 'share_memory',
-        timestamp: '2026-09-11T09:36:00Z',
-        timeDisplay: '9:36 a. m.',
-        payload: {
-          id: 'mem_1',
-          title: 'Atardecer en Guatapé',
-          date: '21 Septiembre 2026',
-          quote: '“La mejor salida del año.”',
-          photo: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
-          sharedBy: 'Sofi'
-        },
-        reactions: { '❤️': ['usr_kevin', 'usr_laura', 'usr_andres', 'usr_sofi', 'usr_me'], '🥺': ['usr_me'] },
-        isPinned: false
-      },
-      {
-        id: 'mock_msg_10',
-        senderId: 'usr_me',
-        senderName: 'Tú',
-        text: 'Qué buena foto! 🥺💜',
-        type: 'text',
-        timestamp: '2026-09-11T09:37:00Z',
-        timeDisplay: '9:37 a. m.',
-        reactions: { '❤️': ['usr_sofi'] },
-        isPinned: false
-      }
-    ],
-
+    messages: [],
     polls: [],
 
     notes: [
@@ -831,10 +833,13 @@
         this.setActiveGroupId(groups[0].id);
       }
 
-      // Asegurar que el grupo activo cuente con las conversaciones del rediseño
+      // Asegurar que el grupo activo cuente con chat limpio y vacío
       const activeData = this.getGroupData();
-      if (!activeData.messages || activeData.messages.length <= 1) {
-        activeData.messages = JSON.parse(JSON.stringify(DEMO_DATA.messages));
+      if (!activeData.messages) {
+        activeData.messages = [];
+        this.saveGroupData(null, activeData);
+      } else if (activeData.messages.some(m => m.id && String(m.id).startsWith('mock_msg_'))) {
+        activeData.messages = [];
         this.saveGroupData(null, activeData);
       }
     }
@@ -1833,7 +1838,7 @@
 
     restoreMockupChat() {
       const data = this.getGroupData();
-      data.messages = JSON.parse(JSON.stringify(DEMO_DATA.messages));
+      data.messages = JSON.parse(JSON.stringify(MOCKUP_CHAT_MESSAGES));
       this.saveGroupData(null, data);
       
       const group = this.getActiveGroup();

@@ -210,7 +210,7 @@ class LumaApp {
       document.getElementById('bottom-tab-inicio')?.classList.add('active');
     } else if (target === 'recuerdos') {
       document.getElementById('bottom-tab-recuerdos')?.classList.add('active');
-    } else if (target === 'notas') {
+    } else if (target === 'mensajes' || target === 'objetivos') {
       document.getElementById('bottom-tab-mensajes')?.classList.add('active');
     }
 
@@ -5299,15 +5299,21 @@ class LumaApp {
 
     if (messages.length === 0) {
       container.innerHTML = `
-        <div class="chat-empty-state" style="text-align: center; padding: 3rem 1rem;">
-          <div style="font-size: 3rem; margin-bottom: 0.5rem;">✨</div>
-          <h4 style="color: #1E1B4B; font-weight: 800;">El chat de tu grupo está listo</h4>
-          <p style="color: #64748B; font-size: 0.88rem; max-width: 320px; margin: 0 auto 1rem auto;">
-            Conversa, comparte canciones, vota en encuestas o guarda recuerdos compartidos.
+        <div class="chat-empty-state" style="text-align: center; padding: 3rem 1rem 2rem 1rem;">
+          <div style="width: 64px; height: 64px; border-radius: 50%; background: #EDE9FE; color: #6D5CFF; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1rem auto; box-shadow: 0 4px 16px rgba(109, 92, 255, 0.12);">
+            💬
+          </div>
+          <h4 style="color: #1E1B4B; font-weight: 800; font-size: 1.15rem; margin-bottom: 0.35rem;">El chat de tu grupo está listo</h4>
+          <p style="color: #64748B; font-size: 0.86rem; max-width: 320px; margin: 0 auto 1.25rem auto; line-height: 1.45;">
+            Conversa, comparte música, recomienda películas o series y guarda recuerdos compartidos.
           </p>
-          <button type="button" class="btn-primary" onclick="window.app.restoreMockupConversation()" style="margin: 0 auto;">
-            Cargar conversación de ejemplo 🌟
-          </button>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 340px; margin: 0 auto;">
+            <button type="button" class="chat-empty-pill-btn" onclick="window.app.openChatMusicModal()">🎵 Música</button>
+            <button type="button" class="chat-empty-pill-btn" onclick="window.app.openChatMovieModal()">🎬 Película</button>
+            <button type="button" class="chat-empty-pill-btn" onclick="window.app.openChatSeriesModal()">📺 Serie</button>
+            <button type="button" class="chat-empty-pill-btn" onclick="window.app.openChatMemoryModal()">📸 Recuerdo</button>
+            <button type="button" class="chat-empty-pill-btn" onclick="window.app.openCreatePollModal()">📊 Encuesta</button>
+          </div>
         </div>
       `;
       return;
@@ -5825,6 +5831,7 @@ class LumaApp {
         if (comment) {
           this.storage.sendMessage({ text: comment, type: 'text' });
         }
+        const artwork = 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80';
         this.storage.sendMessage({
           type: 'share_music',
           text: `🎵 ${title} - ${artist}`,
@@ -5833,10 +5840,14 @@ class LumaApp {
             title: title,
             artist: artist,
             duration: duration,
-            artwork: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80',
+            artwork: artwork,
             sharedBy: this.storage.getUserProfile()?.name || 'Tú'
           }
         });
+        const saveToLib = document.getElementById('input-share-music-save-library')?.checked;
+        if (saveToLib) {
+          this.saveMusicFromChat(title, artist, artwork);
+        }
         this.closeModal('modal-chat-music-share');
         this.renderChat();
         window.Utils.showToast('¡Canción compartida en el chat! 🎵', 'success');
@@ -6260,42 +6271,120 @@ class LumaApp {
 
   openChatMusicModal() {
     this.openModal('modal-chat-music-share');
+    const tabSpotify = document.getElementById('tab-music-spotify');
+    const tabYt = document.getElementById('tab-music-yt');
+    const tabLib = document.getElementById('tab-music-library');
+    const customForm = document.getElementById('form-share-music-custom');
+    const libList = document.getElementById('music-library-picker-list');
+    const platformSelect = document.getElementById('input-share-music-platform');
+
+    const setTab = (activeTab) => {
+      [tabSpotify, tabYt, tabLib].forEach(t => t?.classList.remove('active'));
+      activeTab?.classList.add('active');
+      if (activeTab === tabLib) {
+        if (customForm) customForm.style.display = 'none';
+        if (libList) {
+          libList.style.display = 'block';
+          const songs = this.storage.getSongs() || [];
+          if (songs.length === 0) {
+            libList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.85rem;">Aún no hay canciones en la biblioteca de Música.</div>';
+          } else {
+            libList.innerHTML = songs.map(s => `
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
+                <img src="${s.artwork || 'assets/icon.png'}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;">
+                <div style="flex: 1; min-width: 0;">
+                  <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.title)}</strong>
+                  <span style="font-size: 0.75rem; color: #64748B;">${window.Utils.sanitizeHTML(s.artist || '')}</span>
+                </div>
+                <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.shareExistingSongToChat('${s.id}')">Compartir</button>
+              </div>
+            `).join('');
+          }
+        }
+      } else {
+        if (customForm) customForm.style.display = 'block';
+        if (libList) libList.style.display = 'none';
+        if (platformSelect) {
+          platformSelect.value = (activeTab === tabSpotify) ? 'Spotify' : 'YouTube Music';
+        }
+      }
+    };
+
+    if (tabSpotify) tabSpotify.onclick = () => setTab(tabSpotify);
+    if (tabYt) tabYt.onclick = () => setTab(tabYt);
+    if (tabLib) tabLib.onclick = () => setTab(tabLib);
+    setTab(tabSpotify);
     document.getElementById('input-share-music-title')?.focus();
+  }
+
+  shareExistingSongToChat(songId) {
+    const songs = this.storage.getSongs() || [];
+    const song = songs.find(s => s.id === songId);
+    if (!song) return;
+    this.storage.sendMessage({
+      type: 'share_music',
+      text: `🎵 ${song.title} - ${song.artist}`,
+      payload: {
+        platform: 'Biblioteca',
+        title: song.title,
+        artist: song.artist,
+        duration: '3:45',
+        artwork: song.artwork || 'assets/icon.png',
+        previewUrl: song.previewUrl || '',
+        sharedBy: this.storage.getUserProfile()?.name || 'Tú'
+      }
+    });
+    this.closeModal('modal-chat-music-share');
+    this.renderChat();
+    this.scrollToChatBottom(true);
+    window.Utils.showToast(`"${song.title}" compartida en el chat 🎵`, 'success');
   }
 
   openChatMovieModal() {
     this.openModal('modal-chat-movie-share');
+    const input = document.getElementById('input-chat-search-movie-tmdb');
+    if (input) input.value = '';
     const container = document.getElementById('chat-movie-search-results');
     if (container) {
       const existingMovies = this.storage.getMovies() || [];
-      container.innerHTML = existingMovies.slice(0, 5).map(m => `
-        <div class="chat-share-picker-item" onclick="window.app.shareItemToChat('movie', '${m.id}')" style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;">
-          <img src="${m.poster || 'assets/icon.png'}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
-          <div style="flex: 1; min-width: 0;">
-            <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
-            <span style="font-size: 0.75rem; color: #64748B;">${m.year || ''} · ⭐ ${m.tmdbRating || m.rating || 8.5}</span>
+      if (existingMovies.length === 0) {
+        container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.85rem;">No hay películas en cartelera aún. Usa el buscador arriba para buscar en TMDb.</div>';
+      } else {
+        container.innerHTML = existingMovies.slice(0, 10).map(m => `
+          <div class="chat-share-picker-item" style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
+            <img src="${m.poster || 'assets/icon.png'}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
+            <div style="flex: 1; min-width: 0;">
+              <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
+              <span style="font-size: 0.75rem; color: #64748B;">${m.year || ''} · ⭐ ${m.tmdbRating || m.rating || 8.5}</span>
+            </div>
+            <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.shareItemToChat('movie', '${m.id}')">Compartir</button>
           </div>
-          <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
-        </div>
-      `).join('');
+        `).join('');
+      }
     }
   }
 
   openChatSeriesModal() {
     this.openModal('modal-chat-series-share');
+    const input = document.getElementById('input-chat-search-series-tmdb');
+    if (input) input.value = '';
     const container = document.getElementById('chat-series-search-results');
     if (container) {
       const existingSeries = this.storage.getSeries() || [];
-      container.innerHTML = existingSeries.slice(0, 5).map(s => `
-        <div class="chat-share-picker-item" onclick="window.app.shareItemToChat('series', '${s.id}')" style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;">
-          <img src="${s.poster || 'assets/icon.png'}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
-          <div style="flex: 1; min-width: 0;">
-            <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.title)}</strong>
-            <span style="font-size: 0.75rem; color: #64748B;">📺 Serie</span>
+      if (existingSeries.length === 0) {
+        container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.85rem;">No hay series en la lista aún. Usa el buscador arriba para buscar en TMDb.</div>';
+      } else {
+        container.innerHTML = existingSeries.slice(0, 10).map(s => `
+          <div class="chat-share-picker-item" style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
+            <img src="${s.poster || 'assets/icon.png'}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
+            <div style="flex: 1; min-width: 0;">
+              <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.title)}</strong>
+              <span style="font-size: 0.75rem; color: #64748B;">📺 Serie</span>
+            </div>
+            <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.shareItemToChat('series', '${s.id}')">Compartir</button>
           </div>
-          <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
-        </div>
-      `).join('');
+        `).join('');
+      }
     }
   }
 
@@ -6385,13 +6474,16 @@ class LumaApp {
             const year = (m.release_date || '').split('-')[0] || '2024';
             const rating = m.vote_average ? m.vote_average.toFixed(1) : '8.0';
             return `
-              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;" onclick="window.app.shareTmdbMovieToChat('${window.Utils.sanitizeHTML(m.title)}', '${poster}', '${year}', ${rating})">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
                 <img src="${poster}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
                 <div style="flex: 1; min-width: 0;">
-                  <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
+                  <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
                   <span style="font-size: 0.75rem; color: #64748B;">${year} · ⭐ ${rating}</span>
                 </div>
-                <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn-primary" style="padding: 4px 8px; font-size: 0.74rem;" onclick="window.app.shareTmdbMovieToChat('${window.Utils.sanitizeHTML(m.title)}', '${poster}', '${year}', ${rating})">Compartir</button>
+                  <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addMovieFromChat('${window.Utils.sanitizeHTML(m.title)}', '${poster}', '${year}', ${rating})">+ A Cine</button>
+                </div>
               </div>
             `;
           }).join('');
@@ -6441,13 +6533,16 @@ class LumaApp {
           container.innerHTML = results.slice(0, 6).map(s => {
             const poster = s.poster_path ? `https://image.tmdb.org/t/p/w200${s.poster_path}` : 'assets/icon.png';
             return `
-              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;" onclick="window.app.shareTmdbSeriesToChat('${window.Utils.sanitizeHTML(s.name)}', '${poster}')">
+              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
                 <img src="${poster}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
                 <div style="flex: 1; min-width: 0;">
-                  <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.name)}</strong>
+                  <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.name)}</strong>
                   <span style="font-size: 0.75rem; color: #64748B;">📺 Serie</span>
                 </div>
-                <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn-primary" style="padding: 4px 8px; font-size: 0.74rem;" onclick="window.app.shareTmdbSeriesToChat('${window.Utils.sanitizeHTML(s.name)}', '${poster}')">Compartir</button>
+                  <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addSeriesFromChat('${window.Utils.sanitizeHTML(s.name)}', '${poster}')">+ A Series</button>
+                </div>
               </div>
             `;
           }).join('');

@@ -878,7 +878,7 @@
           <!-- INPUT DOCK INFERIOR (CON BOTÓN + PURPURA, EMOJI, CAMPO, FOTO, ENVIAR) -->
           <footer class="chat-bottom-dock">
             <form id="form-chat-send" class="chat-dock-form">
-              <button type="button" class="btn-chat-dock-plus" id="btn-chat-ecosystem-toggle" title="Centro del Ecosistema LUMA">
+              <button type="button" class="btn-chat-dock-plus" id="btn-chat-ecosystem-toggle" onclick="window.app.openChatEcosystemSheet()" title="Centro del Ecosistema LUMA">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -2422,9 +2422,12 @@
       <div class="chat-media-gallery-grid" id="chat-media-gallery-container">
         <!-- Elementos multimedia renderizados dinámicamente -->
       </div>
+    </div>
+  </div>
+
   <!-- 21. BOTTOM SHEET DEL ECOSISTEMA LUMA (+) -->
   <div id="modal-chat-ecosystem-sheet" class="ecosystem-bottom-sheet-overlay" role="dialog" aria-modal="true" style="display: none;">
-    <div class="ecosystem-sheet-backdrop" id="eco-sheet-backdrop"></div>
+    <div class="ecosystem-sheet-backdrop" id="eco-sheet-backdrop" onclick="window.app.closeChatEcosystemSheet()"></div>
     <div class="ecosystem-sheet-card">
       <div class="ecosystem-sheet-drag-handle"></div>
       <div class="ecosystem-sheet-header">
@@ -2432,42 +2435,42 @@
         <p class="ecosystem-sheet-sub">Comparte experiencias e integra módulos al chat</p>
       </div>
       <div class="ecosystem-sheet-grid">
-        <button type="button" class="eco-grid-item" id="eco-btn-music">
+        <button type="button" class="eco-grid-item" id="eco-btn-music" onclick="window.app.closeChatEcosystemSheet(); window.app.openChatMusicModal();">
           <div class="eco-item-icon-box music">🎵</div>
           <span class="eco-item-title">Música</span>
           <span class="eco-item-desc">Spotify / YT Music</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-movie">
+        <button type="button" class="eco-grid-item" id="eco-btn-movie" onclick="window.app.closeChatEcosystemSheet(); window.app.openChatMovieModal();">
           <div class="eco-item-icon-box movie">🎬</div>
           <span class="eco-item-title">Película</span>
           <span class="eco-item-desc">Búsqueda TMDb</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-series">
+        <button type="button" class="eco-grid-item" id="eco-btn-series" onclick="window.app.closeChatEcosystemSheet(); window.app.openChatSeriesModal();">
           <div class="eco-item-icon-box series">📺</div>
           <span class="eco-item-title">Serie</span>
           <span class="eco-item-desc">Búsqueda & Maratón</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-memory">
+        <button type="button" class="eco-grid-item" id="eco-btn-memory" onclick="window.app.closeChatEcosystemSheet(); window.app.openChatMemoryModal();">
           <div class="eco-item-icon-box memory">📸</div>
           <span class="eco-item-title">Recuerdo</span>
           <span class="eco-item-desc">Momentos del grupo</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-goal">
+        <button type="button" class="eco-grid-item" id="eco-btn-goal" onclick="window.app.closeChatEcosystemSheet(); window.app.openModal('modal-chat-goal-share');">
           <div class="eco-item-icon-box goal">🎯</div>
           <span class="eco-item-title">Objetivo</span>
           <span class="eco-item-desc">Metas con progreso</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-poll">
+        <button type="button" class="eco-grid-item" id="eco-btn-poll" onclick="window.app.closeChatEcosystemSheet(); window.app.openCreatePollModal();">
           <div class="eco-item-icon-box poll">📊</div>
           <span class="eco-item-title">Encuesta</span>
           <span class="eco-item-desc">Votación interactiva</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-note">
+        <button type="button" class="eco-grid-item" id="eco-btn-note" onclick="window.app.closeChatEcosystemSheet(); window.app.openModal('modal-note');">
           <div class="eco-item-icon-box note">📝</div>
           <span class="eco-item-title">Nota</span>
           <span class="eco-item-desc">Tablón de notas</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-photo">
+        <button type="button" class="eco-grid-item" id="eco-btn-photo" onclick="window.app.closeChatEcosystemSheet(); document.getElementById('input-chat-photo-file')?.click();">
           <div class="eco-item-icon-box photo">🖼️</div>
           <span class="eco-item-title">Foto</span>
           <span class="eco-item-desc">Galería del chat</span>
@@ -2514,6 +2517,12 @@
           <label class="form-label">Mensaje opcional</label>
           <input type="text" id="input-share-music-comment" class="form-control" placeholder="¿Qué tal si escuchamos esta canción? 👀">
         </div>
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #4F46E5; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="input-share-music-save-library" checked style="accent-color: #6D5CFF; width: 16px; height: 16px;">
+            <span>Añadir también a la biblioteca de Música del grupo 💜</span>
+          </label>
+        </div>
         <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
           <button type="button" class="btn-secondary" data-close-modal="modal-chat-music-share">Cancelar</button>
           <button type="submit" class="btn-primary">Compartir en Chat 🎵</button>
@@ -2530,7 +2539,11 @@
         <h3 class="modal-title">🎬 Compartir Película (TMDb)</h3>
         <button type="button" class="btn-modal-close" data-close-modal="modal-chat-movie-share">✕</button>
       </div>
-      <div style="margin-top: 0.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding: 6px 12px; background: #F8FAFC; border-radius: 10px; border: 1px dashed #CBD5E1;">
+        <span style="font-size: 0.8rem; color: #64748B;">¿Quieres registrar una nueva película?</span>
+        <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.closeModal('modal-chat-movie-share'); window.app.openModal('modal-movie-add');">+ Nueva Película 🍿</button>
+      </div>
+      <div style="margin-top: 0.6rem;">
         <input type="text" id="input-chat-search-movie-tmdb" class="form-control" placeholder="Buscar título en TMDb (ej: Interstellar)..." autocomplete="off">
       </div>
       <div id="chat-movie-search-results" class="chat-search-picker-results" style="max-height: 280px; overflow-y: auto; margin-top: 0.8rem;"></div>
@@ -2547,7 +2560,11 @@
         <h3 class="modal-title">📺 Compartir Serie & Maratón</h3>
         <button type="button" class="btn-modal-close" data-close-modal="modal-chat-series-share">✕</button>
       </div>
-      <div style="margin-top: 0.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding: 6px 12px; background: #F8FAFC; border-radius: 10px; border: 1px dashed #CBD5E1;">
+        <span style="font-size: 0.8rem; color: #64748B;">¿Quieres añadir una nueva serie a LUMA?</span>
+        <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.closeModal('modal-chat-series-share'); window.app.openModal('modal-series');">+ Nueva Serie 📺</button>
+      </div>
+      <div style="margin-top: 0.6rem;">
         <input type="text" id="input-chat-search-series-tmdb" class="form-control" placeholder="Buscar serie (ej: Arcane, Stranger Things)..." autocomplete="off">
       </div>
       <div id="chat-series-search-results" class="chat-search-picker-results" style="max-height: 280px; overflow-y: auto; margin-top: 0.8rem;"></div>
@@ -2564,7 +2581,11 @@
         <h3 class="modal-title">📸 Compartir Recuerdo</h3>
         <button type="button" class="btn-modal-close" data-close-modal="modal-chat-memory-share">✕</button>
       </div>
-      <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.8rem;">Selecciona un momento especial guardado en el grupo:</p>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; padding: 8px 12px; background: #EDE9FE; border-radius: 12px;">
+        <span style="font-size: 0.82rem; color: #4338CA; font-weight: 600;">¿Tienes una nueva foto o anécdota?</span>
+        <button type="button" class="btn-primary" style="padding: 5px 12px; font-size: 0.75rem;" onclick="window.app.closeModal('modal-chat-memory-share'); window.app.openModal('modal-memory');">+ Subir Recuerdo 📸</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.8rem;">O selecciona un momento existente del grupo:</p>
       <div id="chat-memories-picker-list" class="chat-search-picker-results" style="max-height: 300px; overflow-y: auto;"></div>
     </div>
   </div>
