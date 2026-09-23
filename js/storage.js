@@ -209,8 +209,7 @@
         reactions: { '❤️': ['usr_sofi'] },
         isPinned: false
       }
-    ],
-;
+  ];
   const DEMO_DATA = {
     memories: [
       {
