@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LUMA 🌟 - Capa de Persistencia y Multi-Grupos
  */
 
@@ -814,6 +814,7 @@
       this.listeners = [];
       this.memoryCache = {};
       this.init();
+      this.initSync();
     }
 
     init() {
@@ -843,14 +844,63 @@
       }
     }
 
+    initSync() {
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
+          this.channel = new BroadcastChannel('luma_realtime_sync');
+          this.channel.onmessage = (event) => {
+            const { type, key, groupId } = event.data || {};
+            if (type === 'SYNC_EVENT') {
+              if (this.memoryCache && groupId && this.memoryCache[groupId]) {
+                delete this.memoryCache[groupId];
+              }
+              this.notify(key, false);
+            }
+          };
+        } catch (e) {
+          console.warn('LUMA Sync: BroadcastChannel not supported:', e);
+        }
+      }
+
+      window.addEventListener('storage', (e) => {
+        if (!e.key) return;
+        if (e.key.startsWith(window.CONFIG.storageKeys.groupData)) {
+          const gid = e.key.replace(window.CONFIG.storageKeys.groupData, '');
+          if (this.memoryCache && this.memoryCache[gid]) {
+            delete this.memoryCache[gid];
+          }
+          this.notify('groupData', false);
+        } else if (e.key === window.CONFIG.storageKeys.groups) {
+          this.notify('groups', false);
+        } else if (e.key === window.CONFIG.storageKeys.activeGroup) {
+          this.notify('activeGroup', false);
+        } else if (e.key === window.CONFIG.storageKeys.userProfile) {
+          this.notify('profile', false);
+        }
+      });
+    }
+
     subscribe(callback) {
       this.listeners.push(callback);
     }
 
-    notify(key) {
+    notify(key, broadcast = true) {
       this.listeners.forEach(fn => {
         try { fn(key); } catch (e) { console.error('Storage notify error:', e); }
       });
+
+      if (broadcast && this.channel) {
+        try {
+          this.channel.postMessage({
+            type: 'SYNC_EVENT',
+            key,
+            groupId: this.getActiveGroupId(),
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          console.warn('LUMA Sync broadcast error:', e);
+        }
+      }
     }
 
     // --- PERFIL GLOBAL ---

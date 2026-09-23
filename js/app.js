@@ -91,8 +91,21 @@ class LumaApp {
   bindSubscriptions() {
     this.storage.subscribe((key) => {
       this.updateHeader();
-      if (!key || key === 'groupData' || key === 'activeGroup' || key === 'groups') {
+      if (!key || key === 'activeGroup' || key === 'groups') {
         this.renderCurrentTab();
+      } else if (key === 'groupData') {
+        if (this.currentTab !== 'mensajes' && this.currentTab !== 'objetivos') {
+          this.renderCurrentTab();
+        }
+      } else if (key === 'chatMessages') {
+        if (this.currentTab === 'mensajes' || this.currentTab === 'objetivos') {
+          const scrollEl = document.getElementById('chat-messages-scroll');
+          const prevScrollTop = scrollEl ? scrollEl.scrollTop : null;
+          this._renderChatMessagesList();
+          if (scrollEl && prevScrollTop !== null) {
+            scrollEl.scrollTop = prevScrollTop;
+          }
+        }
       }
     });
 
@@ -115,8 +128,9 @@ class LumaApp {
 
     const onboardingScreen = document.getElementById('onboarding-screen');
     const appContainer = document.getElementById('app-container');
+    const isLobby = window.location.hash === '#lobby';
 
-    if (!groups || groups.length === 0 || !activeGroup) {
+    if (!groups || groups.length === 0 || !activeGroup || isLobby) {
       if (onboardingScreen) onboardingScreen.style.display = 'flex';
       if (appContainer) appContainer.style.display = 'none';
       this.bindOnboardingActions();
@@ -128,6 +142,17 @@ class LumaApp {
       this.updateHeader();
       this.handleHashChange();
     }
+  }
+
+  goToLobby() {
+    this.closeAllModals();
+    const onboardingScreen = document.getElementById('onboarding-screen');
+    const appContainer = document.getElementById('app-container');
+    if (appContainer) appContainer.style.display = 'none';
+    if (onboardingScreen) onboardingScreen.style.display = 'flex';
+    this.bindOnboardingActions();
+    window.location.hash = '#lobby';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   enterActiveGroupDirectly() {
@@ -200,6 +225,16 @@ class LumaApp {
 
   handleHashChange() {
     const rawHash = window.location.hash.replace('#', '').trim();
+    if (rawHash === 'lobby') {
+      this.goToLobby();
+      return;
+    }
+
+    const onboardingScreen = document.getElementById('onboarding-screen');
+    const appContainer = document.getElementById('app-container');
+    if (onboardingScreen) onboardingScreen.style.display = 'none';
+    if (appContainer) appContainer.style.display = 'flex';
+
     const validSections = window.CONFIG.sections.map(s => s.id);
     const target = validSections.includes(rawHash) ? rawHash : 'inicio';
 
@@ -5248,26 +5283,7 @@ class LumaApp {
 
   _renderPinnedMessageBanner() {
     const banner = document.getElementById('chat-pinned-banner');
-    const textEl = document.getElementById('chat-pinned-text');
-    const group = this.storage.getActiveGroup();
-    const pinned = this.storage.getPinnedMessage();
-
-    if (!banner || !textEl) return;
-
-    if (pinned) {
-      banner.style.display = 'flex';
-      let displayText = pinned.text;
-      if (pinned.type === 'poll') displayText = `📊 Encuesta: ${pinned.payload?.question || ''}`;
-      if (pinned.type === 'image') displayText = '📷 Foto compartida';
-      if (pinned.type === 'share_movie') displayText = `🎬 Película: ${pinned.payload?.title || ''}`;
-      if (pinned.type === 'share_series') displayText = `📺 Serie: ${pinned.payload?.title || ''}`;
-      if (pinned.type === 'share_music') displayText = `🎵 Canción: ${pinned.payload?.title || ''}`;
-      if (pinned.type === 'share_memory') displayText = `📸 Recuerdo: ${pinned.payload?.title || ''}`;
-      textEl.textContent = displayText || (group?.pinnedText || 'Próximo viaje: Guatapé — 18 Septiembre 🏞️');
-    } else {
-      banner.style.display = 'flex';
-      textEl.textContent = group?.pinnedText || 'Próximo viaje: Guatapé — 18 Septiembre 🏞️';
-    }
+    if (banner) banner.style.display = 'none';
   }
 
   scrollToPinnedMessage() {
@@ -5441,13 +5457,6 @@ class LumaApp {
     const artwork = p.artwork || 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=300&q=80';
     const timeFormatted = msg.timeDisplay || '9:13 a. m.';
 
-    const listeners = p.listeners || [
-      { avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80' },
-      { avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80' },
-      { avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80' }
-    ];
-    const extraListeners = p.extraListeners !== undefined ? p.extraListeners : 1;
-
     return `
       <div class="luma-card-music">
         <div class="luma-card-music-top">
@@ -5466,14 +5475,7 @@ class LumaApp {
           </div>
         </div>
 
-        <div class="luma-card-music-actions">
-          <button type="button" class="btn-card-listen-together" onclick="window.app.startListeningSession('${window.Utils.sanitizeHTML(title)}', '${window.Utils.sanitizeHTML(artist)}', '${p.previewUrl || ''}')">
-            <span>▶</span> Escuchar juntos
-          </button>
-          <div class="stacked-avatars-row">
-            ${listeners.map(l => `<img src="${l.avatar}" class="stacked-avatar-item" alt="Oyente">`).join('')}
-            ${extraListeners > 0 ? `<div class="stacked-extra-badge">+${extraListeners}</div>` : ''}
-          </div>
+        <div class="luma-card-music-actions" style="justify-content: flex-end;">
           <button type="button" class="btn-card-save-to-module" onclick="window.app.saveMusicFromChat('${window.Utils.sanitizeHTML(title)}', '${window.Utils.sanitizeHTML(artist)}', '${artwork}')">
             💜 Guardar en Música
           </button>
@@ -5542,10 +5544,6 @@ class LumaApp {
             `;
           }).join('')}
         </div>
-
-        <button type="button" class="btn-poll-vote-expand" onclick="window.app.voteChatPoll('${msg.id}', 0)">
-          <span>Votar</span> ⌵
-        </button>
 
         <div class="chat-bubble-meta-time" style="margin-top: 6px;">
           <span>${timeFormatted}</span>
@@ -5902,11 +5900,9 @@ class LumaApp {
       if (!group) return;
       const newName = document.getElementById('input-chat-edit-group-name')?.value.trim() || group.name;
       const newMotto = document.getElementById('input-chat-edit-group-motto')?.value.trim() || group.motto;
-      const newPinned = document.getElementById('input-chat-edit-pinned')?.value.trim() || group.pinnedText;
 
       group.name = newName;
       group.motto = newMotto;
-      group.pinnedText = newPinned;
       this.storage.updateGroup(group.id, group);
       this.closeModal('modal-chat-group-info');
       this.renderChat();
@@ -6436,11 +6432,9 @@ class LumaApp {
     if (!group) return;
     const nameInput = document.getElementById('input-chat-edit-group-name');
     const mottoInput = document.getElementById('input-chat-edit-group-motto');
-    const pinnedInput = document.getElementById('input-chat-edit-pinned');
 
     if (nameInput) nameInput.value = group.name || 'Grupo LUMA';
     if (mottoInput) mottoInput.value = group.motto || 'Buenas conversaciones, mejores recuerdos ✨';
-    if (pinnedInput) pinnedInput.value = group.pinnedText || 'Próximo viaje: Guatapé — 18 Septiembre 🏞️';
 
     this.openModal('modal-chat-group-info');
   }
@@ -6610,8 +6604,13 @@ class LumaApp {
   }
 
   voteChatPoll(messageId, optionId) {
+    const scrollEl = document.getElementById('chat-messages-scroll');
+    const prevScrollTop = scrollEl ? scrollEl.scrollTop : null;
     this.storage.votePoll(messageId, optionId);
     this._renderChatMessagesList();
+    if (scrollEl && prevScrollTop !== null) {
+      scrollEl.scrollTop = prevScrollTop;
+    }
     window.Utils.showToast('¡Voto registrado! ✨', 'success');
   }
 
@@ -6762,9 +6761,9 @@ class LumaApp {
       this.openModal('modal-profile');
     });
 
-    // Botón Salir en barra inferior
+    // Botón Salir en barra inferior (retorno auténtico al Lobby de la aplicación)
     document.getElementById('bottom-tab-salir')?.addEventListener('click', () => {
-      this.openGroupsListModal();
+      this.goToLobby();
     });
 
     // Central Floating Action Button (FAB)
