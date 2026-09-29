@@ -11032,3 +11032,133 @@
     font-size: 1.35rem;
   }
 }
+
+/* ==========================================================================
+   MODALES DEL ECOSISTEMA DE CHAT & TARJETAS DE PREVIEW INTERACTIVAS
+   ========================================================================== */
+
+.chat-modal-preview-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--color-bg-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.chat-modal-preview-card:hover {
+  background: var(--color-bg-card-hover);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.chat-modal-preview-art {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.chat-modal-preview-poster {
+  width: 44px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.chat-modal-preview-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-modal-preview-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-primary-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chat-modal-preview-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.chat-modal-preview-sub {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-modal-preview-meta {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+/* Encuesta Dinámica en Modal */
+.poll-modal-opt-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.poll-opt-num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-primary-light);
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.btn-remove-poll-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface-elevated);
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-remove-poll-opt:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Metadata de uploader en tarjeta de recuerdo de chat */
+.memory-card-uploader-meta {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--color-primary-light);
+  font-weight: 600;
+  margin-top: 2px;
+}

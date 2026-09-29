@@ -2342,30 +2342,37 @@
   </div>
 
   <!-- 18. MODAL CREAR ENCUESTA EN EL CHAT -->
+  <!-- MODAL CREAR ENCUESTA GRUPAL (INTERFAZ MEJORADA) -->
   <div id="modal-create-poll" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-width: 440px;">
+    <div class="modal-content" style="max-width: 460px;">
       <div class="modal-header">
-        <h3 class="modal-title">📊 Crear Encuesta Grupal</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.35rem;">📊</span>
+          <div>
+            <h3 class="modal-title" style="margin: 0; font-size: 1.1rem;">Crear Encuesta Grupal</h3>
+            <p style="margin: 0; font-size: 0.76rem; color: var(--color-text-secondary);">Lanza una votación interactiva para todo el grupo</p>
+          </div>
+        </div>
         <button type="button" class="btn-modal-close" data-close-modal="modal-create-poll">✕</button>
       </div>
-      <form id="form-create-poll" class="chat-poll-form">
+      <form id="form-create-poll" class="chat-poll-form" style="margin-top: 0.85rem;">
         <div class="form-group" style="margin-bottom: 1rem;">
           <label class="form-label" for="input-poll-question">Pregunta de la encuesta</label>
-          <input type="text" id="input-poll-question" class="form-control" placeholder="Ej: ¿Qué película o serie vemos hoy?" required autocomplete="off">
+          <input type="text" id="input-poll-question" class="form-control" placeholder="Ej: ¿Qué película vemos el viernes o a dónde salimos?" required autocomplete="off">
         </div>
         <div class="form-group" style="margin-bottom: 0.75rem;">
-          <label class="form-label">Opciones</label>
-          <div id="poll-options-inputs-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <input type="text" class="form-control poll-opt-input" placeholder="Opción 1 (ej: Inception)" required autocomplete="off">
-            <input type="text" class="form-control poll-opt-input" placeholder="Opción 2 (ej: Arcane)" required autocomplete="off">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label class="form-label" style="margin-bottom: 0;">Opciones de votación</label>
+            <span style="font-size: 0.72rem; color: var(--color-text-secondary);">Mínimo 2 opciones</span>
           </div>
-          <button type="button" class="btn-secondary" id="btn-add-poll-option" style="margin-top: 0.6rem; font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+          <div id="poll-options-inputs-list" style="display: flex; flex-direction: column; gap: 0.6rem;"></div>
+          <button type="button" class="btn-secondary" id="btn-add-poll-option" onclick="window.app.addPollOptionInput()" style="margin-top: 0.75rem; width: 100%; justify-content: center; font-size: 0.84rem; padding: 0.55rem 0.85rem; border-style: dashed;">
             + Añadir otra opción
           </button>
         </div>
-        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem;">
+        <div class="modal-footer" style="margin-top: 1.25rem;">
           <button type="button" class="btn-secondary" data-close-modal="modal-create-poll">Cancelar</button>
-          <button type="submit" class="btn-primary">Publicar Encuesta 🚀</button>
+          <button type="submit" class="btn-primary">Publicar Encuesta 📊</button>
         </div>
       </form>
     </div>
@@ -2424,37 +2431,32 @@
         <button type="button" class="eco-grid-item" id="eco-btn-music" onclick="window.app.closeChatEcosystemSheet(); window.app.openChatMusicModal();">
           <div class="eco-item-icon-box music">🎵</div>
           <span class="eco-item-title">Música</span>
-          <span class="eco-item-desc">Spotify / YT Music</span>
+          <span class="eco-item-desc">Buscar o grupo</span>
         </button>
         <button type="button" class="eco-grid-item" id="eco-btn-movie" onclick="window.app.closeChatEcosystemSheet(); window.app.openChatMovieModal();">
           <div class="eco-item-icon-box movie">🎬</div>
           <span class="eco-item-title">Película</span>
-          <span class="eco-item-desc">Búsqueda TMDb</span>
+          <span class="eco-item-desc">Cartelera o TMDb</span>
         </button>
         <button type="button" class="eco-grid-item" id="eco-btn-series" onclick="window.app.closeChatEcosystemSheet(); window.app.openChatSeriesModal();">
           <div class="eco-item-icon-box series">📺</div>
           <span class="eco-item-title">Serie</span>
-          <span class="eco-item-desc">Búsqueda & Maratón</span>
+          <span class="eco-item-desc">Maratón o TMDb</span>
         </button>
         <button type="button" class="eco-grid-item" id="eco-btn-memory" onclick="window.app.closeChatEcosystemSheet(); window.app.openChatMemoryModal();">
           <div class="eco-item-icon-box memory">📸</div>
           <span class="eco-item-title">Recuerdo</span>
           <span class="eco-item-desc">Momentos del grupo</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-goal" onclick="window.app.closeChatEcosystemSheet(); window.app.openModal('modal-chat-goal-share');">
-          <div class="eco-item-icon-box goal">🎯</div>
-          <span class="eco-item-title">Objetivo</span>
-          <span class="eco-item-desc">Metas con progreso</span>
-        </button>
         <button type="button" class="eco-grid-item" id="eco-btn-poll" onclick="window.app.closeChatEcosystemSheet(); window.app.openCreatePollModal();">
           <div class="eco-item-icon-box poll">📊</div>
           <span class="eco-item-title">Encuesta</span>
           <span class="eco-item-desc">Votación interactiva</span>
         </button>
-        <button type="button" class="eco-grid-item" id="eco-btn-note" onclick="window.app.closeChatEcosystemSheet(); window.app.openModal('modal-note');">
+        <button type="button" class="eco-grid-item" id="eco-btn-note" onclick="window.app.closeChatEcosystemSheet(); location.hash = '#notas';">
           <div class="eco-item-icon-box note">📝</div>
-          <span class="eco-item-title">Nota</span>
-          <span class="eco-item-desc">Tablón de notas</span>
+          <span class="eco-item-title">Notas</span>
+          <span class="eco-item-desc">Ir al tablero</span>
         </button>
         <button type="button" class="eco-grid-item" id="eco-btn-photo" onclick="window.app.closeChatEcosystemSheet(); document.getElementById('input-chat-photo-file')?.click();">
           <div class="eco-item-icon-box photo">🖼️</div>
@@ -2465,166 +2467,145 @@
     </div>
   </div>
 
-  <!-- 22. MODAL SELECTOR DE MÚSICA (SPOTIFY / YOUTUBE MUSIC) -->
+  <!-- 22. MODAL COMPARTIR MÚSICA (BUSCADOR EN VIVO & BIBLIOTECA DEL GRUPO) -->
   <div id="modal-chat-music-share" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
-        <h3 class="modal-title">🎵 Compartir Música en el Chat</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.35rem;">🎵</span>
+          <div>
+            <h3 class="modal-title" style="margin: 0; font-size: 1.1rem;">Compartir Música en el Chat</h3>
+            <p style="margin: 0; font-size: 0.76rem; color: var(--color-text-secondary);">Elige una canción del grupo o busca cualquier tema oficial</p>
+          </div>
+        </div>
         <button type="button" class="btn-modal-close" data-close-modal="modal-chat-music-share">✕</button>
       </div>
-      <div class="chat-platform-tabs">
-        <button type="button" class="chat-platform-tab active" id="tab-music-spotify">🟢 Spotify</button>
-        <button type="button" class="chat-platform-tab" id="tab-music-yt">🔴 YouTube Music</button>
-        <button type="button" class="chat-platform-tab" id="tab-music-library">💜 Biblioteca</button>
+
+      <div class="chat-platform-tabs" style="margin-top: 0.75rem;">
+        <button type="button" class="chat-platform-tab active" id="tab-music-mode-group">💜 Canciones del Grupo</button>
+        <button type="button" class="chat-platform-tab" id="tab-music-mode-search">🔍 Buscador en Línea</button>
       </div>
-      <form id="form-share-music-custom" style="margin-top: 1rem;">
+
+      <!-- Pestaña 1: Canciones del Grupo -->
+      <div id="view-music-share-group" style="margin-top: 1rem;">
         <div class="form-group">
-          <label class="form-label">Canción o Enlace</label>
-          <input type="text" id="input-share-music-title" class="form-control" placeholder="Ej: Sweater Weather" required autocomplete="off">
+          <label class="form-label" for="select-chat-group-song">Canción añadida al grupo:</label>
+          <select id="select-chat-group-song" class="form-control" style="cursor: pointer;"></select>
         </div>
+        <div id="chat-group-song-preview-card" style="margin-top: 0.85rem;"></div>
+      </div>
+
+      <!-- Pestaña 2: Buscador en Vivo -->
+      <div id="view-music-share-search" style="display: none; margin-top: 1rem;">
         <div class="form-group">
-          <label class="form-label">Artista / Banda</label>
-          <input type="text" id="input-share-music-artist" class="form-control" placeholder="Ej: The Neighbourhood" required autocomplete="off">
-        </div>
-        <div class="form-row-2">
-          <div class="form-group">
-            <label class="form-label">Duración (ej: 4:00)</label>
-            <input type="text" id="input-share-music-duration" class="form-control" placeholder="4:00" value="4:00">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Plataforma</label>
-            <select id="input-share-music-platform" class="form-control">
-              <option value="Spotify">Spotify</option>
-              <option value="YouTube Music">YouTube Music</option>
-            </select>
+          <label class="form-label" for="input-chat-search-music">Buscador oficial (canción, artista o álbum):</label>
+          <div style="position: relative;">
+            <input type="text" id="input-chat-search-music" class="form-control" placeholder="Ej: Sweater Weather, Coldplay, Bad Bunny..." autocomplete="off">
+            <span id="chat-music-search-spinner" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: none; font-size: 0.85rem;">⏳</span>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Mensaje opcional</label>
-          <input type="text" id="input-share-music-comment" class="form-control" placeholder="¿Qué tal si escuchamos esta canción? 👀">
-        </div>
-        <div class="form-group" style="margin-top: 0.5rem;">
-          <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #4F46E5; cursor: pointer; user-select: none;">
-            <input type="checkbox" id="input-share-music-save-library" checked style="accent-color: #6D5CFF; width: 16px; height: 16px;">
-            <span>Añadir también a la biblioteca de Música del grupo 💜</span>
-          </label>
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
-          <button type="button" class="btn-secondary" data-close-modal="modal-chat-music-share">Cancelar</button>
-          <button type="submit" class="btn-primary">Compartir en Chat 🎵</button>
-        </div>
-      </form>
-      <div id="music-library-picker-list" style="display: none; margin-top: 1rem; max-height: 250px; overflow-y: auto;"></div>
+        <div id="chat-music-search-results" class="chat-search-picker-results" style="max-height: 280px; overflow-y: auto; margin-top: 0.85rem; display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
     </div>
   </div>
 
-  <!-- 23. MODAL COMPARTIR PELÍCULA (TMDB) -->
+  <!-- 23. MODAL COMPARTIR PELÍCULA (CARTELERA GRUPAL & TMDB) -->
   <div id="modal-chat-movie-share" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
-        <h3 class="modal-title">🎬 Compartir Película (TMDb)</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.35rem;">🎬</span>
+          <div>
+            <h3 class="modal-title" style="margin: 0; font-size: 1.1rem;">Compartir Película en el Chat</h3>
+            <p style="margin: 0; font-size: 0.76rem; color: var(--color-text-secondary);">Selecciona una película de cartelera o busca en TMDb</p>
+          </div>
+        </div>
         <button type="button" class="btn-modal-close" data-close-modal="modal-chat-movie-share">✕</button>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding: 6px 12px; background: #F8FAFC; border-radius: 10px; border: 1px dashed #CBD5E1;">
-        <span style="font-size: 0.8rem; color: #64748B;">¿Quieres registrar una nueva película?</span>
-        <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.closeModal('modal-chat-movie-share'); window.app.openModal('modal-movie-add');">+ Nueva Película 🍿</button>
+
+      <div class="chat-platform-tabs" style="margin-top: 0.75rem;">
+        <button type="button" class="chat-platform-tab active" id="tab-movie-mode-group">🍿 Películas del Grupo</button>
+        <button type="button" class="chat-platform-tab" id="tab-movie-mode-search">🔍 Buscar en TMDb</button>
       </div>
-      <div style="margin-top: 0.6rem;">
-        <input type="text" id="input-chat-search-movie-tmdb" class="form-control" placeholder="Buscar título en TMDb (ej: Interstellar)..." autocomplete="off">
+
+      <!-- Pestaña 1: Películas del Grupo -->
+      <div id="view-movie-share-group" style="margin-top: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="select-chat-group-movie">Película en cartelera:</label>
+          <select id="select-chat-group-movie" class="form-control" style="cursor: pointer;"></select>
+        </div>
+        <div id="chat-group-movie-preview-card" style="margin-top: 0.85rem;"></div>
       </div>
-      <div id="chat-movie-search-results" class="chat-search-picker-results" style="max-height: 280px; overflow-y: auto; margin-top: 0.8rem;"></div>
-      <div style="text-align: right; margin-top: 0.8rem;">
-        <button type="button" class="btn-secondary" data-close-modal="modal-chat-movie-share">Cerrar</button>
+
+      <!-- Pestaña 2: Buscador en TMDb -->
+      <div id="view-movie-share-search" style="display: none; margin-top: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="input-chat-search-movie-tmdb">Buscar en catálogo TMDb:</label>
+          <input type="text" id="input-chat-search-movie-tmdb" class="form-control" placeholder="Buscar título (ej: Interstellar, Inception, Titanic)..." autocomplete="off">
+        </div>
+        <div id="chat-movie-search-results" class="chat-search-picker-results" style="max-height: 280px; overflow-y: auto; margin-top: 0.85rem; display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
     </div>
   </div>
 
-  <!-- 24. MODAL COMPARTIR SERIE (TMDB & MARATÓN) -->
+  <!-- 24. MODAL COMPARTIR SERIE (MARATONES DEL GRUPO & TMDB) -->
   <div id="modal-chat-series-share" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
-        <h3 class="modal-title">📺 Compartir Serie & Maratón</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.35rem;">📺</span>
+          <div>
+            <h3 class="modal-title" style="margin: 0; font-size: 1.1rem;">Compartir Serie en el Chat</h3>
+            <p style="margin: 0; font-size: 0.76rem; color: var(--color-text-secondary);">Propón un maratón de las series del grupo o busca en TMDb</p>
+          </div>
+        </div>
         <button type="button" class="btn-modal-close" data-close-modal="modal-chat-series-share">✕</button>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding: 6px 12px; background: #F8FAFC; border-radius: 10px; border: 1px dashed #CBD5E1;">
-        <span style="font-size: 0.8rem; color: #64748B;">¿Quieres añadir una nueva serie a LUMA?</span>
-        <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.closeModal('modal-chat-series-share'); window.app.openModal('modal-series');">+ Nueva Serie 📺</button>
+
+      <div class="chat-platform-tabs" style="margin-top: 0.75rem;">
+        <button type="button" class="chat-platform-tab active" id="tab-series-mode-group">📺 Series del Grupo</button>
+        <button type="button" class="chat-platform-tab" id="tab-series-mode-search">🔍 Buscar en TMDb</button>
       </div>
-      <div style="margin-top: 0.6rem;">
-        <input type="text" id="input-chat-search-series-tmdb" class="form-control" placeholder="Buscar serie (ej: Arcane, Stranger Things)..." autocomplete="off">
+
+      <!-- Pestaña 1: Series del Grupo -->
+      <div id="view-series-share-group" style="margin-top: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="select-chat-group-series">Serie del grupo:</label>
+          <select id="select-chat-group-series" class="form-control" style="cursor: pointer;"></select>
+        </div>
+        <div id="chat-group-series-preview-card" style="margin-top: 0.85rem;"></div>
       </div>
-      <div id="chat-series-search-results" class="chat-search-picker-results" style="max-height: 280px; overflow-y: auto; margin-top: 0.8rem;"></div>
-      <div style="text-align: right; margin-top: 0.8rem;">
-        <button type="button" class="btn-secondary" data-close-modal="modal-chat-series-share">Cerrar</button>
+
+      <!-- Pestaña 2: Buscador en TMDb -->
+      <div id="view-series-share-search" style="display: none; margin-top: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="input-chat-search-series-tmdb">Buscar en catálogo TMDb:</label>
+          <input type="text" id="input-chat-search-series-tmdb" class="form-control" placeholder="Buscar serie (ej: Arcane, Stranger Things, Dark)..." autocomplete="off">
+        </div>
+        <div id="chat-series-search-results" class="chat-search-picker-results" style="max-height: 280px; overflow-y: auto; margin-top: 0.85rem; display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
     </div>
   </div>
 
   <!-- 25. MODAL COMPARTIR RECUERDO -->
   <div id="modal-chat-memory-share" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
-        <h3 class="modal-title">📸 Compartir Recuerdo</h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.35rem;">📸</span>
+          <div>
+            <h3 class="modal-title" style="margin: 0; font-size: 1.1rem;">Compartir Recuerdo en el Chat</h3>
+            <p style="margin: 0; font-size: 0.76rem; color: var(--color-text-secondary);">Revive un momento inolvidable con el grupo</p>
+          </div>
+        </div>
         <button type="button" class="btn-modal-close" data-close-modal="modal-chat-memory-share">✕</button>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; padding: 8px 12px; background: #EDE9FE; border-radius: 12px;">
-        <span style="font-size: 0.82rem; color: #4338CA; font-weight: 600;">¿Tienes una nueva foto o anécdota?</span>
-        <button type="button" class="btn-primary" style="padding: 5px 12px; font-size: 0.75rem;" onclick="window.app.closeModal('modal-chat-memory-share'); window.app.openModal('modal-memory');">+ Subir Recuerdo 📸</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; margin-bottom: 0.85rem; padding: 10px 14px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 14px;">
+        <span style="font-size: 0.82rem; color: var(--color-text-main); font-weight: 600;">¿Quieres subir una nueva foto o momento?</span>
+        <button type="button" class="btn-primary" style="padding: 5px 12px; font-size: 0.76rem;" onclick="window.app.closeModal('modal-chat-memory-share'); window.app.openModal('modal-memory');">+ Subir Recuerdo 📸</button>
       </div>
-      <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.8rem;">O selecciona un momento existente del grupo:</p>
-      <div id="chat-memories-picker-list" class="chat-search-picker-results" style="max-height: 300px; overflow-y: auto;"></div>
-    </div>
-  </div>
-
-  <!-- 26. MODAL COMPARTIR OBJETIVO / META GRUPAL -->
-  <div id="modal-chat-goal-share" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-width: 460px;">
-      <div class="modal-header">
-        <h3 class="modal-title">🎯 Compartir Meta u Objetivo</h3>
-        <button type="button" class="btn-modal-close" data-close-modal="modal-chat-goal-share">✕</button>
-      </div>
-      <form id="form-chat-goal-create" style="margin-top: 0.8rem;">
-        <div class="form-group">
-          <label class="form-label">Nombre de la Meta</label>
-          <input type="text" id="input-chat-goal-title" class="form-control" placeholder="Ej: Ahorrar para el viaje a Guatapé" required autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Porcentaje de Avance Inicial (0 - 100%)</label>
-          <input type="range" id="input-chat-goal-pct" min="0" max="100" value="68" class="form-control-range" oninput="document.getElementById('goal-pct-display').textContent = this.value + '%'">
-          <div style="text-align: center; font-weight: 700; color: #6D5CFF; font-size: 1.1rem; margin-top: 0.3rem;" id="goal-pct-display">68%</div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Comentario o mensaje</label>
-          <input type="text" id="input-chat-goal-comment" class="form-control" placeholder="¡Vamos muy bien equipo! 💪">
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
-          <button type="button" class="btn-secondary" data-close-modal="modal-chat-goal-share">Cancelar</button>
-          <button type="submit" class="btn-primary">Compartir Objetivo 🎯</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 27. MODAL ACTUALIZAR PROGRESO DE OBJETIVO DIRECTO -->
-  <div id="modal-chat-goal-progress" class="modal-overlay" role="dialog" aria-modal="true">
-    <div class="modal-content" style="max-width: 420px;">
-      <div class="modal-header">
-        <h3 class="modal-title">📈 Actualizar Progreso</h3>
-        <button type="button" class="btn-modal-close" data-close-modal="modal-chat-goal-progress">✕</button>
-      </div>
-      <form id="form-update-chat-goal-progress" style="margin-top: 0.8rem;">
-        <input type="hidden" id="input-update-goal-msg-id">
-        <h5 id="update-goal-title-display" style="font-size: 1rem; color: #1E1B4B; margin-bottom: 1rem;">Objetivo</h5>
-        <div class="form-group">
-          <label class="form-label">Nuevo Porcentaje de Avance</label>
-          <input type="range" id="input-update-goal-slider" min="0" max="100" value="70" class="form-control-range" oninput="document.getElementById('update-goal-pct-badge').textContent = this.value + '%'">
-          <div style="text-align: center; font-weight: 800; color: #6D5CFF; font-size: 1.5rem; margin-top: 0.4rem;" id="update-goal-pct-badge">70%</div>
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.25rem;">
-          <button type="button" class="btn-secondary" data-close-modal="modal-chat-goal-progress">Cancelar</button>
-          <button type="submit" class="btn-primary">Guardar Progreso ✨</button>
-        </div>
-      </form>
+      <p style="font-size: 0.82rem; color: var(--color-text-secondary); margin-bottom: 0.65rem; font-weight: 700;">Momentos guardados en el grupo:</p>
+      <div id="chat-memories-picker-list" class="chat-search-picker-results" style="max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
     </div>
   </div>
 

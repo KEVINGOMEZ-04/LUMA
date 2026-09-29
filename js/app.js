@@ -5688,21 +5688,23 @@ class LumaApp {
 
   _renderMemoryCardHtml(msg, user) {
     const p = msg.payload || {};
-    const title = p.title || 'Atardecer en Guatapé';
-    const date = p.date || '21 Septiembre 2026';
-    const quote = p.quote || '“La mejor salida del año.”';
-    const photo = p.photo || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80';
+    const title = p.title || 'Recuerdo';
+    const date = p.date || 'Fecha especial';
+    const quote = p.quote || '';
+    const photo = p.photo || 'assets/icon.png';
+    const uploadedBy = p.uploadedBy || p.author || p.sharedBy || msg.senderName || 'Miembro de LUMA';
     const timeFormatted = msg.timeDisplay || '9:36 a. m.';
 
     return `
       <div class="luma-card-memory">
         <div class="memory-card-split">
-          <img src="${photo}" class="memory-card-photo-thumb" alt="${window.Utils.sanitizeHTML(title)}" onclick="window.app.openLightbox('${photo}')">
+          <img src="${photo}" class="memory-card-photo-thumb" alt="${window.Utils.sanitizeHTML(title)}" onclick="window.app.openLightbox('${photo}')" onerror="this.src='assets/icon.png'">
           <div class="memory-card-info-col">
-            <span class="memory-badge-amber">🖼️ Recuerdo</span>
+            <span class="memory-badge-amber">📸 Recuerdo</span>
             <h4 class="memory-card-title-text">${window.Utils.sanitizeHTML(title)}</h4>
-            <span class="memory-card-date-meta">${date}</span>
-            <p class="memory-card-quote-snippet">${window.Utils.sanitizeHTML(quote)}</p>
+            <span class="memory-card-date-meta">📅 ${date}</span>
+            <span class="memory-card-uploader-meta">👤 Subido por ${window.Utils.sanitizeHTML(uploadedBy)}</span>
+            ${quote ? `<p class="memory-card-quote-snippet">${window.Utils.sanitizeHTML(quote)}</p>` : ''}
             <button type="button" class="btn-card-open-memory" onclick="location.hash='#recuerdos'">
               Abrir recuerdo ➔
             </button>
@@ -5830,10 +5832,6 @@ class LumaApp {
     document.getElementById('eco-btn-memory')?.addEventListener('click', () => {
       this.closeChatEcosystemSheet();
       this.openChatMemoryModal();
-    });
-    document.getElementById('eco-btn-goal')?.addEventListener('click', () => {
-      this.closeChatEcosystemSheet();
-      this.openModal('modal-chat-goal-share');
     });
     document.getElementById('eco-btn-poll')?.addEventListener('click', () => {
       this.closeChatEcosystemSheet();
@@ -6329,50 +6327,126 @@ class LumaApp {
 
   openChatMusicModal() {
     this.openModal('modal-chat-music-share');
-    const tabSpotify = document.getElementById('tab-music-spotify');
-    const tabYt = document.getElementById('tab-music-yt');
-    const tabLib = document.getElementById('tab-music-library');
-    const customForm = document.getElementById('form-share-music-custom');
-    const libList = document.getElementById('music-library-picker-list');
-    const platformSelect = document.getElementById('input-share-music-platform');
+    const tabGroup = document.getElementById('tab-music-mode-group');
+    const tabSearch = document.getElementById('tab-music-mode-search');
+    const viewGroup = document.getElementById('view-music-share-group');
+    const viewSearch = document.getElementById('view-music-share-search');
+    const selectSong = document.getElementById('select-chat-group-song');
+    const previewCard = document.getElementById('chat-group-song-preview-card');
+    const searchInput = document.getElementById('input-chat-search-music');
+    const resultsContainer = document.getElementById('chat-music-search-results');
+    const spinner = document.getElementById('chat-music-search-spinner');
 
-    const setTab = (activeTab) => {
-      [tabSpotify, tabYt, tabLib].forEach(t => t?.classList.remove('active'));
-      activeTab?.classList.add('active');
-      if (activeTab === tabLib) {
-        if (customForm) customForm.style.display = 'none';
-        if (libList) {
-          libList.style.display = 'block';
-          const songs = this.storage.getSongs() || [];
-          if (songs.length === 0) {
-            libList.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.85rem;">Aún no hay canciones en la biblioteca de Música.</div>';
-          } else {
-            libList.innerHTML = songs.map(s => `
-              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
-                <img src="${s.artwork || 'assets/icon.png'}" style="width: 44px; height: 44px; border-radius: 8px; object-fit: cover;">
-                <div style="flex: 1; min-width: 0;">
-                  <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.title)}</strong>
-                  <span style="font-size: 0.75rem; color: #64748B;">${window.Utils.sanitizeHTML(s.artist || '')}</span>
-                </div>
-                <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.shareExistingSongToChat('${s.id}')">Compartir</button>
-              </div>
-            `).join('');
-          }
-        }
+    const songs = this.storage.getSongs() || [];
+
+    const updateSelectedSongPreview = () => {
+      if (!previewCard) return;
+      const selectedId = selectSong ? selectSong.value : null;
+      const song = songs.find(s => s.id === selectedId);
+      if (!song) {
+        previewCard.innerHTML = `
+          <div style="padding: 1.5rem; text-align: center; background: var(--color-bg-surface-elevated); border: 1px dashed var(--color-border); border-radius: var(--radius-md);">
+            <p style="margin: 0 0 8px 0; color: var(--color-text-secondary); font-size: 0.85rem;">No hay canciones registradas en la biblioteca del grupo.</p>
+            <button type="button" class="btn-primary" style="padding: 6px 14px; font-size: 0.8rem;" onclick="window.app.closeModal('modal-chat-music-share'); location.hash = '#musica';">+ Ir a Música 🎵</button>
+          </div>
+        `;
+        return;
+      }
+      const artwork = song.artwork || song.cover || 'assets/icon.png';
+      previewCard.innerHTML = `
+        <div class="chat-modal-preview-card">
+          <img src="${artwork}" class="chat-modal-preview-art" alt="${window.Utils.sanitizeHTML(song.title)}" onerror="this.src='assets/icon.png'">
+          <div class="chat-modal-preview-details">
+            <span class="chat-modal-preview-badge">🎵 Canción del Grupo</span>
+            <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(song.title)}</strong>
+            <span class="chat-modal-preview-sub">${window.Utils.sanitizeHTML(song.artist || 'Artista')}</span>
+            ${song.album ? `<span class="chat-modal-preview-meta">Álbum: ${window.Utils.sanitizeHTML(song.album)}</span>` : ''}
+          </div>
+          <button type="button" class="btn-primary" style="padding: 8px 14px; font-size: 0.82rem; white-space: nowrap;" onclick="window.app.shareExistingSongToChat('${song.id}')">
+            Compartir 🎵
+          </button>
+        </div>
+      `;
+    };
+
+    if (selectSong) {
+      if (songs.length === 0) {
+        selectSong.innerHTML = '<option value="">(No hay canciones en el grupo aún)</option>';
+        selectSong.disabled = true;
       } else {
-        if (customForm) customForm.style.display = 'block';
-        if (libList) libList.style.display = 'none';
-        if (platformSelect) {
-          platformSelect.value = (activeTab === tabSpotify) ? 'Spotify' : 'YouTube Music';
-        }
+        selectSong.disabled = false;
+        selectSong.innerHTML = songs.map(s => `
+          <option value="${s.id}">${window.Utils.sanitizeHTML(s.title)} — ${window.Utils.sanitizeHTML(s.artist || 'Desconocido')}</option>
+        `).join('');
+      }
+      selectSong.onchange = updateSelectedSongPreview;
+    }
+    updateSelectedSongPreview();
+
+    const setMode = (isGroup) => {
+      if (tabGroup) tabGroup.classList.toggle('active', isGroup);
+      if (tabSearch) tabSearch.classList.toggle('active', !isGroup);
+      if (viewGroup) viewGroup.style.display = isGroup ? 'block' : 'none';
+      if (viewSearch) viewSearch.style.display = !isGroup ? 'block' : 'none';
+      if (!isGroup && searchInput) {
+        searchInput.focus();
       }
     };
 
-    if (tabSpotify) tabSpotify.onclick = () => setTab(tabSpotify);
-    if (tabYt) tabYt.onclick = () => setTab(tabYt);
-    if (tabLib) tabLib.onclick = () => setTab(tabLib);
-    setTab(tabSpotify);
-    document.getElementById('input-share-music-title')?.focus();
+    if (tabGroup) tabGroup.onclick = () => setMode(true);
+    if (tabSearch) tabSearch.onclick = () => setMode(false);
+    setMode(true);
+
+    if (searchInput && resultsContainer) {
+      if (!searchInput.value) {
+        resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Escribe una canción o artista para buscar en vivo...</div>';
+      }
+      let debounceTimer = null;
+      searchInput.oninput = (e) => {
+        const query = e.target.value.trim();
+        clearTimeout(debounceTimer);
+        if (!query) {
+          if (spinner) spinner.style.display = 'none';
+          resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Escribe una canción o artista para buscar en vivo...</div>';
+          return;
+        }
+        if (spinner) spinner.style.display = 'inline-block';
+        debounceTimer = setTimeout(async () => {
+          try {
+            const results = await this.media.searchSongs(query);
+            if (spinner) spinner.style.display = 'none';
+            if (!results || results.length === 0) {
+              resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">No se encontraron canciones para tu búsqueda.</div>';
+              return;
+            }
+            resultsContainer.innerHTML = results.slice(0, 8).map(s => {
+              const songJson = encodeURIComponent(JSON.stringify(s));
+              return `
+                <div class="chat-modal-preview-card" style="margin-bottom: 6px;">
+                  <img src="${s.artwork || 'assets/icon.png'}" class="chat-modal-preview-art" alt="${window.Utils.sanitizeHTML(s.title)}" onerror="this.src='assets/icon.png'">
+                  <div class="chat-modal-preview-details">
+                    <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(s.title)}</strong>
+                    <span class="chat-modal-preview-sub">${window.Utils.sanitizeHTML(s.artist || '')}</span>
+                    <span class="chat-modal-preview-meta">${s.duration ? `⏱ ${s.duration}` : 'Canción oficial'}</span>
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareOnlineSongToChat('${songJson}')">
+                      Compartir 🎵
+                    </button>
+                    <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" title="Añadir a biblioteca de música" onclick="window.app.saveMusicFromChat('${window.Utils.sanitizeHTML(s.title)}', '${window.Utils.sanitizeHTML(s.artist || '')}', '${s.artwork || ''}')">
+                      + Biblioteca
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          } catch (err) {
+            if (spinner) spinner.style.display = 'none';
+            resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-error); font-size: 0.82rem;">Error al buscar canciones. Inténtalo de nuevo.</div>';
+          }
+        }, 320);
+      };
+    }
   }
 
   shareExistingSongToChat(songId) {
@@ -6386,7 +6460,35 @@ class LumaApp {
         platform: 'Biblioteca',
         title: song.title,
         artist: song.artist,
-        duration: '3:45',
+        duration: song.duration || '3:30',
+        artwork: song.artwork || song.cover || 'assets/icon.png',
+        previewUrl: song.previewUrl || '',
+        sharedBy: this.storage.getUserProfile()?.name || 'Tú'
+      }
+    });
+    this.closeModal('modal-chat-music-share');
+    this.renderChat();
+    this.scrollToChatBottom(true);
+    window.Utils.showToast(`"${song.title}" compartida en el chat 🎵`, 'success');
+  }
+
+  shareOnlineSongToChat(songJsonEncoded) {
+    let song = null;
+    try {
+      song = typeof songJsonEncoded === 'string' ? JSON.parse(decodeURIComponent(songJsonEncoded)) : songJsonEncoded;
+    } catch (e) {
+      console.error('Error parsing online song', e);
+      return;
+    }
+    if (!song) return;
+    this.storage.sendMessage({
+      type: 'share_music',
+      text: `🎵 ${song.title} - ${song.artist}`,
+      payload: {
+        platform: 'Spotify / Apple Music',
+        title: song.title,
+        artist: song.artist,
+        duration: song.duration || '3:30',
         artwork: song.artwork || 'assets/icon.png',
         previewUrl: song.previewUrl || '',
         sharedBy: this.storage.getUserProfile()?.name || 'Tú'
@@ -6400,49 +6502,172 @@ class LumaApp {
 
   openChatMovieModal() {
     this.openModal('modal-chat-movie-share');
-    const input = document.getElementById('input-chat-search-movie-tmdb');
-    if (input) input.value = '';
-    const container = document.getElementById('chat-movie-search-results');
-    if (container) {
-      const existingMovies = this.storage.getMovies() || [];
-      if (existingMovies.length === 0) {
-        container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.85rem;">No hay películas en cartelera aún. Usa el buscador arriba para buscar en TMDb.</div>';
-      } else {
-        container.innerHTML = existingMovies.slice(0, 10).map(m => `
-          <div class="chat-share-picker-item" style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
-            <img src="${m.poster || 'assets/icon.png'}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
-            <div style="flex: 1; min-width: 0;">
-              <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
-              <span style="font-size: 0.75rem; color: #64748B;">${m.year || ''} · ⭐ ${m.tmdbRating || m.rating || 8.5}</span>
-            </div>
-            <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.shareItemToChat('movie', '${m.id}')">Compartir</button>
+    const tabGroup = document.getElementById('tab-movie-mode-group');
+    const tabSearch = document.getElementById('tab-movie-mode-search');
+    const viewGroup = document.getElementById('view-movie-share-group');
+    const viewSearch = document.getElementById('view-movie-share-search');
+    const selectMovie = document.getElementById('select-chat-group-movie');
+    const previewCard = document.getElementById('chat-group-movie-preview-card');
+    const searchInput = document.getElementById('input-chat-search-movie-tmdb');
+    const resultsContainer = document.getElementById('chat-movie-search-results');
+
+    const movies = this.storage.getMovies() || [];
+
+    const updateSelectedMoviePreview = () => {
+      if (!previewCard) return;
+      const selectedId = selectMovie ? selectMovie.value : null;
+      const movie = movies.find(m => m.id === selectedId);
+      if (!movie) {
+        previewCard.innerHTML = `
+          <div style="padding: 1.5rem; text-align: center; background: var(--color-bg-surface-elevated); border: 1px dashed var(--color-border); border-radius: var(--radius-md);">
+            <p style="margin: 0 0 8px 0; color: var(--color-text-secondary); font-size: 0.85rem;">No hay películas en cartelera aún.</p>
+            <button type="button" class="btn-primary" style="padding: 6px 14px; font-size: 0.8rem;" onclick="window.app.closeModal('modal-chat-movie-share'); location.hash = '#cine';">+ Ir a Cine 🎬</button>
           </div>
+        `;
+        return;
+      }
+      const poster = movie.poster || 'assets/icon.png';
+      previewCard.innerHTML = `
+        <div class="chat-modal-preview-card">
+          <img src="${poster}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(movie.title)}" onerror="this.src='assets/icon.png'">
+          <div class="chat-modal-preview-details">
+            <span class="chat-modal-preview-badge">🍿 Cartelera del Grupo</span>
+            <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(movie.title)}</strong>
+            <span class="chat-modal-preview-sub">${movie.year || ''} · ⭐ ${movie.tmdbRating || movie.rating || '8.5'}</span>
+            ${movie.genre || movie.genres ? `<span class="chat-modal-preview-meta">${window.Utils.sanitizeHTML(movie.genre || movie.genres)}</span>` : ''}
+          </div>
+          <button type="button" class="btn-primary" style="padding: 8px 14px; font-size: 0.82rem; white-space: nowrap;" onclick="window.app.shareItemToChat('movie', '${movie.id}')">
+            Compartir 🎬
+          </button>
+        </div>
+      `;
+    };
+
+    if (selectMovie) {
+      if (movies.length === 0) {
+        selectMovie.innerHTML = '<option value="">(No hay películas en cartelera aún)</option>';
+        selectMovie.disabled = true;
+      } else {
+        selectMovie.disabled = false;
+        selectMovie.innerHTML = movies.map(m => `
+          <option value="${m.id}">${window.Utils.sanitizeHTML(m.title)} (${m.year || 'Cartelera'})</option>
         `).join('');
       }
+      selectMovie.onchange = updateSelectedMoviePreview;
+    }
+    updateSelectedMoviePreview();
+
+    const setMode = (isGroup) => {
+      if (tabGroup) tabGroup.classList.toggle('active', isGroup);
+      if (tabSearch) tabSearch.classList.toggle('active', !isGroup);
+      if (viewGroup) viewGroup.style.display = isGroup ? 'block' : 'none';
+      if (viewSearch) viewSearch.style.display = !isGroup ? 'block' : 'none';
+      if (!isGroup && searchInput) {
+        searchInput.focus();
+      }
+    };
+
+    if (tabGroup) tabGroup.onclick = () => setMode(true);
+    if (tabSearch) tabSearch.onclick = () => setMode(false);
+    setMode(true);
+
+    if (searchInput && resultsContainer) {
+      if (!searchInput.value) {
+        resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Escribe el título de una película para buscar en TMDb...</div>';
+      }
+      let debounceTimer = null;
+      searchInput.oninput = (e) => {
+        const q = e.target.value.trim();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          this._searchTmdbMoviesForChat(q);
+        }, 320);
+      };
     }
   }
 
   openChatSeriesModal() {
     this.openModal('modal-chat-series-share');
-    const input = document.getElementById('input-chat-search-series-tmdb');
-    if (input) input.value = '';
-    const container = document.getElementById('chat-series-search-results');
-    if (container) {
-      const existingSeries = this.storage.getSeries() || [];
-      if (existingSeries.length === 0) {
-        container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.85rem;">No hay series en la lista aún. Usa el buscador arriba para buscar en TMDb.</div>';
-      } else {
-        container.innerHTML = existingSeries.slice(0, 10).map(s => `
-          <div class="chat-share-picker-item" style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
-            <img src="${s.poster || 'assets/icon.png'}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
-            <div style="flex: 1; min-width: 0;">
-              <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.title)}</strong>
-              <span style="font-size: 0.75rem; color: #64748B;">📺 Serie</span>
-            </div>
-            <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.app.shareItemToChat('series', '${s.id}')">Compartir</button>
+    const tabGroup = document.getElementById('tab-series-mode-group');
+    const tabSearch = document.getElementById('tab-series-mode-search');
+    const viewGroup = document.getElementById('view-series-share-group');
+    const viewSearch = document.getElementById('view-series-share-search');
+    const selectSeries = document.getElementById('select-chat-group-series');
+    const previewCard = document.getElementById('chat-group-series-preview-card');
+    const searchInput = document.getElementById('input-chat-search-series-tmdb');
+    const resultsContainer = document.getElementById('chat-series-search-results');
+
+    const seriesList = this.storage.getSeries() || [];
+
+    const updateSelectedSeriesPreview = () => {
+      if (!previewCard) return;
+      const selectedId = selectSeries ? selectSeries.value : null;
+      const s = seriesList.find(item => item.id === selectedId);
+      if (!s) {
+        previewCard.innerHTML = `
+          <div style="padding: 1.5rem; text-align: center; background: var(--color-bg-surface-elevated); border: 1px dashed var(--color-border); border-radius: var(--radius-md);">
+            <p style="margin: 0 0 8px 0; color: var(--color-text-secondary); font-size: 0.85rem;">No hay series en la lista aún.</p>
+            <button type="button" class="btn-primary" style="padding: 6px 14px; font-size: 0.8rem;" onclick="window.app.closeModal('modal-chat-series-share'); location.hash = '#series';">+ Ir a Series 📺</button>
           </div>
+        `;
+        return;
+      }
+      const poster = s.poster || 'assets/icon.png';
+      previewCard.innerHTML = `
+        <div class="chat-modal-preview-card">
+          <img src="${poster}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(s.title)}" onerror="this.src='assets/icon.png'">
+          <div class="chat-modal-preview-details">
+            <span class="chat-modal-preview-badge">📺 Serie del Grupo</span>
+            <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(s.title)}</strong>
+            <span class="chat-modal-preview-sub">${s.seasons || 'Temporadas'} · ${s.status || 'En emisión'}</span>
+          </div>
+          <button type="button" class="btn-primary" style="padding: 8px 14px; font-size: 0.82rem; white-space: nowrap;" onclick="window.app.shareItemToChat('series', '${s.id}')">
+            Compartir 📺
+          </button>
+        </div>
+      `;
+    };
+
+    if (selectSeries) {
+      if (seriesList.length === 0) {
+        selectSeries.innerHTML = '<option value="">(No hay series en la lista aún)</option>';
+        selectSeries.disabled = true;
+      } else {
+        selectSeries.disabled = false;
+        selectSeries.innerHTML = seriesList.map(s => `
+          <option value="${s.id}">${window.Utils.sanitizeHTML(s.title)}</option>
         `).join('');
       }
+      selectSeries.onchange = updateSelectedSeriesPreview;
+    }
+    updateSelectedSeriesPreview();
+
+    const setMode = (isGroup) => {
+      if (tabGroup) tabGroup.classList.toggle('active', isGroup);
+      if (tabSearch) tabSearch.classList.toggle('active', !isGroup);
+      if (viewGroup) viewGroup.style.display = isGroup ? 'block' : 'none';
+      if (viewSearch) viewSearch.style.display = !isGroup ? 'block' : 'none';
+      if (!isGroup && searchInput) {
+        searchInput.focus();
+      }
+    };
+
+    if (tabGroup) tabGroup.onclick = () => setMode(true);
+    if (tabSearch) tabSearch.onclick = () => setMode(false);
+    setMode(true);
+
+    if (searchInput && resultsContainer) {
+      if (!searchInput.value) {
+        resultsContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Escribe el título de una serie para buscar en TMDb...</div>';
+      }
+      let debounceTimer = null;
+      searchInput.oninput = (e) => {
+        const q = e.target.value.trim();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          this._searchTmdbSeriesForChat(q);
+        }, 320);
+      };
     }
   }
 
@@ -6452,35 +6677,43 @@ class LumaApp {
     if (container) {
       const memories = this.storage.getMemories() || [];
       if (memories.length === 0) {
-        container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: #94A3B8;">No hay recuerdos guardados aún.</div>';
+        container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.85rem;">No hay recuerdos guardados aún en el grupo.</div>';
         return;
       }
-      container.innerHTML = memories.map(m => `
-        <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8; cursor: pointer;" onclick="window.app.shareMemoryToChat('${m.id}')">
-          <img src="${m.coverImage || (m.photos && m.photos[0]) || 'assets/icon.png'}" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover;">
-          <div style="flex: 1; min-width: 0;">
-            <strong style="font-size: 0.9rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
-            <span style="font-size: 0.75rem; color: #64748B;">${m.date || 'Recuerdo'}</span>
+      container.innerHTML = memories.map(m => {
+        const cover = m.coverImage || (m.photos && m.photos[0]) || 'assets/icon.png';
+        const author = m.author || m.uploadedBy || this.storage.getUserProfile()?.name || 'Miembro de LUMA';
+        return `
+          <div class="chat-modal-preview-card" style="margin-bottom: 6px; cursor: pointer;" onclick="window.app.shareMemoryToChat('${m.id}')">
+            <img src="${cover}" class="chat-modal-preview-art" style="width: 52px; height: 52px; border-radius: 12px; object-fit: cover;" alt="${window.Utils.sanitizeHTML(m.title)}" onerror="this.src='assets/icon.png'">
+            <div class="chat-modal-preview-details">
+              <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(m.title)}</strong>
+              <span class="chat-modal-preview-sub">📅 ${m.date || 'Fecha especial'}</span>
+              <span class="chat-modal-preview-meta">👤 Subido por ${window.Utils.sanitizeHTML(author)}</span>
+            </div>
+            <button type="button" class="btn-primary" style="padding: 6px 12px; font-size: 0.76rem; white-space: nowrap;">Compartir 📸</button>
           </div>
-          <button type="button" class="btn-primary" style="padding: 4px 10px; font-size: 0.74rem;">Compartir</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
   }
 
   shareMemoryToChat(memoryId) {
     const mem = (this.storage.getMemories() || []).find(m => m.id === memoryId);
     if (!mem) return;
+    const uploadedBy = mem.author || mem.uploadedBy || this.storage.getUserProfile()?.name || 'Tú';
+    const photo = mem.coverImage || (mem.photos && mem.photos[0]) || 'assets/icon.png';
     this.storage.sendMessage({
-      text: `Miren este recuerdo de nuestro último viaje 💜`,
+      text: `Miren este recuerdo: "${mem.title}" 📸💜`,
       type: 'share_memory',
       payload: {
         id: mem.id,
         title: mem.title,
         date: mem.date || 'Fecha especial',
-        quote: mem.description || '“Un momento inolvidable juntos.”',
-        photo: mem.coverImage || (mem.photos && mem.photos[0]) || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
-        sharedBy: this.storage.getUserProfile()?.name || 'Sofi'
+        quote: mem.description || '',
+        photo: photo,
+        uploadedBy: uploadedBy,
+        sharedBy: this.storage.getUserProfile()?.name || 'Tú'
       }
     });
     this.closeModal('modal-chat-memory-share');
@@ -6513,9 +6746,11 @@ class LumaApp {
     const container = document.getElementById('chat-movie-search-results');
     if (!container) return;
     if (!query) {
-      this.openChatMovieModal();
+      container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Escribe el título de una película para buscar en TMDb...</div>';
       return;
     }
+
+    container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Buscando en TMDb... ⏳</div>';
 
     if (window.CONFIG && window.CONFIG.tmdb && window.CONFIG.tmdb.apiKey) {
       fetch(`https://api.themoviedb.org/3/search/movie?api_key=${window.CONFIG.tmdb.apiKey}&language=es-ES&query=${encodeURIComponent(query)}&page=1`)
@@ -6523,30 +6758,35 @@ class LumaApp {
         .then(data => {
           const results = data.results || [];
           if (results.length === 0) {
-            container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94A3B8;">No se encontraron películas.</div>';
+            container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">No se encontraron películas en TMDb.</div>';
             return;
           }
-          container.innerHTML = results.slice(0, 6).map(m => {
+          container.innerHTML = results.slice(0, 8).map(m => {
             const poster = m.poster_path ? `https://image.tmdb.org/t/p/w200${m.poster_path}` : 'assets/icon.png';
             const year = (m.release_date || '').split('-')[0] || '2024';
             const rating = m.vote_average ? m.vote_average.toFixed(1) : '8.0';
+            const safeTitle = window.Utils.sanitizeHTML(m.title).replace(/'/g, "\\'");
             return `
-              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
-                <img src="${poster}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
-                <div style="flex: 1; min-width: 0;">
-                  <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)}</strong>
-                  <span style="font-size: 0.75rem; color: #64748B;">${year} · ⭐ ${rating}</span>
+              <div class="chat-modal-preview-card" style="margin-bottom: 6px;">
+                <img src="${poster}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(m.title)}" onerror="this.src='assets/icon.png'">
+                <div class="chat-modal-preview-details">
+                  <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(m.title)}</strong>
+                  <span class="chat-modal-preview-sub">${year} · ⭐ ${rating}</span>
                 </div>
-                <div style="display: flex; gap: 6px;">
-                  <button type="button" class="btn-primary" style="padding: 4px 8px; font-size: 0.74rem;" onclick="window.app.shareTmdbMovieToChat('${window.Utils.sanitizeHTML(m.title)}', '${poster}', '${year}', ${rating})">Compartir</button>
-                  <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addMovieFromChat('${window.Utils.sanitizeHTML(m.title)}', '${poster}', '${year}', ${rating})">+ A Cine</button>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareTmdbMovieToChat('${safeTitle}', '${poster}', '${year}', ${rating})">
+                    Compartir 🎬
+                  </button>
+                  <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addMovieFromChat('${safeTitle}', '${poster}', '${year}', ${rating})">
+                    + Cartelera
+                  </button>
                 </div>
               </div>
             `;
           }).join('');
         })
         .catch(() => {
-          container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94A3B8;">Error al buscar en TMDb.</div>';
+          container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-error); font-size: 0.82rem;">Error al buscar en TMDb.</div>';
         });
     }
   }
@@ -6574,9 +6814,11 @@ class LumaApp {
     const container = document.getElementById('chat-series-search-results');
     if (!container) return;
     if (!query) {
-      this.openChatSeriesModal();
+      container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Escribe el título de una serie para buscar en TMDb...</div>';
       return;
     }
+
+    container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Buscando series en TMDb... ⏳</div>';
 
     if (window.CONFIG && window.CONFIG.tmdb && window.CONFIG.tmdb.apiKey) {
       fetch(`https://api.themoviedb.org/3/search/tv?api_key=${window.CONFIG.tmdb.apiKey}&language=es-ES&query=${encodeURIComponent(query)}&page=1`)
@@ -6584,28 +6826,33 @@ class LumaApp {
         .then(data => {
           const results = data.results || [];
           if (results.length === 0) {
-            container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94A3B8;">No se encontraron series.</div>';
+            container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">No se encontraron series en TMDb.</div>';
             return;
           }
-          container.innerHTML = results.slice(0, 6).map(s => {
+          container.innerHTML = results.slice(0, 8).map(s => {
             const poster = s.poster_path ? `https://image.tmdb.org/t/p/w200${s.poster_path}` : 'assets/icon.png';
+            const safeName = window.Utils.sanitizeHTML(s.name).replace(/'/g, "\\'");
             return `
-              <div style="display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #F1F1F8;">
-                <img src="${poster}" style="width: 44px; height: 60px; border-radius: 8px; object-fit: cover;">
-                <div style="flex: 1; min-width: 0;">
-                  <strong style="font-size: 0.88rem; color: #1E1B4B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(s.name)}</strong>
-                  <span style="font-size: 0.75rem; color: #64748B;">📺 Serie</span>
+              <div class="chat-modal-preview-card" style="margin-bottom: 6px;">
+                <img src="${poster}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(s.name)}" onerror="this.src='assets/icon.png'">
+                <div class="chat-modal-preview-details">
+                  <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(s.name)}</strong>
+                  <span class="chat-modal-preview-sub">📺 Serie · TMDb</span>
                 </div>
-                <div style="display: flex; gap: 6px;">
-                  <button type="button" class="btn-primary" style="padding: 4px 8px; font-size: 0.74rem;" onclick="window.app.shareTmdbSeriesToChat('${window.Utils.sanitizeHTML(s.name)}', '${poster}')">Compartir</button>
-                  <button type="button" class="btn-secondary" style="padding: 4px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addSeriesFromChat('${window.Utils.sanitizeHTML(s.name)}', '${poster}')">+ A Series</button>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareTmdbSeriesToChat('${safeName}', '${poster}')">
+                    Compartir 📺
+                  </button>
+                  <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addSeriesFromChat('${safeName}', '${poster}')">
+                    + A Series
+                  </button>
                 </div>
               </div>
             `;
           }).join('');
         })
         .catch(() => {
-          container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #94A3B8;">Error al buscar series.</div>';
+          container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-error); font-size: 0.82rem;">Error al buscar series.</div>';
         });
     }
   }
@@ -6635,11 +6882,59 @@ class LumaApp {
     const list = document.getElementById('poll-options-inputs-list');
     if (list) {
       list.innerHTML = `
-        <input type="text" class="form-control poll-opt-input" placeholder="Opción 1 (ej: Inception)" required autocomplete="off">
-        <input type="text" class="form-control poll-opt-input" placeholder="Opción 2 (ej: Arcane)" required autocomplete="off">
+        <div class="poll-modal-opt-row">
+          <span class="poll-opt-num-badge">1</span>
+          <input type="text" class="form-control poll-opt-input" placeholder="Opción 1 (ej: Inception o Salir a cenar)" required autocomplete="off">
+        </div>
+        <div class="poll-modal-opt-row">
+          <span class="poll-opt-num-badge">2</span>
+          <input type="text" class="form-control poll-opt-input" placeholder="Opción 2 (ej: Arcane o Tarde de juegos)" required autocomplete="off">
+        </div>
       `;
     }
     this.openModal('modal-create-poll');
+    setTimeout(() => {
+      document.getElementById('input-poll-question')?.focus();
+    }, 150);
+  }
+
+  addPollOptionInput() {
+    const list = document.getElementById('poll-options-inputs-list');
+    if (!list) return;
+    const currentRows = list.querySelectorAll('.poll-modal-opt-row');
+    const nextNum = currentRows.length + 1;
+    if (nextNum > 8) {
+      window.Utils.showToast('Máximo 8 opciones por encuesta', 'warning');
+      return;
+    }
+    const row = document.createElement('div');
+    row.className = 'poll-modal-opt-row';
+    row.innerHTML = `
+      <span class="poll-opt-num-badge">${nextNum}</span>
+      <input type="text" class="form-control poll-opt-input" placeholder="Opción ${nextNum}" required autocomplete="off">
+      <button type="button" class="btn-remove-poll-opt" onclick="window.app.removePollOptionInput(this)" title="Eliminar opción">✕</button>
+    `;
+    list.appendChild(row);
+    const newInput = row.querySelector('.poll-opt-input');
+    if (newInput) newInput.focus();
+  }
+
+  removePollOptionInput(btn) {
+    const row = btn.closest('.poll-modal-opt-row');
+    const list = document.getElementById('poll-options-inputs-list');
+    if (!row || !list) return;
+    const allRows = list.querySelectorAll('.poll-modal-opt-row');
+    if (allRows.length <= 2) {
+      window.Utils.showToast('La encuesta debe tener al menos 2 opciones', 'warning');
+      return;
+    }
+    row.remove();
+    list.querySelectorAll('.poll-modal-opt-row').forEach((r, idx) => {
+      const badge = r.querySelector('.poll-opt-num-badge');
+      if (badge) badge.textContent = (idx + 1).toString();
+      const input = r.querySelector('.poll-opt-input');
+      if (input && !input.value) input.placeholder = `Opción ${idx + 1}`;
+    });
   }
 
   submitCreatePoll() {
@@ -6689,7 +6984,9 @@ class LumaApp {
           title: movie.title,
           poster: movie.poster,
           year: movie.year,
-          rating: movie.tmdbRating || movie.rating
+          rating: movie.tmdbRating || movie.rating,
+          genres: movie.genre || movie.genres || 'Cartelera',
+          sharedBy: this.storage.getUserProfile()?.name || 'Tú'
         }
       });
     } else if (type === 'series') {
@@ -6702,8 +6999,10 @@ class LumaApp {
           id: series.id,
           title: series.title,
           poster: series.poster,
-          seasons: (series.seasons && series.seasons.length) || 1,
-          rating: series.rating
+          seasons: (series.seasons && (typeof series.seasons === 'string' ? series.seasons : `${series.seasons.length} Temp.`)) || '1 Temp.',
+          platform: series.platform || 'Streaming',
+          rating: series.rating || '8.5',
+          sharedBy: this.storage.getUserProfile()?.name || 'Tú'
         }
       });
     } else if (type === 'song') {
@@ -6716,7 +7015,10 @@ class LumaApp {
           id: song.id,
           title: song.title,
           artist: song.artist,
-          artwork: song.cover || song.artwork
+          duration: song.duration || '3:30',
+          artwork: song.cover || song.artwork || 'assets/icon.png',
+          previewUrl: song.previewUrl || '',
+          sharedBy: this.storage.getUserProfile()?.name || 'Tú'
         }
       });
     }
@@ -6724,6 +7026,7 @@ class LumaApp {
     this.closeAllModals();
     location.hash = '#mensajes';
     this.renderChat();
+    this.scrollToChatBottom(true);
     window.Utils.showToast('¡Compartido con éxito en el chat!', 'success');
   }
 
