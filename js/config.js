@@ -19,17 +19,17 @@ window.CONFIG = {
     language: 'es-ES'
   },
 
-  // Firebase Realtime Database
+  // Firebase Realtime Database & Hosting
   firebase: {
-    enabled: false,
+    enabled: true,
     config: {
-      apiKey: "AIzaSyDummyKeyForPresenceOnly_LUMA2026",
-      authDomain: "luma-social-app.firebaseapp.com",
-      databaseURL: "https://luma-social-app-default-rtdb.firebaseio.com",
-      projectId: "luma-social-app",
-      storageBucket: "luma-social-app.appspot.com",
-      messagingSenderId: "1029384756",
-      appId: "1:1029384756:web:luma2026app"
+      apiKey: "AIzaSy_YOUR_API_KEY_HERE",
+      authDomain: "luma-f53ee.firebaseapp.com",
+      databaseURL: "https://luma-f53ee-default-rtdb.firebaseio.com",
+      projectId: "luma-f53ee",
+      storageBucket: "luma-f53ee.firebasestorage.app",
+      messagingSenderId: "854351141592",
+      appId: "1:854351141592:web:29c2a15b898638a00655ad"
     }
   },
 
@@ -54,6 +54,7 @@ window.CONFIG = {
     userProfile: 'luma_user_profile',
     activeGroup: 'luma_active_group_id',
     groups: 'luma_user_groups',
-    groupData: 'luma_data_'
+    groupData: 'luma_data_',
+    notifications: 'luma_user_notifications'
   }
 };

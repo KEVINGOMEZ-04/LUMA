@@ -14,13 +14,13 @@
     color: '#6366F1',
     coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
     createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    host: { id: 'luma_host_1', name: 'Alex' },
+    host: { id: 'luma_host_1', name: 'Alex', email: 'alex@luma.app' },
     members: [
-      { id: 'usr_me', name: 'Usuario LUMA', color: '#6366F1', avatar: '', statusMsg: '✨ Explorando LUMA', joinedAt: new Date(Date.now() - 86400000 * 5).toISOString() },
-      { id: 'luma_host_1', name: 'Alex', color: '#7C3AED', avatar: '', statusMsg: '🎬 Listo para el cine', joinedAt: new Date(Date.now() - 86400000 * 4).toISOString() },
-      { id: 'luma_member_2', name: 'Sam', color: '#3B82F6', avatar: '', statusMsg: '🎵 Escuchando música', joinedAt: new Date(Date.now() - 86400000 * 3).toISOString() },
-      { id: 'luma_member_3', name: 'Dani', color: '#06B6D4', avatar: '', statusMsg: '🏖️ Planeando viaje', joinedAt: new Date(Date.now() - 86400000 * 2).toISOString() },
-      { id: 'luma_member_4', name: 'KEVIN', color: '#10B981', avatar: '', statusMsg: '🚀 Diseñando LUMA', joinedAt: new Date(Date.now() - 86400000 * 1).toISOString() }
+      { id: 'usr_me', name: 'Usuario LUMA', email: 'usuario@luma.app', role: 'admin', color: '#6366F1', avatar: '', statusMsg: '✨ Explorando LUMA', joinedAt: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { id: 'luma_host_1', name: 'Alex', email: 'alex@luma.app', role: 'member', color: '#7C3AED', avatar: '', statusMsg: '🎬 Listo para el cine', joinedAt: new Date(Date.now() - 86400000 * 4).toISOString() },
+      { id: 'luma_member_2', name: 'Sam', email: 'sam@luma.app', role: 'member', color: '#3B82F6', avatar: '', statusMsg: '🎵 Escuchando música', joinedAt: new Date(Date.now() - 86400000 * 3).toISOString() },
+      { id: 'luma_member_3', name: 'Dani', email: 'dani@luma.app', role: 'member', color: '#06B6D4', avatar: '', statusMsg: '🏖️ Planeando viaje', joinedAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+      { id: 'luma_member_4', name: 'KEVIN', email: 'kevin@luma.app', role: 'member', color: '#10B981', avatar: '', statusMsg: '🚀 Diseñando LUMA', joinedAt: new Date(Date.now() - 86400000 * 1).toISOString() }
     ]
   };
 
@@ -799,6 +799,7 @@
   const DEFAULT_USER_PROFILE = {
     id: 'usr_me',
     name: 'Usuario LUMA',
+    email: 'usuario@luma.app',
     handle: '@usuario',
     avatar: '',
     presetAvatar: 'astronaut',
@@ -876,6 +877,8 @@
           this.notify('activeGroup', false);
         } else if (e.key === window.CONFIG.storageKeys.userProfile) {
           this.notify('profile', false);
+        } else if (e.key === (window.CONFIG.storageKeys.notifications || 'luma_user_notifications')) {
+          this.notify('notifications', false);
         }
       });
     }
@@ -925,7 +928,8 @@
         ...existing,
         ...profile,
         id: existing.id || 'usr_' + Date.now().toString(36),
-        name: (profile.name || existing.name || 'Usuario LUMA').trim(),
+        name: (profile.name !== undefined ? profile.name : (existing.name || 'Usuario LUMA')).trim(),
+        email: (profile.email !== undefined ? profile.email : (existing.email || '')).trim().toLowerCase(),
         handle: profile.handle !== undefined ? profile.handle : (existing.handle || '@usuario'),
         avatar: profile.avatar !== undefined ? profile.avatar : (existing.avatar || ''),
         presetAvatar: profile.presetAvatar !== undefined ? profile.presetAvatar : (existing.presetAvatar || 'astronaut'),
@@ -943,11 +947,25 @@
       return updated;
     }
 
-    // --- GRUPOS ---
+    // --- GRUPOS & ROLES ---
     getGroups() {
       const raw = localStorage.getItem(window.CONFIG.storageKeys.groups);
       if (!raw) return [];
-      try { return JSON.parse(raw); } catch (_) { return []; }
+      try {
+        const groups = JSON.parse(raw);
+        if (!Array.isArray(groups)) return [];
+        return groups.map(g => {
+          if (!g.members) g.members = [];
+          const hostId = g.host?.id;
+          g.members = g.members.map((m, idx) => {
+            if (!m.role) {
+              m.role = (m.id === hostId || idx === 0) ? 'admin' : 'member';
+            }
+            return m;
+          });
+          return g;
+        });
+      } catch (_) { return []; }
     }
 
     saveGroups(groups) {
@@ -975,6 +993,23 @@
       return this.getActiveGroup();
     }
 
+    getCurrentUserRole(groupId) {
+      const group = groupId ? this.getGroups().find(g => g.id === groupId) : this.getActiveGroup();
+      if (!group) return 'member';
+      const user = this.getUserProfile();
+      if (!user) return 'member';
+      if (group.host && (group.host.id === user.id || (group.host.email && user.email && group.host.email.toLowerCase() === user.email.toLowerCase()))) {
+        return 'admin';
+      }
+      const member = (group.members || []).find(m => m.id === user.id || (m.email && user.email && m.email.toLowerCase() === user.email.toLowerCase()));
+      if (member && member.role) return member.role;
+      return 'member';
+    }
+
+    isCurrentUserAdmin(groupId) {
+      return this.getCurrentUserRole(groupId) === 'admin';
+    }
+
     createGroup(name, icon = '🌟', color = '#6366F1', coverImage = '', iconImage = '') {
       const user = this.getUserProfile();
       const now = new Date().toISOString();
@@ -987,10 +1022,12 @@
         color: color || '#6366F1',
         coverImage: coverImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
         createdAt: now,
-        host: { id: user.id, name: user.name },
+        host: { id: user.id, name: user.name, email: user.email || '' },
         members: [{
           id: user.id,
           name: user.name,
+          email: user.email || '',
+          role: 'admin',
           color: user.favoriteColor || color,
           avatar: user.avatar || '',
           statusMsg: user.statusMsg || '✨ En línea',
@@ -1071,9 +1108,18 @@
           color: '#3B82F6',
           coverImage: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
           createdAt: now,
-          host: { id: 'remote_host', name: 'Administrador' },
+          host: { id: 'remote_host', name: 'Administrador', email: 'admin@luma.app' },
           members: [
-            { id: user.id, name: user.name, color: user.favoriteColor || '#3B82F6', avatar: user.avatar || '', statusMsg: user.statusMsg || '✨ En línea', joinedAt: now }
+            {
+              id: user.id,
+              name: user.name || 'Miembro LUMA',
+              email: user.email || '',
+              role: 'member',
+              color: user.favoriteColor || '#3B82F6',
+              avatar: user.avatar || '',
+              statusMsg: user.statusMsg || '✨ En línea',
+              joinedAt: now
+            }
           ]
         };
         groups.push(group);
@@ -1083,10 +1129,13 @@
         });
       } else {
         if (!group.members) group.members = [];
-        if (!group.members.some(m => m.id === user.id)) {
+        const existingIdx = group.members.findIndex(m => m.id === user.id || (m.email && user.email && m.email.toLowerCase() === user.email.toLowerCase()));
+        if (existingIdx === -1) {
           group.members.push({
             id: user.id,
-            name: user.name,
+            name: user.name || 'Miembro LUMA',
+            email: user.email || '',
+            role: 'member',
             color: user.favoriteColor || group.color,
             avatar: user.avatar || '',
             statusMsg: user.statusMsg || '✨ En línea',
@@ -1107,10 +1156,13 @@
       if (!group) return;
 
       if (!group.members) group.members = [];
-      const idx = group.members.findIndex(m => m.id === userProfile.id);
+      const idx = group.members.findIndex(m => m.id === userProfile.id || (m.email && userProfile.email && m.email.toLowerCase() === userProfile.email.toLowerCase()));
+      const currentRole = (idx >= 0 && group.members[idx].role) ? group.members[idx].role : ((group.host && group.host.id === userProfile.id) ? 'admin' : 'member');
       const memberObj = {
         id: userProfile.id,
         name: userProfile.name,
+        email: userProfile.email || (idx >= 0 ? group.members[idx].email : ''),
+        role: currentRole,
         color: userProfile.favoriteColor,
         avatar: userProfile.avatar,
         statusMsg: userProfile.statusMsg,
@@ -1205,12 +1257,28 @@
     saveMemory(memory) {
       const data = this.getGroupData();
       if (!data.memories) data.memories = [];
+      const isNew = !memory.id || !data.memories.some(m => m.id === memory.id);
       if (!memory.id) memory.id = window.Utils.generateId();
       if (!memory.createdAt) memory.createdAt = new Date().toISOString();
       const idx = data.memories.findIndex(m => m.id === memory.id);
       if (idx >= 0) data.memories[idx] = memory;
       else data.memories.unshift(memory);
       this.saveGroupData(null, data);
+
+      if (isNew) {
+        const grp = this.getActiveGroup();
+        const usr = this.getUserProfile();
+        this.addNotification({
+          groupId: grp?.id,
+          groupName: grp?.name,
+          groupIcon: grp?.icon || '🌟',
+          actorName: memory.author || usr.name,
+          actorAvatar: usr.avatar,
+          actionType: 'recuerdos',
+          text: `subió un nuevo recuerdo: "${memory.title || 'Momento especial'}" 📸`,
+          targetSection: 'recuerdos'
+        });
+      }
       return memory;
     }
     deleteMemory(id) {
@@ -1239,12 +1307,28 @@
     saveSong(song) {
       const data = this.getGroupData();
       if (!data.songs) data.songs = [];
+      const isNew = !song.id || !data.songs.some(s => s.id === song.id);
       if (!song.id) song.id = 'song_' + window.Utils.generateId();
       if (!song.createdAt) song.createdAt = new Date().toISOString();
       const idx = data.songs.findIndex(s => s.id === song.id);
       if (idx >= 0) data.songs[idx] = song;
       else data.songs.unshift(song);
       this.saveGroupData(null, data);
+
+      if (isNew) {
+        const grp = this.getActiveGroup();
+        const usr = this.getUserProfile();
+        this.addNotification({
+          groupId: grp?.id,
+          groupName: grp?.name,
+          groupIcon: grp?.icon || '🌟',
+          actorName: usr.name,
+          actorAvatar: usr.avatar,
+          actionType: 'musica',
+          text: `añadió la canción "${song.title || 'Canción'}" a la lista 🎵`,
+          targetSection: 'musica'
+        });
+      }
       return song;
     }
     deleteSong(id) {
@@ -1315,12 +1399,28 @@
     saveMovie(movie) {
       const data = this.getGroupData();
       if (!data.movies) data.movies = [];
+      const isNew = !movie.id || !data.movies.some(m => m.id === movie.id);
       if (!movie.id) movie.id = 'mov_' + Date.now().toString(36);
       if (!movie.createdAt) movie.createdAt = new Date().toISOString();
       const idx = data.movies.findIndex(m => m.id === movie.id);
       if (idx >= 0) data.movies[idx] = movie;
       else data.movies.unshift(movie);
       this.saveGroupData(null, data);
+
+      if (isNew) {
+        const grp = this.getActiveGroup();
+        const usr = this.getUserProfile();
+        this.addNotification({
+          groupId: grp?.id,
+          groupName: grp?.name,
+          groupIcon: grp?.icon || '🌟',
+          actorName: usr.name,
+          actorAvatar: usr.avatar,
+          actionType: 'cine',
+          text: `añadió la película "${movie.title || 'Película'}" a la cartelera 🎬`,
+          targetSection: 'cine'
+        });
+      }
       return movie;
     }
     deleteMovie(id) {
@@ -1503,6 +1603,7 @@
     saveSeries(series) {
       const data = this.getGroupData();
       if (!data.series) data.series = [];
+      const isNew = !series.id || !data.series.some(s => s.id === series.id);
       if (!series.id) series.id = 'ser_' + Date.now().toString(36);
       if (!series.createdAt) series.createdAt = new Date().toISOString();
       const idx = data.series.findIndex(s => s.id === series.id);
@@ -1510,6 +1611,21 @@
       else data.series.unshift(series);
       this.saveGroupData(null, data);
       this.notify('series');
+
+      if (isNew) {
+        const grp = this.getActiveGroup();
+        const usr = this.getUserProfile();
+        this.addNotification({
+          groupId: grp?.id,
+          groupName: grp?.name,
+          groupIcon: grp?.icon || '🌟',
+          actorName: usr.name,
+          actorAvatar: usr.avatar,
+          actionType: 'series',
+          text: `agregó la serie "${series.title || 'Serie'}" al maratón 📺`,
+          targetSection: 'series'
+        });
+      }
       return series;
     }
 
@@ -1745,6 +1861,31 @@
       data.messages.push(newMsg);
       this.saveGroupData(null, data);
       this.notify('chatMessages');
+
+      if (newMsg.senderId !== 'sys_luma') {
+        const activeGrp = this.getActiveGroup();
+        let notifText = 'envió un mensaje';
+        if (newMsg.text) {
+          const cleanSnippet = newMsg.text.substring(0, 45);
+          notifText = `envió: "${cleanSnippet}${newMsg.text.length > 45 ? '...' : ''}" 💬`;
+        }
+        if (newMsg.type === 'share_music') notifText = `compartió la canción "${newMsg.payload?.title || 'Música'}" 🎵`;
+        else if (newMsg.type === 'share_movie') notifText = `compartió la película "${newMsg.payload?.title || 'Película'}" 🎬`;
+        else if (newMsg.type === 'share_series') notifText = `compartió la serie "${newMsg.payload?.title || 'Serie'}" 📺`;
+        else if (newMsg.type === 'share_memory') notifText = `compartió un recuerdo fotográfico 📸`;
+        else if (newMsg.type === 'poll') notifText = `creó una votación: "${newMsg.payload?.question || 'Encuesta'}" 📊`;
+
+        this.addNotification({
+          groupId: activeGrp?.id,
+          groupName: activeGrp?.name,
+          groupIcon: activeGrp?.icon || '🌟',
+          actorName: newMsg.senderName,
+          actorAvatar: newMsg.senderAvatar,
+          actionType: 'chat',
+          text: notifText,
+          targetSection: 'mensajes'
+        });
+      }
       return newMsg;
     }
 
@@ -2069,6 +2210,126 @@
         goalsPct,
         monthlyData
       };
+    }
+
+    // =========================================
+    // SISTEMA DE NOTIFICACIONES INTER-GRUPO (CAMPANITA 🔔)
+    // =========================================
+    getNotifications() {
+      const key = (window.CONFIG && window.CONFIG.storageKeys && window.CONFIG.storageKeys.notifications) || 'luma_user_notifications';
+      const raw = localStorage.getItem(key);
+      if (!raw) {
+        const defaults = this.getDefaultNotifications();
+        this.saveNotifications(defaults);
+        return defaults;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    saveNotifications(notifications) {
+      const key = (window.CONFIG && window.CONFIG.storageKeys && window.CONFIG.storageKeys.notifications) || 'luma_user_notifications';
+      localStorage.setItem(key, JSON.stringify(notifications || []));
+      this.notify('notifications');
+    }
+
+    addNotification({ groupId, groupName, groupIcon = '🌟', actorName, actorAvatar = '', actionType = 'chat', text, targetSection = 'mensajes' }) {
+      const notifs = this.getNotifications();
+      const currentGrp = this.getActiveGroup();
+      const newNotif = {
+        id: 'notif_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4),
+        groupId: groupId || (currentGrp?.id) || DEFAULT_INITIAL_GROUP_ID,
+        groupName: groupName || (currentGrp?.name) || 'Grupo LUMA',
+        groupIcon: groupIcon || (currentGrp?.icon) || '🌟',
+        actorName: actorName || 'Un amigo',
+        actorAvatar: actorAvatar || '',
+        actionType,
+        text: text || 'Compartió nueva actividad',
+        targetSection: targetSection || 'mensajes',
+        createdAt: new Date().toISOString(),
+        read: false
+      };
+      const updated = [newNotif, ...notifs.filter(n => n.id !== newNotif.id)].slice(0, 50);
+      this.saveNotifications(updated);
+      return newNotif;
+    }
+
+    markNotificationAsRead(notifId) {
+      const notifs = this.getNotifications();
+      let changed = false;
+      const updated = notifs.map(n => {
+        if (n.id === notifId && !n.read) {
+          changed = true;
+          return { ...n, read: true };
+        }
+        return n;
+      });
+      if (changed) this.saveNotifications(updated);
+    }
+
+    markAllNotificationsAsRead() {
+      const notifs = this.getNotifications();
+      const updated = notifs.map(n => ({ ...n, read: true }));
+      this.saveNotifications(updated);
+    }
+
+    clearNotifications() {
+      this.saveNotifications([]);
+    }
+
+    getUnreadNotificationsCount() {
+      const notifs = this.getNotifications();
+      return notifs.filter(n => !n.read).length;
+    }
+
+    getDefaultNotifications() {
+      const groups = this.getGroups();
+      const g = groups[0] || { id: 'luma_main_group', name: 'Grupo LUMA', icon: '🌟' };
+      return [
+        {
+          id: 'notif_init_1',
+          groupId: g.id,
+          groupName: g.name,
+          groupIcon: g.icon || '🌟',
+          actorName: 'Alex',
+          actorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+          actionType: 'music',
+          text: 'compartió la canción "Sweater Weather" de The Neighbourhood 🎵',
+          targetSection: 'musica',
+          createdAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+          read: false
+        },
+        {
+          id: 'notif_init_2',
+          groupId: g.id,
+          groupName: g.name,
+          groupIcon: g.icon || '🌟',
+          actorName: 'Laura',
+          actorAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&q=80',
+          actionType: 'cine',
+          text: 'agregó la película "Interstellar" a la cartelera 🎬',
+          targetSection: 'cine',
+          createdAt: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
+          read: false
+        },
+        {
+          id: 'notif_init_3',
+          groupId: g.id,
+          groupName: g.name,
+          groupIcon: g.icon || '🌟',
+          actorName: 'Carlos',
+          actorAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&q=80',
+          actionType: 'recuerdos',
+          text: 'subió un nuevo recuerdo: "Noche de fogata y anécdotas" 📸',
+          targetSection: 'recuerdos',
+          createdAt: new Date(Date.now() - 1000 * 60 * 130).toISOString(),
+          read: false
+        }
+      ];
     }
   }
 

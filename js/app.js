@@ -38,6 +38,8 @@ class LumaApp {
     this.bindFormEvents();
     this.bindSearchEvents();
     this.bindProfileCustomizerInteractions();
+    this.bindNotificationsModalEvents();
+    this.bindAuthLoginEvents();
 
     // 6.1 Inicializar Módulo de Música Colaborativa y Reproductor Global
     this.initMusicLiveSearch();
@@ -156,6 +158,12 @@ class LumaApp {
             scrollEl.scrollTop = prevScrollTop;
           }
         }
+      } else if (key === 'notifications') {
+        this.updateNotificationsBadge();
+        const notifModal = document.getElementById('modal-notifications-panel');
+        if (notifModal && notifModal.classList.contains('active')) {
+          this.renderNotificationsList();
+        }
       }
     });
 
@@ -172,6 +180,15 @@ class LumaApp {
   }
 
   checkInitialState() {
+    const rawHash = (window.location.hash || '').replace('#', '').trim();
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinCode = rawHash.startsWith('join=') ? rawHash.replace('join=', '').trim().toUpperCase() : (urlParams.get('join') || '').trim().toUpperCase();
+
+    if (joinCode) {
+      this.handleJoinRequest(joinCode);
+      return;
+    }
+
     const profile = this.storage.getUserProfile();
     const groups = this.storage.getGroups();
     const activeGroup = this.storage.getActiveGroup();
@@ -275,6 +292,11 @@ class LumaApp {
 
   handleHashChange() {
     const rawHash = window.location.hash.replace('#', '').trim();
+    if (rawHash.startsWith('join=')) {
+      const code = rawHash.replace('join=', '').trim().toUpperCase();
+      this.handleJoinRequest(code);
+      return;
+    }
     if (rawHash === 'lobby') {
       this.goToLobby();
       return;
@@ -372,9 +394,10 @@ class LumaApp {
     const notifsBtn = document.getElementById('btn-header-notifs');
     if (notifsBtn) {
       notifsBtn.onclick = () => {
-        window.Utils.showToast('Tienes 3 actividades recientes en tu grupo', 'info');
+        this.openNotificationsPanel();
       };
     }
+    this.updateNotificationsBadge();
 
     this.updateHeaderPresence();
   }
@@ -411,11 +434,34 @@ class LumaApp {
       };
     }
 
+    const btnInvite = document.getElementById('btn-menu-action-invite');
+    if (btnInvite) {
+      btnInvite.onclick = () => {
+        this.closeModal('modal-group-menu');
+        this.openInviteModal();
+      };
+    }
+
     const btnSwitch = document.getElementById('btn-menu-action-switch');
     if (btnSwitch) {
       btnSwitch.onclick = () => {
         this.closeModal('modal-group-menu');
         this.openGroupsListModal();
+      };
+    }
+
+    const btnAuth = document.getElementById('btn-menu-action-auth');
+    if (btnAuth) {
+      btnAuth.onclick = () => {
+        this.closeModal('modal-group-menu');
+        const p = this.storage.getUserProfile();
+        const inputName = document.getElementById('auth-input-name');
+        const inputEmail = document.getElementById('auth-input-email');
+        if (inputName) inputName.value = p.name || '';
+        if (inputEmail) inputEmail.value = p.email || '';
+        const banner = document.getElementById('auth-invite-banner');
+        if (banner) banner.style.display = 'none';
+        this.openModal('modal-auth-login');
       };
     }
 
@@ -643,6 +689,7 @@ class LumaApp {
     this.activeProfileColor = p.favoriteColor || '#6366F1';
 
     const nameInput = document.getElementById('profile-name-input');
+    const emailInput = document.getElementById('profile-email-input');
     const handleInput = document.getElementById('profile-handle-input');
     const bioInput = document.getElementById('profile-bio-input');
     const statusInput = document.getElementById('profile-status-input');
@@ -650,6 +697,7 @@ class LumaApp {
     const colorInput = document.getElementById('profile-color-input');
 
     if (nameInput) nameInput.value = p.name || 'Usuario LUMA';
+    if (emailInput) emailInput.value = p.email || '';
     if (handleInput) handleInput.value = p.handle || '@usuario';
     if (bioInput) bioInput.value = p.bio || '';
     if (statusInput) statusInput.value = p.statusMsg || '✨ En línea';
@@ -959,33 +1007,60 @@ class LumaApp {
       container.innerHTML = '';
       groups.forEach(g => {
         const isActive = activeGroup && activeGroup.id === g.id;
+        const role = this.storage.getCurrentUserRole(g.id);
         const item = document.createElement('div');
         item.className = 'group-menu-action-item';
         item.style.borderColor = isActive ? 'var(--color-primary)' : 'var(--color-border)';
-        item.style.background = isActive ? '#EDE9FE' : '#F8FAFC';
+        item.style.background = isActive ? 'rgba(99, 102, 241, 0.12)' : 'var(--color-bg-surface)';
+        item.style.cursor = 'default';
 
         item.innerHTML = `
-          <div class="group-menu-icon" style="font-size: 1.6rem;">${g.icon || '🌟'}</div>
+          <div class="group-menu-icon" style="font-size: 1.6rem; cursor: pointer;">${g.icon || '🌟'}</div>
           <div style="flex: 1; min-width: 0;">
-            <strong style="color: var(--color-text-main); font-size: 1rem;">${window.Utils.sanitizeHTML(g.name)}</strong>
-            <p style="color: var(--color-text-secondary); font-size: 0.8rem;">Código: <strong>${g.code}</strong> · ${g.members?.length || 1} miembros</p>
+            <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;">
+              <strong style="color: var(--color-text-main); font-size: 0.98rem;">${window.Utils.sanitizeHTML(g.name)}</strong>
+              <span class="role-badge ${role === 'admin' ? 'role-badge-admin' : 'role-badge-member'}">
+                ${role === 'admin' ? '👑 Admin' : '👤 Miembro'}
+              </span>
+            </div>
+            <p style="color: var(--color-text-secondary); font-size: 0.78rem; margin-top: 0.2rem;">
+              Código: <strong style="font-family: var(--font-mono); color: var(--color-primary-light);">${g.code}</strong> · ${g.members?.length || 1} miembros
+            </p>
           </div>
-          <button type="button" class="${isActive ? 'btn-primary' : 'btn-secondary'}" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
-            ${isActive ? 'Activo ✓' : 'Entrar ➔'}
-          </button>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <button type="button" class="btn-secondary btn-group-item-invite" style="padding: 0.35rem 0.65rem; font-size: 0.76rem;" title="Invitar amigos">
+              🔗 Invitar
+            </button>
+            <button type="button" class="${isActive ? 'btn-primary' : 'btn-secondary'} btn-group-item-switch" style="padding: 0.38rem 0.8rem; font-size: 0.78rem;">
+              ${isActive ? 'Activo ✓' : 'Entrar ➔'}
+            </button>
+          </div>
         `;
 
-        item.onclick = () => {
-          this.storage.switchGroup(g.id);
-          this.closeModal('modal-groups-list');
-          
-          document.getElementById('onboarding-screen').style.display = 'none';
-          document.getElementById('app-container').style.display = 'flex';
-          this.updateHeader();
-          window.location.hash = '#inicio';
-          this.handleHashChange();
-          window.Utils.showToast(`Entraste a "${g.name}" 🚀`, 'success');
-        };
+        const btnSwitch = item.querySelector('.btn-group-item-switch');
+        if (btnSwitch) {
+          btnSwitch.onclick = (e) => {
+            e.stopPropagation();
+            this.storage.switchGroup(g.id);
+            this.closeModal('modal-groups-list');
+            
+            document.getElementById('onboarding-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'flex';
+            this.updateHeader();
+            window.location.hash = '#inicio';
+            this.handleHashChange();
+            window.Utils.showToast(`Entraste a "${g.name}" 🚀`, 'success');
+          };
+        }
+
+        const btnInvite = item.querySelector('.btn-group-item-invite');
+        if (btnInvite) {
+          btnInvite.onclick = (e) => {
+            e.stopPropagation();
+            this.closeModal('modal-groups-list');
+            this.openInviteModal(g);
+          };
+        }
 
         container.appendChild(item);
       });
@@ -999,12 +1074,309 @@ class LumaApp {
     const group = this.storage.getActiveGroup();
     if (!group) return;
 
+    if (!this.storage.isCurrentUserAdmin()) {
+      window.Utils.showToast('Solo el administrador de este grupo puede editar su nombre o portada 👑', 'warning');
+      return;
+    }
+
     document.getElementById('edit-group-name').value = group.name || '';
     document.getElementById('edit-group-icon').value = group.icon || '🌟';
     document.getElementById('edit-group-color').value = group.color || '#6366F1';
     document.getElementById('edit-group-cover-url').value = group.coverImage || '';
 
     this.openModal('modal-edit-group');
+  }
+
+  // --- PANEL DE NOTIFICACIONES INTER-GRUPO (CAMPANITA 🔔) ---
+  openNotificationsPanel() {
+    this.renderNotificationsList('all');
+    this.openModal('modal-notifications-panel');
+  }
+
+  updateNotificationsBadge() {
+    const badgeEl = document.querySelector('.header-badge-count');
+    if (!badgeEl) return;
+    const count = this.storage.getUnreadNotificationsCount();
+    badgeEl.textContent = count;
+    if (count > 0) {
+      badgeEl.style.display = 'inline-flex';
+      badgeEl.classList.add('has-unread');
+    } else {
+      badgeEl.style.display = 'none';
+      badgeEl.classList.remove('has-unread');
+    }
+  }
+
+  renderNotificationsList(filter = 'all') {
+    const container = document.getElementById('notifs-list-container');
+    const pill = document.getElementById('notifs-counter-pill');
+    if (!container) return;
+
+    let notifs = this.storage.getNotifications();
+    const unreadCount = this.storage.getUnreadNotificationsCount();
+    if (pill) {
+      pill.textContent = `${unreadCount} ${unreadCount === 1 ? 'nueva' : 'nuevas'}`;
+    }
+
+    if (filter === 'unread') {
+      notifs = notifs.filter(n => !n.read);
+    }
+
+    if (!notifs || notifs.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 2.5rem 1rem; color: var(--color-text-secondary);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✨</div>
+          <strong style="display: block; color: var(--color-text-main); font-size: 0.95rem;">Estás al día</strong>
+          <p style="font-size: 0.8rem; margin-top: 0.25rem;">${filter === 'unread' ? 'No tienes notificaciones pendientes.' : 'Aquí verás la actividad de tus amigos en todos tus grupos.'}</p>
+        </div>
+      `;
+      return;
+    }
+
+    const actionIcons = {
+      chat: '💬',
+      recuerdos: '📸',
+      memory: '📸',
+      musica: '🎵',
+      music: '🎵',
+      cine: '🎬',
+      movie: '🎬',
+      series: '📺',
+      notas: '📝',
+      goals: '🎯'
+    };
+
+    container.innerHTML = '';
+    notifs.forEach(n => {
+      const card = document.createElement('div');
+      card.className = `notif-card ${n.read ? '' : 'unread'}`;
+
+      const icon = actionIcons[n.actionType] || '🌟';
+      const timeStr = this.formatRelativeTime ? this.formatRelativeTime(n.createdAt) : 'Reciente';
+
+      card.innerHTML = `
+        <div class="notif-avatar-wrap">
+          <div class="notif-avatar-circle">
+            ${n.actorAvatar ? `<img src="${n.actorAvatar}" alt="${window.Utils.sanitizeHTML(n.actorName)}" />` : (n.actorName ? n.actorName[0].toUpperCase() : 'U')}
+          </div>
+          <span class="notif-action-badge">${icon}</span>
+        </div>
+        <div class="notif-content-wrap">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
+            <span class="notif-group-pill">${n.groupIcon || '🌟'} ${window.Utils.sanitizeHTML(n.groupName || 'Grupo LUMA')}</span>
+            <span class="notif-meta-time">⏱️ ${timeStr}</span>
+          </div>
+          <p class="notif-text"><strong>${window.Utils.sanitizeHTML(n.actorName)}</strong> ${window.Utils.sanitizeHTML(n.text)}</p>
+        </div>
+        ${!n.read ? '<span class="notif-unread-dot" title="No leída"></span>' : ''}
+      `;
+
+      card.onclick = () => {
+        this.storage.markNotificationAsRead(n.id);
+        this.updateNotificationsBadge();
+
+        const currentActive = this.storage.getActiveGroupId();
+        if (n.groupId && n.groupId !== currentActive) {
+          this.storage.switchGroup(n.groupId);
+          this.updateHeader();
+          window.Utils.showToast(`Cambiando a "${n.groupName}" 🚀`, 'info');
+        }
+
+        this.closeModal('modal-notifications-panel');
+        if (n.targetSection) {
+          window.location.hash = '#' + n.targetSection;
+          this.handleHashChange();
+        }
+      };
+
+      container.appendChild(card);
+    });
+  }
+
+  bindNotificationsModalEvents() {
+    const btnAll = document.getElementById('btn-tab-notifs-all');
+    const btnUnread = document.getElementById('btn-tab-notifs-unread');
+    const btnMarkRead = document.getElementById('btn-notifs-mark-read');
+    const btnClearAll = document.getElementById('btn-notifs-clear-all');
+
+    if (btnAll) {
+      btnAll.onclick = () => {
+        btnAll.classList.add('active');
+        btnUnread?.classList.remove('active');
+        this.renderNotificationsList('all');
+      };
+    }
+
+    if (btnUnread) {
+      btnUnread.onclick = () => {
+        btnUnread.classList.add('active');
+        btnAll?.classList.remove('active');
+        this.renderNotificationsList('unread');
+      };
+    }
+
+    if (btnMarkRead) {
+      btnMarkRead.onclick = () => {
+        this.storage.markAllNotificationsAsRead();
+        this.updateNotificationsBadge();
+        const isUnreadTab = btnUnread?.classList.contains('active');
+        this.renderNotificationsList(isUnreadTab ? 'unread' : 'all');
+        window.Utils.showToast('Todas las notificaciones marcadas como leídas ✓', 'success');
+      };
+    }
+
+    if (btnClearAll) {
+      btnClearAll.onclick = () => {
+        this.storage.clearNotifications();
+        this.updateNotificationsBadge();
+        this.renderNotificationsList('all');
+        window.Utils.showToast('Historial de notificaciones limpiado', 'info');
+      };
+    }
+  }
+
+  // --- MODAL: INVITAR AMIGOS AL GRUPO ---
+  openInviteModal(customGroup = null) {
+    const group = customGroup || this.storage.getActiveGroup();
+    if (!group) return;
+
+    const iconEl = document.getElementById('invite-modal-group-icon');
+    const nameEl = document.getElementById('invite-modal-group-name');
+    const codeEl = document.getElementById('invite-modal-code-display');
+    const linkInput = document.getElementById('invite-modal-link-input');
+
+    if (iconEl) iconEl.textContent = group.icon || '🌟';
+    if (nameEl) nameEl.textContent = group.name;
+    if (codeEl) codeEl.textContent = group.code;
+
+    const fullUrl = `${window.location.origin}${window.location.pathname}#join=${group.code}`;
+    if (linkInput) linkInput.value = fullUrl;
+
+    const copyCodeBtn = document.getElementById('btn-copy-invite-code');
+    if (copyCodeBtn) {
+      copyCodeBtn.onclick = () => {
+        window.Utils.copyToClipboard(group.code, `Código "${group.code}" copiado al portapapeles 📋`);
+      };
+    }
+
+    const copyLinkBtn = document.getElementById('btn-copy-invite-link');
+    if (copyLinkBtn) {
+      copyLinkBtn.onclick = () => {
+        window.Utils.copyToClipboard(fullUrl, `Enlace de invitación copiado 🔗`);
+      };
+    }
+
+    const whatsappBtn = document.getElementById('btn-share-whatsapp');
+    if (whatsappBtn) {
+      whatsappBtn.onclick = () => {
+        const text = `¡Hola! Únete a mi grupo privado "${group.name}" en LUMA 🌟 para compartir recuerdos, cine, música y chat. Haz clic aquí: ${fullUrl}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+      };
+    }
+
+    const nativeShareBtn = document.getElementById('btn-share-native');
+    if (nativeShareBtn) {
+      nativeShareBtn.onclick = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: `Únete a ${group.name} en LUMA`,
+              text: `Únete a mi grupo privado en LUMA para compartir momentos, series, películas y música.`,
+              url: fullUrl
+            });
+          } catch (_) {}
+        } else {
+          window.Utils.copyToClipboard(fullUrl, `Enlace copiado al portapapeles 🔗`);
+        }
+      };
+    }
+
+    this.openModal('modal-invite-group');
+  }
+
+  // --- MANEJO DE INVITACIONES DIRECTAS (#join=CODIGO) ---
+  handleJoinRequest(code) {
+    if (!code || code.length !== 6) {
+      window.Utils.showToast('Código de invitación inválido', 'error');
+      window.location.hash = '#inicio';
+      return;
+    }
+
+    const profile = this.storage.getUserProfile();
+    const hasEmail = profile && profile.email && profile.email.includes('@');
+
+    if (!hasEmail) {
+      this.pendingJoinCode = code;
+      const banner = document.getElementById('auth-invite-banner');
+      if (banner) banner.style.display = 'block';
+      this.openModal('modal-auth-login');
+      window.Utils.showToast(`Ingresa tu correo para unirte al grupo #${code} 🚀`, 'info');
+      return;
+    }
+
+    try {
+      const joined = this.storage.joinGroupByCode(code);
+      if (joined) {
+        window.location.hash = '#inicio';
+        window.Utils.showToast(`¡Te has unido con éxito a "${joined.name}"! 🎉`, 'success');
+        this.enterActiveGroupDirectly();
+      }
+    } catch (err) {
+      window.Utils.showToast(err.message || 'Error al unirse al grupo', 'error');
+      window.location.hash = '#inicio';
+    }
+  }
+
+  // --- EVENTOS DEL MODAL DE LOGIN / CUENTA ---
+  bindAuthLoginEvents() {
+    const formAuth = document.getElementById('form-auth-login');
+    if (!formAuth) return;
+
+    const presets = document.querySelectorAll('#auth-avatar-presets .avatar-preset-item');
+    presets.forEach(p => {
+      p.onclick = () => {
+        presets.forEach(x => x.classList.remove('active'));
+        p.classList.add('active');
+        this.activeAuthPresetAvatar = p.dataset.preset;
+      };
+    });
+
+    formAuth.onsubmit = (e) => {
+      e.preventDefault();
+      const name = document.getElementById('auth-input-name').value.trim();
+      const email = document.getElementById('auth-input-email').value.trim().toLowerCase();
+
+      if (!name || !email) {
+        window.Utils.showToast('Por favor completa tu nombre y correo', 'error');
+        return;
+      }
+
+      const avatar = this.activeAuthPresetAvatar || '👨‍🚀';
+      const updated = this.storage.saveUserProfile({
+        name,
+        email,
+        presetAvatar: avatar
+      });
+
+      this.closeModal('modal-auth-login');
+      window.Utils.showToast(`¡Bienvenido a LUMA, ${updated.name}! ✨`, 'success');
+
+      if (this.pendingJoinCode) {
+        const codeToJoin = this.pendingJoinCode;
+        this.pendingJoinCode = null;
+        try {
+          const joined = this.storage.joinGroupByCode(codeToJoin);
+          window.location.hash = '#inicio';
+          window.Utils.showToast(`¡Te uniste a "${joined.name}"! 🎉`, 'success');
+          this.enterActiveGroupDirectly();
+        } catch (err) {
+          window.Utils.showToast(err.message, 'error');
+        }
+      } else {
+        this.updateHeader();
+        this.enterActiveGroupDirectly();
+      }
+    };
   }
 
   // --- 2. RENDER RECUERDOS (NÚCLEO EMOCIONAL & LÍNEA TEMPORAL VIVA) ---
@@ -7762,6 +8134,7 @@ class LumaApp {
       formProfile.onsubmit = async (e) => {
         e.preventDefault();
         const name = document.getElementById('profile-name-input').value.trim();
+        const email = document.getElementById('profile-email-input')?.value?.trim()?.toLowerCase() || '';
         const handle = document.getElementById('profile-handle-input').value.trim();
         const bio = document.getElementById('profile-bio-input').value.trim();
         const statusMsg = document.getElementById('profile-status-input').value.trim();
@@ -7776,6 +8149,7 @@ class LumaApp {
 
         const updated = this.storage.saveUserProfile({
           name,
+          email,
           handle,
           bio,
           statusMsg,
