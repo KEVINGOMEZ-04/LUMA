@@ -766,7 +766,7 @@
 
             <div class="chat-header-center">
               <div class="chat-header-sun-avatar">
-                <span class="chat-sun-emoji">☀️</span>
+                <span class="chat-sun-emoji" id="chat-header-avatar-emoji">☀️</span>
               </div>
               <div class="chat-header-titles">
                 <h3 class="chat-header-group-name" id="chat-header-group-name">Grupo LUMA</h3>
@@ -780,7 +780,10 @@
               </div>
             </div>
 
-            <div class="chat-header-right">
+            <div class="chat-header-right" style="display: flex; align-items: center; gap: 4px;">
+              <button type="button" class="btn-chat-options" id="btn-chat-theme-toggle" title="Cambiar tema Claro / Oscuro" aria-label="Cambiar tema">
+                <span id="chat-theme-icon" style="font-size: 1.15rem; line-height: 1;">🌙</span>
+              </button>
               <button type="button" class="btn-chat-options" id="btn-chat-header-menu" title="Opciones del grupo">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="12" cy="5" r="2"></circle>
@@ -2640,6 +2643,17 @@
         <div class="form-group">
           <label class="form-label">Frase o Lema del Grupo</label>
           <input type="text" id="input-chat-edit-group-motto" class="form-control" value="Buenas conversaciones, mejores recuerdos ✨">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tema del Chat</label>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-secondary" id="btn-chat-modal-dark" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0.6rem 0.8rem;">
+              <span>🌙</span> Modo Oscuro
+            </button>
+            <button type="button" class="btn-secondary" id="btn-chat-modal-light" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0.6rem 0.8rem;">
+              <span>☀️</span> Modo Claro
+            </button>
+          </div>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem;">
           <button type="button" class="btn-secondary" id="btn-chat-reset-mockup" title="Restaurar conversación idéntica a la maqueta" style="color: #6D5CFF; border-color: #DDD6FE;">Restaurar maqueta 🔄</button>

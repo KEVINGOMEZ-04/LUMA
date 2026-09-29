@@ -73,8 +73,54 @@ class LumaApp {
       }
     }
 
+    this.updateChatThemeIcon();
+
     if (showToast) {
       window.Utils.showToast(theme === 'light' ? '☀️ Modo Claro activado' : '🌙 Modo Oscuro activado', 'info');
+    }
+  }
+
+  toggleTheme() {
+    const nextTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+    this.setTheme(nextTheme, true);
+  }
+
+  updateChatThemeIcon() {
+    const icon = document.getElementById('chat-theme-icon');
+    const avatarEmoji = document.getElementById('chat-header-avatar-emoji');
+    const isDark = this.currentTheme === 'dark';
+
+    if (icon) {
+      icon.textContent = isDark ? '☀️' : '🌙';
+      icon.parentElement?.setAttribute('title', isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro');
+    }
+
+    if (avatarEmoji) {
+      avatarEmoji.textContent = isDark ? '🌙' : '☀️';
+    }
+
+    const modalDark = document.getElementById('btn-chat-modal-dark');
+    const modalLight = document.getElementById('btn-chat-modal-light');
+    if (modalDark && modalLight) {
+      if (isDark) {
+        modalDark.classList.add('active');
+        modalDark.style.borderColor = '#6D5CFF';
+        modalDark.style.background = 'rgba(109, 92, 255, 0.2)';
+        modalDark.style.color = '#FFFFFF';
+        modalLight.classList.remove('active');
+        modalLight.style.borderColor = '';
+        modalLight.style.background = '';
+        modalLight.style.color = '';
+      } else {
+        modalLight.classList.add('active');
+        modalLight.style.borderColor = '#6D5CFF';
+        modalLight.style.background = 'rgba(109, 92, 255, 0.1)';
+        modalLight.style.color = '#6D5CFF';
+        modalDark.classList.remove('active');
+        modalDark.style.borderColor = '';
+        modalDark.style.background = '';
+        modalDark.style.color = '';
+      }
     }
   }
 
@@ -5254,6 +5300,9 @@ class LumaApp {
     if (!group) return;
     const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Usuario' };
 
+    // 0. Sincronizar iconos y estado del tema Claro / Oscuro
+    this.updateChatThemeIcon();
+
     // 1. Cabecera del Chat
     const groupNameEl = document.getElementById('chat-header-group-name');
     const membersCountEl = document.getElementById('chat-header-members-count');
@@ -5750,6 +5799,19 @@ class LumaApp {
     // 5. Botón de menú superior del grupo (⋮)
     document.getElementById('btn-chat-header-menu')?.addEventListener('click', () => {
       this.openChatGroupSettingsModal();
+    });
+
+    // 5.1 Botón de cambio rápido de tema Claro / Oscuro en la cabecera del chat
+    document.getElementById('btn-chat-theme-toggle')?.addEventListener('click', () => {
+      this.toggleTheme();
+    });
+
+    // 5.2 Botones de selección de tema en modal de ajustes de conversación
+    document.getElementById('btn-chat-modal-dark')?.addEventListener('click', () => {
+      this.setTheme('dark');
+    });
+    document.getElementById('btn-chat-modal-light')?.addEventListener('click', () => {
+      this.setTheme('light');
     });
 
     // 6. Botones dentro del Bottom Sheet del Ecosistema
@@ -6436,6 +6498,7 @@ class LumaApp {
     if (nameInput) nameInput.value = group.name || 'Grupo LUMA';
     if (mottoInput) mottoInput.value = group.motto || 'Buenas conversaciones, mejores recuerdos ✨';
 
+    this.updateChatThemeIcon();
     this.openModal('modal-chat-group-info');
   }
 
