@@ -46,6 +46,10 @@ class LumaApp {
     this.initSongCommentsInteractions();
     this.initGlobalPlayerControls();
 
+    // 6.2 Inicializar Buscadores Reactivos de Cine y Series
+    this.initMovieLiveSearch();
+    this.initSeriesLiveSearch();
+
     // 7. Verificar Estado Inicial y Mostrar Dashboard
     this.checkInitialState();
   }
@@ -4417,7 +4421,33 @@ class LumaApp {
       `;
 
       try {
-        const results = await window.MediaService.searchSeries(query);
+        let results = [];
+        if (window.MediaService && typeof window.MediaService.searchSeries === 'function') {
+          results = await window.MediaService.searchSeries(query);
+        } else {
+          const keys = ['e9e9d8da18ae29fc430845952232787c', '8265bd1679663a7ea12ac168da84d2e8', 'cfe422613b250f702980a3bbf9e90716'];
+          for (const k of keys) {
+            try {
+              const res = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${k}&language=es-ES&query=${encodeURIComponent(query)}&page=1`);
+              if (res.ok) {
+                const data = await res.json();
+                results = (data.results || []).slice(0, 12).map(s => ({
+                  tmdbId: s.id,
+                  id: 'tmdb_series_' + s.id,
+                  title: s.name,
+                  originalTitle: s.original_name,
+                  year: (s.first_air_date || '').split('-')[0] || '',
+                  overview: s.overview || 'Sin sinopsis disponible.',
+                  poster: s.poster_path ? `https://image.tmdb.org/t/p/w500${s.poster_path}` : 'assets/icon.png',
+                  backdrop: s.backdrop_path ? `https://image.tmdb.org/t/p/w1280${s.backdrop_path}` : '',
+                  voteAverage: s.vote_average ? s.vote_average.toFixed(1) : '8.5'
+                }));
+                break;
+              }
+            } catch (_) {}
+          }
+        }
+
         if (!results || results.length === 0) {
           resultsBox.innerHTML = `
             <div class="movie-results-header">
@@ -4431,19 +4461,21 @@ class LumaApp {
           return;
         }
 
+        this.cachedSeriesSearch = results;
+
         resultsBox.innerHTML = `
           <div class="movie-results-header">
             <span>📺 ${results.length} serie${results.length > 1 ? 's' : ''} en TMDb</span>
             <button type="button" class="btn-close-movie-results" onclick="window.app.closeSeriesSearchResults()">✕ Cerrar</button>
           </div>
-          ${results.map(s => `
-            <div class="movie-live-result-item" onclick="window.app.addSeriesFromSearch(${s.tmdbId})">
+          ${results.map((s, idx) => `
+            <div class="movie-live-result-item" onclick="window.app.addSeriesFromSearch(${idx})">
               <img src="${s.poster || 'assets/icon.png'}" class="movie-live-poster" alt="${window.Utils.sanitizeHTML(s.title)}" loading="lazy">
               <div class="movie-live-meta">
                 <div class="movie-live-title" title="${window.Utils.sanitizeHTML(s.title)}">${window.Utils.sanitizeHTML(s.title)}</div>
                 <div class="movie-live-sub">${s.year || 'TMDb'} • ⭐ ${s.voteAverage || '8.5'}</div>
               </div>
-              <button type="button" class="btn-movie-add-inline" onclick="event.stopPropagation(); window.app.addSeriesFromSearch(${s.tmdbId})">
+              <button type="button" class="btn-movie-add-inline" onclick="event.stopPropagation(); window.app.addSeriesFromSearch(${idx})">
                 + Añadir
               </button>
             </div>
@@ -4456,7 +4488,7 @@ class LumaApp {
             <span>⚠️ Error</span>
             <button type="button" class="btn-close-movie-results" onclick="window.app.closeSeriesSearchResults()">✕ Cerrar</button>
           </div>
-          <div style="padding: 1rem; color: #EF4444; font-size: 0.85rem; text-align: center;">Error al consultar TMDb.</div>
+          <div style="padding: 1rem; color: #EF4444; font-size: 0.85rem; text-align: center;">Error al consultar TMDb. Intenta de nuevo.</div>
         `;
       }
     };
@@ -4493,78 +4525,100 @@ class LumaApp {
 
         debounceTimer = setTimeout(() => {
           executeSearch(query);
-        }, 350);
+        }, 300);
+      });
+
+      if (clearBtn && !clearBtn.dataset.bound) {
+        clearBtn.dataset.bound = 'true';
+        clearBtn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          searchInput.value = '';
+          clearBtn.style.display = 'none';
+          resultsBox.style.display = 'none';
+          searchInput.focus();
+        };
+      }
+
+      document.addEventListener('click', (e) => {
+        if (!resultsBox || resultsBox.style.display === 'none') return;
+        const wrap = searchInput.closest('.movie-search-section-wrap');
+        if (wrap && !wrap.contains(e.target) && (!submitBtn || !submitBtn.contains(e.target))) {
+          resultsBox.style.display = 'none';
+        }
       });
     }
-
-    if (clearBtn && !clearBtn.dataset.bound) {
-      clearBtn.dataset.bound = 'true';
-      clearBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        searchInput.value = '';
-        clearBtn.style.display = 'none';
-        resultsBox.style.display = 'none';
-        searchInput.focus();
-      };
-    }
-
-    document.addEventListener('click', (e) => {
-      const wrap = searchInput.closest('.movie-search-section-wrap');
-      if (wrap && !wrap.contains(e.target)) {
-        resultsBox.style.display = 'none';
-      }
-    });
   }
 
-  async addSeriesFromSearch(tmdbId) {
+  async addSeriesFromSearch(identifier) {
+    let fallback = null;
+    let tmdbId = identifier;
+
+    if (typeof identifier === 'number' && this.cachedSeriesSearch && this.cachedSeriesSearch[identifier]) {
+      fallback = this.cachedSeriesSearch[identifier];
+      tmdbId = fallback.tmdbId || fallback.id;
+    } else if (this.cachedSeriesSearch) {
+      fallback = this.cachedSeriesSearch.find(s => s.tmdbId == identifier || s.id == identifier);
+    }
+
     window.Utils.showToast('Importando serie desde TMDb...', 'info');
-    const details = await window.MediaService.getSeriesDetails(tmdbId);
-    if (!details) {
+
+    let details = null;
+    try {
+      if (window.MediaService && typeof window.MediaService.getSeriesDetails === 'function') {
+        details = await window.MediaService.getSeriesDetails(tmdbId);
+      }
+    } catch (e) {
+      console.warn('Error obteniendo detalles:', e);
+    }
+
+    if (!details && !fallback) {
       window.Utils.showToast('No se pudieron obtener los detalles de la serie', 'error');
       return;
     }
 
+    const dataObj = details || fallback;
     const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
 
-    // Construir nueva serie colaborativa
+    // Construir nueva serie colaborativa con resiliencia garantizada
     const newSeries = {
       id: 'ser_' + Date.now().toString(36),
-      tmdbId: details.tmdbId,
-      title: details.title,
-      originalTitle: details.originalTitle,
-      years: details.years,
-      genres: details.genres,
-      platform: details.platform,
-      poster: details.poster,
-      backdrop: details.backdrop,
-      overview: details.overview,
-      synopsis: details.overview,
+      tmdbId: dataObj.tmdbId || tmdbId,
+      title: dataObj.title || dataObj.name || 'Serie',
+      originalTitle: dataObj.originalTitle || dataObj.original_name || dataObj.title,
+      years: dataObj.years || dataObj.year || '2024',
+      genres: dataObj.genres || 'Drama, Serie',
+      platform: dataObj.platform || 'Streaming',
+      poster: dataObj.poster || 'assets/icon.png',
+      backdrop: dataObj.backdrop || '',
+      overview: dataObj.overview || 'Añadida desde TMDb.',
+      synopsis: dataObj.overview || 'Añadida desde TMDb.',
       proposedBy: {
         id: user.id,
         name: user.name,
         avatar: user.avatar || 'assets/icon.png',
         date: 'Hoy'
       },
-      groupRating: parseFloat(details.voteAverage) || 9.0,
+      groupRating: parseFloat(dataObj.voteAverage) || 9.0,
       status: 'Por ver',
       priority: 5,
-      numberOfSeasons: details.numberOfSeasons,
-      totalEpisodes: details.totalEpisodes,
-      seasons: details.seasons || [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: 10 }],
+      numberOfSeasons: dataObj.numberOfSeasons || 1,
+      totalEpisodes: dataObj.totalEpisodes || 10,
+      seasons: dataObj.seasons || [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: 10 }],
       seasonEpisodes: {},
       userProgress: {},
       comments: []
     };
 
-    // Precargar temporada 1 si es posible
-    try {
-      const s1Eps = await window.MediaService.getSeasonEpisodes(details.tmdbId, 1);
-      if (s1Eps && s1Eps.length > 0) {
-        newSeries.seasonEpisodes[1] = s1Eps;
+    if (details && details.tmdbId) {
+      try {
+        const s1Eps = await window.MediaService.getSeasonEpisodes(details.tmdbId, 1);
+        if (s1Eps && s1Eps.length > 0) {
+          newSeries.seasonEpisodes[1] = s1Eps;
+        }
+      } catch (e) {
+        console.warn('No se pudieron precargar episodios T1:', e);
       }
-    } catch (e) {
-      console.warn('No se pudieron precargar episodios T1:', e);
     }
 
     this.storage.saveSeries(newSeries);
@@ -5665,7 +5719,15 @@ class LumaApp {
     const poster = p.poster || 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg';
     const sharedBy = p.sharedBy || msg.senderName || 'Kevin';
     const timeFormatted = msg.timeDisplay || '10:00 a. m.';
-    const encodedPayload = encodeURIComponent(JSON.stringify({ title, poster }));
+    const encodedPayload = encodeURIComponent(JSON.stringify({ 
+      title, 
+      poster, 
+      tmdbId: p.tmdbId || p.id, 
+      id: p.id || ('ser_' + (p.tmdbId || Date.now())),
+      seasons,
+      platform,
+      rating: p.rating || '8.5'
+    }));
 
     return `
       <div class="luma-card-movie">
@@ -6333,12 +6395,12 @@ class LumaApp {
     return newSeries;
   }
 
-  async startMarathonFromChat(title, poster) {
+  async startMarathonFromChat(title, poster, tmdbId) {
     if (!title) return;
     const seriesList = this.storage.getSeries() || [];
-    let series = seriesList.find(s => s.title && s.title.toLowerCase() === title.toLowerCase());
+    let series = seriesList.find(s => (s.title && s.title.toLowerCase() === title.toLowerCase()) || (tmdbId && s.tmdbId == tmdbId));
     if (!series) {
-      series = await this.addSeriesFromChat(title, poster);
+      series = await this.addSeriesFromChat(title, poster, tmdbId);
     }
     if (series) {
       const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
@@ -6373,7 +6435,7 @@ class LumaApp {
         btnEl.disabled = true;
         btnEl.textContent = 'Guardando...';
       }
-      await this.addSeriesFromChat(data.title, data.poster, data.tmdbId);
+      await this.addSeriesFromChat(data.title, data.poster, data.tmdbId || data.id);
       if (btnEl) {
         btnEl.textContent = '✓ En biblioteca';
         btnEl.style.color = '#10B981';
@@ -6391,7 +6453,7 @@ class LumaApp {
     try {
       const data = JSON.parse(decodeURIComponent(encodedPayload));
       if (!data) return;
-      await this.startMarathonFromChat(data.title, data.poster, data.tmdbId);
+      await this.startMarathonFromChat(data.title, data.poster, data.tmdbId || data.id);
     } catch (e) {
       console.error(e);
     }
@@ -6826,6 +6888,13 @@ class LumaApp {
           this._searchTmdbSeriesForChat(q);
         }, 300);
       };
+      searchInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          clearTimeout(debounceTimer);
+          this._searchTmdbSeriesForChat(searchInput.value.trim());
+        }
+      };
     }
   }
 
@@ -7032,58 +7101,127 @@ class LumaApp {
     window.Utils.showToast(`¡"${title}" compartida en el chat! 🎬`, 'success');
   }
 
-  _searchTmdbSeriesForChat(query) {
+  async _searchTmdbSeriesForChat(query) {
     const container = document.getElementById('chat-series-search-results');
     if (!container) return;
-    if (!query) {
+    const q = (query || '').trim();
+    if (!q) {
       container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Escribe el título de una serie para buscar en TMDb...</div>';
       return;
     }
 
     container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">Buscando series en TMDb... ⏳</div>';
 
-    if (window.CONFIG && window.CONFIG.tmdb && window.CONFIG.tmdb.apiKey) {
-      fetch(`https://api.themoviedb.org/3/search/tv?api_key=${window.CONFIG.tmdb.apiKey}&language=es-ES&query=${encodeURIComponent(query)}&page=1`)
-        .then(r => r.json())
-        .then(data => {
-          const results = data.results || [];
-          if (results.length === 0) {
-            container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">No se encontraron series en TMDb.</div>';
-            return;
-          }
-          container.innerHTML = results.slice(0, 8).map(s => {
-            const poster = s.poster_path ? `https://image.tmdb.org/t/p/w200${s.poster_path}` : 'assets/icon.png';
-            const year = (s.first_air_date || '').split('-')[0] || '2024';
-            const rating = s.vote_average ? s.vote_average.toFixed(1) : '8.0';
-            const payload = encodeURIComponent(JSON.stringify({
-              id: s.id,
-              name: s.name || '',
-              poster: poster,
-              year: year,
-              rating: rating
-            }));
-            return `
-              <div class="chat-modal-preview-card" style="margin-bottom: 6px;">
-                <img src="${poster}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(s.name)}" onerror="this.src='assets/icon.png'">
-                <div class="chat-modal-preview-details">
-                  <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(s.name)}</strong>
-                  <span class="chat-modal-preview-sub">${year} · ⭐ ${rating} · TMDb</span>
-                </div>
-                <div style="display: flex; gap: 6px; align-items: center;">
-                  <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareTmdbSeriesFromSearch('${payload}')">
-                    Compartir 📺
-                  </button>
-                  <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addSeriesFromSearchPayload('${payload}', this)">
-                    + A Series
-                  </button>
-                </div>
-              </div>
-            `;
-          }).join('');
-        })
-        .catch(() => {
-          container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-error); font-size: 0.82rem;">Error al buscar series.</div>';
-        });
+    try {
+      let results = [];
+      if (window.MediaService && typeof window.MediaService.searchSeries === 'function') {
+        results = await window.MediaService.searchSeries(q);
+      } else {
+        const keys = ['e9e9d8da18ae29fc430845952232787c', '8265bd1679663a7ea12ac168da84d2e8', 'cfe422613b250f702980a3bbf9e90716'];
+        for (const k of keys) {
+          try {
+            const res = await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${k}&language=es-ES&query=${encodeURIComponent(q)}&page=1`);
+            if (res.ok) {
+              const data = await res.json();
+              results = (data.results || []).slice(0, 10).map(s => ({
+                tmdbId: s.id,
+                id: 'tmdb_series_' + s.id,
+                title: s.name,
+                poster: s.poster_path ? `https://image.tmdb.org/t/p/w200${s.poster_path}` : 'assets/icon.png',
+                year: (s.first_air_date || '').split('-')[0] || '2024',
+                voteAverage: s.vote_average ? s.vote_average.toFixed(1) : '8.0'
+              }));
+              break;
+            }
+          } catch (_) {}
+        }
+      }
+
+      if (!results || results.length === 0) {
+        container.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: var(--color-text-secondary); font-size: 0.82rem;">No se encontraron series para "<strong>${window.Utils.sanitizeHTML(q)}</strong>".</div>`;
+        return;
+      }
+
+      this.cachedChatSeriesSearch = results;
+
+      container.innerHTML = results.map((s, idx) => {
+        const payload = encodeURIComponent(JSON.stringify({
+          id: s.tmdbId || s.id,
+          name: s.title || '',
+          title: s.title || '',
+          poster: s.poster || 'assets/icon.png',
+          year: s.year || '2024',
+          rating: s.voteAverage || '8.0'
+        }));
+
+        return `
+          <div class="chat-modal-preview-card" style="margin-bottom: 6px;">
+            <img src="${s.poster || 'assets/icon.png'}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(s.title)}" onerror="this.src='assets/icon.png'">
+            <div class="chat-modal-preview-details">
+              <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(s.title)}</strong>
+              <span class="chat-modal-preview-sub">${s.year || 'TMDb'} · ⭐ ${s.voteAverage || '8.0'} · TMDb</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareChatSeriesFromSearchIndex(${idx})">
+                Compartir 📺
+              </button>
+              <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addChatSeriesToGroupFromSearchIndex(${idx}, this)">
+                + A Series
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      console.warn('Error al buscar series para chat:', err);
+      container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-error); font-size: 0.82rem;">Error al buscar series en TMDb. Intenta de nuevo.</div>';
+    }
+  }
+
+  shareChatSeriesFromSearchIndex(index) {
+    if (!this.cachedChatSeriesSearch || !this.cachedChatSeriesSearch[index]) return;
+    const s = this.cachedChatSeriesSearch[index];
+    this.storage.sendMessage({
+      type: 'share_series',
+      text: `📺 ${s.title}`,
+      payload: {
+        id: 'ser_' + (s.tmdbId || s.id),
+        tmdbId: s.tmdbId || s.id,
+        title: s.title,
+        poster: s.poster || 'assets/icon.png',
+        seasons: 'Temporadas disponibles',
+        platform: 'Streaming',
+        rating: s.voteAverage || '8.5',
+        sharedBy: this.storage.getUserProfile()?.name || 'Tú'
+      }
+    });
+    this.closeModal('modal-chat-series-share');
+    this.renderChat();
+    this.scrollToChatBottom(true);
+    window.Utils.showToast(`¡"${s.title}" compartida en el chat! 📺`, 'success');
+  }
+
+  async addChatSeriesToGroupFromSearchIndex(index, btnEl) {
+    if (!this.cachedChatSeriesSearch || !this.cachedChatSeriesSearch[index]) return;
+    const s = this.cachedChatSeriesSearch[index];
+    if (btnEl) {
+      btnEl.disabled = true;
+      btnEl.textContent = 'Guardando...';
+    }
+    await this.addSeriesFromChat(s.title, s.poster, s.tmdbId || s.id);
+    if (btnEl) {
+      btnEl.textContent = '✓ Añadida';
+      btnEl.style.color = '#10B981';
+      btnEl.style.borderColor = '#A7F3D0';
+    }
+    const selectSeries = document.getElementById('select-chat-group-series');
+    if (selectSeries) {
+      const seriesList = this.storage.getSeries() || [];
+      selectSeries.disabled = false;
+      selectSeries.innerHTML = seriesList.map(item => `
+        <option value="${item.id}">${window.Utils.sanitizeHTML(item.title)}</option>
+      `).join('');
+      selectSeries.value = String(seriesList[0]?.id || '');
     }
   }
 
@@ -7093,11 +7231,11 @@ class LumaApp {
       if (!data) return;
       this.storage.sendMessage({
         type: 'share_series',
-        text: `📺 ${data.name}`,
+        text: `📺 ${data.name || data.title}`,
         payload: {
           id: data.id ? 'ser_' + data.id : null,
           tmdbId: data.id || null,
-          title: data.name,
+          title: data.name || data.title,
           poster: data.poster,
           seasons: 'Temporadas disponibles',
           platform: 'Streaming',
@@ -7108,7 +7246,7 @@ class LumaApp {
       this.closeModal('modal-chat-series-share');
       this.renderChat();
       this.scrollToChatBottom(true);
-      window.Utils.showToast(`¡"${data.name}" compartida en el chat! 📺`, 'success');
+      window.Utils.showToast(`¡"${data.name || data.title}" compartida en el chat! 📺`, 'success');
     } catch (e) {
       console.error(e);
     }
@@ -7122,7 +7260,7 @@ class LumaApp {
         btnEl.disabled = true;
         btnEl.textContent = 'Guardando...';
       }
-      await this.addSeriesFromChat(data.name, data.poster, data.id);
+      await this.addSeriesFromChat(data.name || data.title, data.poster, data.id || data.tmdbId);
       if (btnEl) {
         btnEl.textContent = '✓ Añadida';
         btnEl.style.color = '#10B981';
@@ -7135,6 +7273,7 @@ class LumaApp {
         selectSeries.innerHTML = seriesList.map(s => `
           <option value="${s.id}">${window.Utils.sanitizeHTML(s.title)}</option>
         `).join('');
+        selectSeries.value = String(seriesList[0]?.id || '');
       }
     } catch (e) {
       console.error(e);
