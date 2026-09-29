@@ -5611,6 +5611,14 @@ class LumaApp {
     const sharedBy = p.sharedBy || msg.senderName || 'Andrés';
     const timeFormatted = msg.timeDisplay || '9:28 a. m.';
 
+    const moviePayload = encodeURIComponent(JSON.stringify({
+      id: p.id || null,
+      title: title,
+      poster: poster,
+      year: year,
+      rating: rating
+    }));
+
     return `
       <div class="luma-card-movie">
         <div class="movie-card-split">
@@ -5629,13 +5637,13 @@ class LumaApp {
               <span>⭐</span> ${rating}
             </div>
             <div class="movie-card-actions-row">
-              <button type="button" class="btn-card-add-cinema" onclick="window.app.addMovieFromChat('${window.Utils.sanitizeHTML(title)}', '${poster}', ${year}, ${rating})">
+              <button type="button" class="btn-card-add-cinema" onclick="window.app.addMovieFromChatCard('${moviePayload}', this)">
                 <span>+</span> Añadir a Cine
               </button>
-              <button type="button" class="btn-card-outline-action" onclick="window.app.convertMovieToPoll('${window.Utils.sanitizeHTML(title)}')">
+              <button type="button" class="btn-card-outline-action" onclick="window.app.convertMovieToPollFromCard('${moviePayload}')">
                 <span>📊</span> Crear encuesta
               </button>
-              <button type="button" class="btn-card-outline-action" onclick="window.app.openMovieDetailsModal('${p.id || 'mov_interstellar'}', '${window.Utils.sanitizeHTML(title)}')">
+              <button type="button" class="btn-card-outline-action" onclick="window.app.openMovieDetailsModalFromCard('${moviePayload}')">
                 Ver detalles ↗
               </button>
             </div>
@@ -5657,6 +5665,7 @@ class LumaApp {
     const poster = p.poster || 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg';
     const sharedBy = p.sharedBy || msg.senderName || 'Kevin';
     const timeFormatted = msg.timeDisplay || '10:00 a. m.';
+    const encodedPayload = encodeURIComponent(JSON.stringify({ title, poster }));
 
     return `
       <div class="luma-card-movie">
@@ -5670,10 +5679,10 @@ class LumaApp {
             <h4 class="movie-card-title-text">${window.Utils.sanitizeHTML(title)}</h4>
             <span class="movie-card-genres-meta">${seasons} · Maratón grupal</span>
             <div class="movie-card-actions-row" style="margin-top: 14px;">
-              <button type="button" class="btn-card-add-cinema" onclick="window.app.addSeriesFromChat('${window.Utils.sanitizeHTML(title)}', '${poster}')">
+              <button type="button" class="btn-card-add-cinema" onclick="window.app.addSeriesFromChatCard('${encodedPayload}', this)">
                 <span>+</span> Añadir a Series
               </button>
-              <button type="button" class="btn-card-outline-action" onclick="window.app.startMarathonFromChat('${window.Utils.sanitizeHTML(title)}')">
+              <button type="button" class="btn-card-outline-action" onclick="window.app.startMarathonFromChatCard('${encodedPayload}')">
                 <span>🍿</span> Empezar maratón
               </button>
             </div>
@@ -6270,35 +6279,164 @@ class LumaApp {
     location.hash = '#cine';
   }
 
-  addSeriesFromChat(title, poster) {
-    const groupData = this.storage.getGroupData();
-    if (!groupData.series) groupData.series = [];
-
-    const exists = groupData.series.some(s => s.title.toLowerCase() === title.toLowerCase());
+  async addSeriesFromChat(title, poster, tmdbId) {
+    if (!title) return;
+    const seriesList = this.storage.getSeries() || [];
+    const exists = seriesList.find(s => (s.title && s.title.toLowerCase() === title.toLowerCase()) || (tmdbId && s.tmdbId == tmdbId));
     if (exists) {
       window.Utils.showToast(`"${title}" ya está en Series 📺`, 'info');
-      return;
+      return exists;
     }
 
-    groupData.series.unshift({
-      id: 'ser_' + window.Utils.generateId(),
-      title: title,
-      poster: poster,
-      seasons: [
-        { seasonNumber: 1, name: 'Temporada 1', episodes: [{ episodeNumber: 1, name: 'Capítulo 1', synopsis: 'Inicio de la serie' }] }
-      ],
-      watchedEpisodes: [],
-      createdAt: new Date().toISOString()
-    });
+    let details = null;
+    if (tmdbId) {
+      try {
+        details = await window.MediaService.getSeriesDetails(tmdbId);
+      } catch (e) {
+        console.warn('Could not fetch series details:', e);
+      }
+    }
 
-    this.storage.saveGroupData(null, groupData);
-    this.storage.notify('series');
+    const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+    const newSeries = {
+      id: 'ser_' + Date.now().toString(36),
+      tmdbId: tmdbId || (details && details.tmdbId) || null,
+      title: title,
+      originalTitle: (details && details.originalTitle) || title,
+      years: (details && details.years) || '2024',
+      genres: (details && details.genres) || 'Serie, Maratón',
+      platform: (details && details.platform) || 'Streaming',
+      poster: poster || (details && details.poster) || 'assets/icon.png',
+      backdrop: (details && details.backdrop) || '',
+      overview: (details && details.overview) || 'Añadida desde el chat.',
+      synopsis: (details && details.overview) || 'Añadida desde el chat.',
+      proposedBy: {
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar || 'assets/icon.png',
+        date: 'Hoy'
+      },
+      groupRating: (details && parseFloat(details.voteAverage)) || 9.0,
+      status: 'Por ver',
+      priority: 5,
+      numberOfSeasons: (details && details.numberOfSeasons) || 1,
+      totalEpisodes: (details && details.totalEpisodes) || 10,
+      seasons: (details && details.seasons) || [{ seasonNumber: 1, name: 'Temporada 1', episodeCount: 10 }],
+      seasonEpisodes: {},
+      userProgress: {},
+      comments: []
+    };
+
+    this.storage.saveSeries(newSeries);
+    this.renderSeries();
     window.Utils.showToast(`"${title}" guardada en biblioteca de Series 📺`, 'success');
+    return newSeries;
   }
 
-  startMarathonFromChat(title) {
-    window.Utils.showToast(`🍿 ¡Maratón de "${title}" activada para todo el grupo!`, 'success');
-    location.hash = '#series';
+  async startMarathonFromChat(title, poster) {
+    if (!title) return;
+    const seriesList = this.storage.getSeries() || [];
+    let series = seriesList.find(s => s.title && s.title.toLowerCase() === title.toLowerCase());
+    if (!series) {
+      series = await this.addSeriesFromChat(title, poster);
+    }
+    if (series) {
+      const user = this.storage.getUserProfile() || { id: 'usr_me', name: 'Kevin' };
+      series.status = 'Viendo';
+      if (!series.userProgress) series.userProgress = {};
+      series.userProgress[user.id] = {
+        userId: user.id,
+        userName: user.name,
+        userAvatar: user.avatar || 'assets/icon.png',
+        currentSeason: 1,
+        currentEpisode: 1,
+        watchedEpisodes: {},
+        lastWatched: { season: 1, episode: 1 },
+        status: 'Viendo',
+        updatedAt: new Date().toISOString()
+      };
+      this.storage.saveSeries(series);
+      window.Utils.showToast(`🍿 ¡Maratón de "${series.title}" activada!`, 'success');
+      location.hash = '#series';
+      this.renderSeries();
+      this.openSeriesDetail(series.id);
+    } else {
+      location.hash = '#series';
+    }
+  }
+
+  async addSeriesFromChatCard(encodedPayload, btnEl) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = 'Guardando...';
+      }
+      await this.addSeriesFromChat(data.title, data.poster, data.tmdbId);
+      if (btnEl) {
+        btnEl.textContent = '✓ En biblioteca';
+        btnEl.style.color = '#10B981';
+      }
+    } catch (e) {
+      console.error(e);
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.textContent = '+ Añadir a Series';
+      }
+    }
+  }
+
+  async startMarathonFromChatCard(encodedPayload) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      await this.startMarathonFromChat(data.title, data.poster, data.tmdbId);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  addMovieFromChatCard(encodedPayload, btnEl) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = 'Guardando...';
+      }
+      this.addMovieFromChat(data.title, data.poster, data.year, data.rating, data.id);
+      if (btnEl) {
+        btnEl.textContent = '✓ En Cartelera';
+        btnEl.style.color = '#10B981';
+      }
+    } catch (e) {
+      console.error(e);
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.textContent = '+ Añadir a Cine';
+      }
+    }
+  }
+
+  convertMovieToPollFromCard(encodedPayload) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      this.convertMovieToPoll(data.title);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  openMovieDetailsModalFromCard(encodedPayload) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      this.openMovieDetailsModal(data.id || 'mov_interstellar', data.title);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   openGoalProgressModal(messageId, title, currentPct) {
@@ -6511,12 +6649,11 @@ class LumaApp {
     const searchInput = document.getElementById('input-chat-search-movie-tmdb');
     const resultsContainer = document.getElementById('chat-movie-search-results');
 
-    const movies = this.storage.getMovies() || [];
-
     const updateSelectedMoviePreview = () => {
       if (!previewCard) return;
+      const currentMovies = this.storage.getMovies() || [];
       const selectedId = selectMovie ? selectMovie.value : null;
-      const movie = movies.find(m => m.id === selectedId);
+      const movie = currentMovies.find(m => String(m.id) === String(selectedId));
       if (!movie) {
         previewCard.innerHTML = `
           <div style="padding: 1.5rem; text-align: center; background: var(--color-bg-surface-elevated); border: 1px dashed var(--color-border); border-radius: var(--radius-md);">
@@ -6543,26 +6680,36 @@ class LumaApp {
       `;
     };
 
-    if (selectMovie) {
-      if (movies.length === 0) {
-        selectMovie.innerHTML = '<option value="">(No hay películas en cartelera aún)</option>';
-        selectMovie.disabled = true;
-      } else {
-        selectMovie.disabled = false;
-        selectMovie.innerHTML = movies.map(m => `
-          <option value="${m.id}">${window.Utils.sanitizeHTML(m.title)} (${m.year || 'Cartelera'})</option>
-        `).join('');
+    const refreshMovieSelect = () => {
+      const currentMovies = this.storage.getMovies() || [];
+      if (selectMovie) {
+        if (currentMovies.length === 0) {
+          selectMovie.innerHTML = '<option value="">(No hay películas en cartelera aún)</option>';
+          selectMovie.disabled = true;
+        } else {
+          selectMovie.disabled = false;
+          selectMovie.innerHTML = currentMovies.map(m => `
+            <option value="${m.id}">${window.Utils.sanitizeHTML(m.title)} (${m.year || 'Cartelera'})</option>
+          `).join('');
+          if (!selectMovie.value || !currentMovies.some(m => String(m.id) === String(selectMovie.value))) {
+            selectMovie.value = String(currentMovies[0].id);
+          }
+        }
+        selectMovie.onchange = updateSelectedMoviePreview;
       }
-      selectMovie.onchange = updateSelectedMoviePreview;
-    }
-    updateSelectedMoviePreview();
+      updateSelectedMoviePreview();
+    };
+
+    refreshMovieSelect();
 
     const setMode = (isGroup) => {
       if (tabGroup) tabGroup.classList.toggle('active', isGroup);
       if (tabSearch) tabSearch.classList.toggle('active', !isGroup);
       if (viewGroup) viewGroup.style.display = isGroup ? 'block' : 'none';
       if (viewSearch) viewSearch.style.display = !isGroup ? 'block' : 'none';
-      if (!isGroup && searchInput) {
+      if (isGroup) {
+        refreshMovieSelect();
+      } else if (searchInput) {
         searchInput.focus();
       }
     };
@@ -6581,7 +6728,7 @@ class LumaApp {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           this._searchTmdbMoviesForChat(q);
-        }, 320);
+        }, 300);
       };
     }
   }
@@ -6597,12 +6744,11 @@ class LumaApp {
     const searchInput = document.getElementById('input-chat-search-series-tmdb');
     const resultsContainer = document.getElementById('chat-series-search-results');
 
-    const seriesList = this.storage.getSeries() || [];
-
     const updateSelectedSeriesPreview = () => {
       if (!previewCard) return;
+      const currentList = this.storage.getSeries() || [];
       const selectedId = selectSeries ? selectSeries.value : null;
-      const s = seriesList.find(item => item.id === selectedId);
+      const s = currentList.find(item => String(item.id) === String(selectedId));
       if (!s) {
         previewCard.innerHTML = `
           <div style="padding: 1.5rem; text-align: center; background: var(--color-bg-surface-elevated); border: 1px dashed var(--color-border); border-radius: var(--radius-md);">
@@ -6613,13 +6759,15 @@ class LumaApp {
         return;
       }
       const poster = s.poster || 'assets/icon.png';
+      const seasonsText = Array.isArray(s.seasons) ? `${s.seasons.length} Temp.` : (s.seasons || (s.numberOfSeasons ? `${s.numberOfSeasons} Temp.` : '1 Temp.'));
+      const statusText = s.status || 'En emisión';
       previewCard.innerHTML = `
         <div class="chat-modal-preview-card">
           <img src="${poster}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(s.title)}" onerror="this.src='assets/icon.png'">
           <div class="chat-modal-preview-details">
             <span class="chat-modal-preview-badge">📺 Serie del Grupo</span>
             <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(s.title)}</strong>
-            <span class="chat-modal-preview-sub">${s.seasons || 'Temporadas'} · ${s.status || 'En emisión'}</span>
+            <span class="chat-modal-preview-sub">${seasonsText} · ${statusText}</span>
           </div>
           <button type="button" class="btn-primary" style="padding: 8px 14px; font-size: 0.82rem; white-space: nowrap;" onclick="window.app.shareItemToChat('series', '${s.id}')">
             Compartir 📺
@@ -6628,26 +6776,36 @@ class LumaApp {
       `;
     };
 
-    if (selectSeries) {
-      if (seriesList.length === 0) {
-        selectSeries.innerHTML = '<option value="">(No hay series en la lista aún)</option>';
-        selectSeries.disabled = true;
-      } else {
-        selectSeries.disabled = false;
-        selectSeries.innerHTML = seriesList.map(s => `
-          <option value="${s.id}">${window.Utils.sanitizeHTML(s.title)}</option>
-        `).join('');
+    const refreshSeriesSelect = () => {
+      const currentList = this.storage.getSeries() || [];
+      if (selectSeries) {
+        if (currentList.length === 0) {
+          selectSeries.innerHTML = '<option value="">(No hay series en la lista aún)</option>';
+          selectSeries.disabled = true;
+        } else {
+          selectSeries.disabled = false;
+          selectSeries.innerHTML = currentList.map(s => `
+            <option value="${s.id}">${window.Utils.sanitizeHTML(s.title)}</option>
+          `).join('');
+          if (!selectSeries.value || !currentList.some(item => String(item.id) === String(selectSeries.value))) {
+            selectSeries.value = String(currentList[0].id);
+          }
+        }
+        selectSeries.onchange = updateSelectedSeriesPreview;
       }
-      selectSeries.onchange = updateSelectedSeriesPreview;
-    }
-    updateSelectedSeriesPreview();
+      updateSelectedSeriesPreview();
+    };
+
+    refreshSeriesSelect();
 
     const setMode = (isGroup) => {
       if (tabGroup) tabGroup.classList.toggle('active', isGroup);
       if (tabSearch) tabSearch.classList.toggle('active', !isGroup);
       if (viewGroup) viewGroup.style.display = isGroup ? 'block' : 'none';
       if (viewSearch) viewSearch.style.display = !isGroup ? 'block' : 'none';
-      if (!isGroup && searchInput) {
+      if (isGroup) {
+        refreshSeriesSelect();
+      } else if (searchInput) {
         searchInput.focus();
       }
     };
@@ -6666,7 +6824,7 @@ class LumaApp {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           this._searchTmdbSeriesForChat(q);
-        }, 320);
+        }, 300);
       };
     }
   }
@@ -6765,7 +6923,13 @@ class LumaApp {
             const poster = m.poster_path ? `https://image.tmdb.org/t/p/w200${m.poster_path}` : 'assets/icon.png';
             const year = (m.release_date || '').split('-')[0] || '2024';
             const rating = m.vote_average ? m.vote_average.toFixed(1) : '8.0';
-            const safeTitle = window.Utils.sanitizeHTML(m.title).replace(/'/g, "\\'");
+            const payload = encodeURIComponent(JSON.stringify({
+              id: m.id,
+              title: m.title || '',
+              poster: poster,
+              year: year,
+              rating: rating
+            }));
             return `
               <div class="chat-modal-preview-card" style="margin-bottom: 6px;">
                 <img src="${poster}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(m.title)}" onerror="this.src='assets/icon.png'">
@@ -6774,10 +6938,10 @@ class LumaApp {
                   <span class="chat-modal-preview-sub">${year} · ⭐ ${rating}</span>
                 </div>
                 <div style="display: flex; gap: 6px; align-items: center;">
-                  <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareTmdbMovieToChat('${safeTitle}', '${poster}', '${year}', ${rating})">
+                  <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareTmdbMovieFromSearch('${payload}')">
                     Compartir 🎬
                   </button>
-                  <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addMovieFromChat('${safeTitle}', '${poster}', '${year}', ${rating})">
+                  <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addMovieFromSearchPayload('${payload}', this)">
                     + Cartelera
                   </button>
                 </div>
@@ -6788,6 +6952,64 @@ class LumaApp {
         .catch(() => {
           container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-error); font-size: 0.82rem;">Error al buscar en TMDb.</div>';
         });
+    }
+  }
+
+  shareTmdbMovieFromSearch(encodedPayload) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      this.storage.sendMessage({
+        type: 'share_movie',
+        text: `🎬 ${data.title}`,
+        payload: {
+          id: data.id ? 'mov_' + data.id : null,
+          tmdbId: data.id || null,
+          title: data.title,
+          poster: data.poster,
+          year: data.year,
+          rating: data.rating,
+          genres: 'Cine compartido',
+          sharedBy: this.storage.getUserProfile()?.name || 'Tú'
+        }
+      });
+      this.closeModal('modal-chat-movie-share');
+      this.renderChat();
+      this.scrollToChatBottom(true);
+      window.Utils.showToast(`¡"${data.title}" compartida en el chat! 🎬`, 'success');
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async addMovieFromSearchPayload(encodedPayload, btnEl) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = 'Guardando...';
+      }
+      this.addMovieFromChat(data.title, data.poster, data.year, data.rating, data.id);
+      if (btnEl) {
+        btnEl.textContent = '✓ En Cartelera';
+        btnEl.style.color = '#10B981';
+        btnEl.style.borderColor = '#A7F3D0';
+      }
+      const selectMovie = document.getElementById('select-chat-group-movie');
+      if (selectMovie) {
+        const movies = this.storage.getMovies() || [];
+        selectMovie.disabled = false;
+        selectMovie.innerHTML = movies.map(m => `
+          <option value="${m.id}">${window.Utils.sanitizeHTML(m.title)} (${m.year || 'Cartelera'})</option>
+        `).join('');
+      }
+    } catch (e) {
+      console.error(e);
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.textContent = '+ Cartelera';
+      }
     }
   }
 
@@ -6831,19 +7053,27 @@ class LumaApp {
           }
           container.innerHTML = results.slice(0, 8).map(s => {
             const poster = s.poster_path ? `https://image.tmdb.org/t/p/w200${s.poster_path}` : 'assets/icon.png';
-            const safeName = window.Utils.sanitizeHTML(s.name).replace(/'/g, "\\'");
+            const year = (s.first_air_date || '').split('-')[0] || '2024';
+            const rating = s.vote_average ? s.vote_average.toFixed(1) : '8.0';
+            const payload = encodeURIComponent(JSON.stringify({
+              id: s.id,
+              name: s.name || '',
+              poster: poster,
+              year: year,
+              rating: rating
+            }));
             return `
               <div class="chat-modal-preview-card" style="margin-bottom: 6px;">
                 <img src="${poster}" class="chat-modal-preview-poster" alt="${window.Utils.sanitizeHTML(s.name)}" onerror="this.src='assets/icon.png'">
                 <div class="chat-modal-preview-details">
                   <strong class="chat-modal-preview-title">${window.Utils.sanitizeHTML(s.name)}</strong>
-                  <span class="chat-modal-preview-sub">📺 Serie · TMDb</span>
+                  <span class="chat-modal-preview-sub">${year} · ⭐ ${rating} · TMDb</span>
                 </div>
                 <div style="display: flex; gap: 6px; align-items: center;">
-                  <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareTmdbSeriesToChat('${safeName}', '${poster}')">
+                  <button type="button" class="btn-primary" style="padding: 6px 10px; font-size: 0.76rem; white-space: nowrap;" onclick="window.app.shareTmdbSeriesFromSearch('${payload}')">
                     Compartir 📺
                   </button>
-                  <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addSeriesFromChat('${safeName}', '${poster}')">
+                  <button type="button" class="btn-secondary" style="padding: 6px 8px; font-size: 0.72rem; color: #6D5CFF; border-color: #DDD6FE;" onclick="window.app.addSeriesFromSearchPayload('${payload}', this)">
                     + A Series
                   </button>
                 </div>
@@ -6854,6 +7084,64 @@ class LumaApp {
         .catch(() => {
           container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-error); font-size: 0.82rem;">Error al buscar series.</div>';
         });
+    }
+  }
+
+  shareTmdbSeriesFromSearch(encodedPayload) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      this.storage.sendMessage({
+        type: 'share_series',
+        text: `📺 ${data.name}`,
+        payload: {
+          id: data.id ? 'ser_' + data.id : null,
+          tmdbId: data.id || null,
+          title: data.name,
+          poster: data.poster,
+          seasons: 'Temporadas disponibles',
+          platform: 'Streaming',
+          rating: data.rating || '8.5',
+          sharedBy: this.storage.getUserProfile()?.name || 'Tú'
+        }
+      });
+      this.closeModal('modal-chat-series-share');
+      this.renderChat();
+      this.scrollToChatBottom(true);
+      window.Utils.showToast(`¡"${data.name}" compartida en el chat! 📺`, 'success');
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async addSeriesFromSearchPayload(encodedPayload, btnEl) {
+    try {
+      const data = JSON.parse(decodeURIComponent(encodedPayload));
+      if (!data) return;
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.textContent = 'Guardando...';
+      }
+      await this.addSeriesFromChat(data.name, data.poster, data.id);
+      if (btnEl) {
+        btnEl.textContent = '✓ Añadida';
+        btnEl.style.color = '#10B981';
+        btnEl.style.borderColor = '#A7F3D0';
+      }
+      const selectSeries = document.getElementById('select-chat-group-series');
+      if (selectSeries) {
+        const seriesList = this.storage.getSeries() || [];
+        selectSeries.disabled = false;
+        selectSeries.innerHTML = seriesList.map(s => `
+          <option value="${s.id}">${window.Utils.sanitizeHTML(s.title)}</option>
+        `).join('');
+      }
+    } catch (e) {
+      console.error(e);
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.textContent = '+ A Series';
+      }
     }
   }
 
@@ -6974,13 +7262,14 @@ class LumaApp {
 
   shareItemToChat(type, itemId) {
     if (type === 'movie') {
-      const movie = (this.storage.getMovies() || []).find(m => m.id === itemId);
+      const movie = (this.storage.getMovies() || []).find(m => String(m.id) === String(itemId));
       if (!movie) return;
       this.storage.sendMessage({
         text: `¡Miren esta película para ver juntos! 🎬`,
         type: 'share_movie',
         payload: {
           id: movie.id,
+          tmdbId: movie.tmdbId || null,
           title: movie.title,
           poster: movie.poster,
           year: movie.year,
@@ -6990,23 +7279,24 @@ class LumaApp {
         }
       });
     } else if (type === 'series') {
-      const series = (this.storage.getSeries() || []).find(s => s.id === itemId);
+      const series = (this.storage.getSeries() || []).find(s => String(s.id) === String(itemId));
       if (!series) return;
       this.storage.sendMessage({
         text: `¡Plan de maratón en serie! 📺`,
         type: 'share_series',
         payload: {
           id: series.id,
+          tmdbId: series.tmdbId || null,
           title: series.title,
           poster: series.poster,
-          seasons: (series.seasons && (typeof series.seasons === 'string' ? series.seasons : `${series.seasons.length} Temp.`)) || '1 Temp.',
+          seasons: (series.seasons && (typeof series.seasons === 'string' ? series.seasons : `${series.seasons.length} Temp.`)) || (series.numberOfSeasons ? `${series.numberOfSeasons} Temp.` : '1 Temp.'),
           platform: series.platform || 'Streaming',
-          rating: series.rating || '8.5',
+          rating: series.rating || series.groupRating || '8.5',
           sharedBy: this.storage.getUserProfile()?.name || 'Tú'
         }
       });
     } else if (type === 'song') {
-      const song = (this.storage.getSongs() || []).find(s => s.id === itemId);
+      const song = (this.storage.getSongs() || []).find(s => String(s.id) === String(itemId));
       if (!song) return;
       this.storage.sendMessage({
         text: `Escuchen esta canción para la playlist 🎵`,

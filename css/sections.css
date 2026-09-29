@@ -10252,8 +10252,9 @@
 
 .ecosystem-sheet-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(62px, 1fr));
+  gap: 10px;
+  justify-content: center;
 }
 
 .eco-grid-item {
