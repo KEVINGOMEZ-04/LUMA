@@ -8,7 +8,7 @@ const manifestPath = path.join(process.cwd(), 'android/app/src/main/AndroidManif
 if (fs.existsSync(manifestPath)) {
   let manifest = fs.readFileSync(manifestPath, 'utf8');
   const permissions = `
-    <!-- PERMISOS NATIVOS PARA ATRIA -->
+    <!-- PERMISOS NATIVOS PARA LUMA -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
@@ -40,9 +40,18 @@ if (fs.existsSync(manifestPath)) {
 }
 
 // 2. Personalizar MainActivity.java para solicitar permisos y habilitar WebRTC / getUserMedia manteniendo el selector de archivos nativo
-const mainActivityPath = path.join(process.cwd(), 'android/app/src/main/java/com/kevinwendy/atria/MainActivity.java');
+const capConfigPath = path.join(process.cwd(), 'capacitor.config.json');
+let appId = 'com.kevin.luma';
+if (fs.existsSync(capConfigPath)) {
+  try {
+    const capConfig = JSON.parse(fs.readFileSync(capConfigPath, 'utf8'));
+    if (capConfig.appId) appId = capConfig.appId;
+  } catch (_) {}
+}
+const packageRelPath = appId.replace(/\./g, '/');
+const mainActivityPath = path.join(process.cwd(), `android/app/src/main/java/${packageRelPath}/MainActivity.java`);
 if (fs.existsSync(mainActivityPath)) {
-  const javaContent = `package com.kevinwendy.atria;
+  const javaContent = `package ${appId};
 
 import android.Manifest;
 import android.content.pm.PackageManager;

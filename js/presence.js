@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LUMA 🌟 - Sistema de Presencia Multi-Usuario en Grupo
  */
 
@@ -20,9 +20,11 @@
 
     initFirebase() {
       try {
-        if (typeof firebase !== 'undefined' && window.CONFIG?.firebase?.enabled) {
+        const fbConfig = window.CONFIG?.firebase?.config;
+        const hasValidKey = fbConfig && fbConfig.apiKey && !fbConfig.apiKey.includes('YOUR_API_KEY_HERE');
+        if (typeof firebase !== 'undefined' && window.CONFIG?.firebase?.enabled && hasValidKey) {
           if (!firebase.apps.length) {
-            firebase.initializeApp(window.CONFIG.firebase.config);
+            firebase.initializeApp(fbConfig);
           }
           this.db = firebase.database();
         }
@@ -47,6 +49,13 @@
 
       if (!this.db) return;
 
+      if (this.presenceRef) {
+        this.presenceRef.off();
+      }
+      if (this.connectedRef) {
+        this.connectedRef.off();
+      }
+
       if (this.userPresenceRef) {
         this.userPresenceRef.set({
           online: false,
@@ -58,8 +67,8 @@
       const presencePath = `presence/${groupId}/${userProfile.id}`;
       this.userPresenceRef = this.db.ref(presencePath);
 
-      const connectedRef = this.db.ref('.info/connected');
-      connectedRef.on('value', (snap) => {
+      this.connectedRef = this.db.ref('.info/connected');
+      this.connectedRef.on('value', (snap) => {
         if (snap.val() === true) {
           this.isOnline = true;
           this.userPresenceRef.onDisconnect().set({

@@ -3474,7 +3474,7 @@ class LumaApp {
     const playBtn = document.getElementById('btn-player-play-toggle');
     const prevBtn = document.getElementById('btn-player-prev');
     const nextBtn = document.getElementById('btn-player-next');
-    const closeBtn = document.getElementById('btn-player-close');
+    const closeBtn = document.getElementById('btn-global-player-close');
     const progressFill = document.getElementById('player-progress-fill');
     const progressTrack = document.getElementById('player-progress-track');
     const currentTimeEl = document.getElementById('player-current-time');
@@ -3483,7 +3483,7 @@ class LumaApp {
     if (playBtn) playBtn.onclick = () => this.toggleGlobalPlay();
     if (prevBtn) prevBtn.onclick = () => this.playPrevTrack();
     if (nextBtn) nextBtn.onclick = () => this.playNextTrack();
-    if (closeBtn) closeBtn.onclick = () => this.closeGlobalPlayer();
+    if (closeBtn) closeBtn.onclick = (e) => this.closeGlobalPlayer(e);
 
     if (audioEl) {
       audioEl.addEventListener('timeupdate', () => {
@@ -4545,9 +4545,12 @@ class LumaApp {
     const members = (group && group.members) || [];
     const user = this.storage.getUserProfile();
 
-    document.getElementById('movie-id').value = movie.id;
-    document.getElementById('movie-title-input').value = movie.title || '';
-    document.getElementById('movie-year-input').value = movie.year || new Date().getFullYear();
+    const idEl = document.getElementById('movie-id');
+    const titleEl = document.getElementById('movie-title-input');
+    const yearEl = document.getElementById('movie-year-input');
+    if (idEl) idEl.value = movie.id;
+    if (titleEl) titleEl.value = movie.title || '';
+    if (yearEl) yearEl.value = movie.year || new Date().getFullYear();
 
     const propSelect = document.getElementById('movie-proposed-select');
     if (propSelect) {
@@ -4556,24 +4559,18 @@ class LumaApp {
       `).join('');
     }
 
-    document.getElementById('movie-priority-select').value = movie.priority || 5;
-    document.getElementById('movie-status-select').value = movie.status || 'Por ver';
-    document.getElementById('movie-rating-input').value = (movie.ratings && movie.ratings[user?.id]) || '';
-    document.getElementById('movie-comment-input').value = (movie.comments && movie.comments[user?.id]) || '';
+    const prioEl = document.getElementById('movie-priority-select');
+    const statusEl = document.getElementById('movie-status-select');
+    const ratingEl = document.getElementById('movie-rating-input');
+    const commentEl = document.getElementById('movie-comment-input');
+    if (prioEl) prioEl.value = movie.priority || 5;
+    if (statusEl) statusEl.value = movie.status || 'Por ver';
+    if (ratingEl) ratingEl.value = (movie.ratings && movie.ratings[user?.id]) || '';
+    if (commentEl) commentEl.value = (movie.comments && movie.comments[user?.id]) || '';
 
     this.openModal('modal-movie');
   }
 
-  deleteMovie(movieId) {
-    if (confirm('¿Eliminar esta película de la biblioteca?')) {
-      this.storage.deleteMovie(movieId);
-      window.Utils.showToast('Película eliminada', 'info');
-      this.renderMovies();
-      this.renderInicio();
-    }
-  }
-
-  // --- 5. RENDER SERIES ---
   // --- 5. RENDER SERIES (CENTRO DE MARATONES DEL GRUPO) ---
   renderSeries() {
     const feedContainer = document.getElementById('series-feed-list');
@@ -7990,8 +7987,10 @@ class LumaApp {
 
     document.getElementById('btn-new-movie')?.addEventListener('click', () => {
       document.getElementById('form-movie')?.reset();
-      document.getElementById('movie-id').value = '';
-      document.getElementById('movie-year-input').value = new Date().getFullYear();
+      const idEl = document.getElementById('movie-id');
+      const yearEl = document.getElementById('movie-year-input');
+      if (idEl) idEl.value = '';
+      if (yearEl) yearEl.value = new Date().getFullYear();
       
       const group = this.storage.getActiveGroup();
       const members = (group && group.members) || [];
@@ -8394,20 +8393,20 @@ class LumaApp {
       };
     }
 
-    // 6. Formulario Película (ATRIA FULL PARITY)
+    // 6. Formulario Película
     const formMovie = document.getElementById('form-movie');
     if (formMovie) {
       formMovie.onsubmit = (e) => {
         e.preventDefault();
-        const id = document.getElementById('movie-id').value;
-        const title = document.getElementById('movie-title-input').value.trim();
-        const year = parseInt(document.getElementById('movie-year-input').value, 10);
-        const proposedBy = document.getElementById('movie-proposed-select').value;
-        const priority = parseInt(document.getElementById('movie-priority-select').value, 10) || 5;
-        const status = document.getElementById('movie-status-select').value;
-        const ratingVal = document.getElementById('movie-rating-input').value;
-        const comment = document.getElementById('movie-comment-input').value.trim();
-        const poster = document.getElementById('movie-poster-url').value;
+        const id = document.getElementById('movie-id')?.value || '';
+        const title = document.getElementById('movie-title-input')?.value.trim() || '';
+        const year = parseInt(document.getElementById('movie-year-input')?.value, 10);
+        const proposedBy = document.getElementById('movie-proposed-select')?.value || '';
+        const priority = parseInt(document.getElementById('movie-priority-select')?.value, 10) || 5;
+        const status = document.getElementById('movie-status-select')?.value || 'Por ver';
+        const ratingVal = document.getElementById('movie-rating-input')?.value ?? '';
+        const comment = document.getElementById('movie-comment-input')?.value.trim() || '';
+        const poster = document.getElementById('movie-poster-url')?.value || '';
 
         const user = this.storage.getUserProfile();
         const movieObj = {
@@ -8474,7 +8473,7 @@ class LumaApp {
       };
     }
 
-    // 9. Formulario Objetivo / Sueño (ATRIA PARITY)
+    // 9. Formulario Objetivo / Sueño
     const formGoal = document.getElementById('form-goal');
     if (formGoal) {
       formGoal.onsubmit = (e) => {
@@ -8499,7 +8498,7 @@ class LumaApp {
       };
     }
 
-    // 10. Formulario Nota (ATRIA PARITY)
+    // 10. Formulario Nota
     const formNote = document.getElementById('form-note');
     if (formNote) {
       formNote.onsubmit = async (e) => {
@@ -8607,7 +8606,7 @@ class LumaApp {
                   <img src="${m.poster || 'assets/icon.png'}" style="width: 32px; height: 46px; border-radius: 4px; object-fit: cover;" alt="poster" />
                   <div style="min-width: 0;">
                     <div style="font-weight: 700; font-size: 0.85rem; color: var(--color-text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${window.Utils.sanitizeHTML(m.title)} (${m.year || ''})</div>
-                    <div style="font-size: 0.75rem; color: var(--color-gold);">⭐ TMDb ${m.tmdbRating || 'N/A'}</div>
+                    <div style="font-size: 0.75rem; color: var(--color-gold);">⭐ TMDb ${m.voteAverage || m.tmdbRating || 'N/A'}</div>
                   </div>
                 </div>
                 <button type="button" class="btn-primary" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;" onclick="window.app.addMovieFromSearch(${idx})">
@@ -8633,8 +8632,10 @@ class LumaApp {
         rating: 5,
         addedBy: this.storage.getUserProfile()?.name || 'Miembro'
       });
-      document.getElementById('music-search-results').innerHTML = '';
-      document.getElementById('music-search-input').value = '';
+      const resEl = document.getElementById('music-search-results');
+      const inpEl = document.getElementById('music-search-input');
+      if (resEl) resEl.innerHTML = '';
+      if (inpEl) inpEl.value = '';
       window.Utils.showToast(`"${s.title}" añadida a Música 🎵`, 'success');
       this.renderSongs();
       this.renderInicio();

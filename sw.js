@@ -1,4 +1,4 @@
-const CACHE_NAME = 'patico-wrapped-v2';
+const CACHE_NAME = 'luma-cache-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,9 +9,11 @@ const ASSETS_TO_CACHE = [
   './css/sections.css',
   './js/config.js',
   './js/utils.js',
-  './js/storage.js',
+  './js/gdrive.js',
   './js/media.js',
   './js/presence.js',
+  './js/series-data.js',
+  './js/storage.js',
   './js/animations.js',
   './js/app.js'
 ];

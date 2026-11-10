@@ -86,6 +86,14 @@ class LumaAudioManager {
     }
   }
 
+  togglePlay() {
+    if (this.isPlaying) {
+      this.pause();
+    } else {
+      this.resume();
+    }
+  }
+
   stop() {
     this.audio.pause();
     this.audio.currentTime = 0;
@@ -153,13 +161,10 @@ window.MediaService = {
 
   async fetchTmdbWithFallback(endpoint) {
     const tmdbConfig = window.CONFIG?.tmdb || {};
-    const keys = [
+    const keys = [...new Set([
       tmdbConfig.apiKey,
-      ...(tmdbConfig.backupKeys || []),
-      'e9e9d8da18ae29fc430845952232787c',
-      '8265bd1679663a7ea12ac168da84d2e8',
-      'cfe422613b250f702980a3bbf9e90716'
-    ].filter(Boolean);
+      ...(tmdbConfig.backupKeys || [])
+    ].filter(Boolean))];
 
     const baseUrl = tmdbConfig.baseUrl || 'https://api.themoviedb.org/3';
     const language = tmdbConfig.language || 'es-ES';

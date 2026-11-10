@@ -988,6 +988,11 @@
       return groups.find(g => g.id === activeId) || groups[0] || null;
     }
 
+    getMembers(groupId) {
+      const group = groupId ? this.getGroups().find(g => g.id === groupId) : this.getActiveGroup();
+      return (group && Array.isArray(group.members)) ? group.members : [];
+    }
+
     switchGroup(groupId) {
       this.setActiveGroupId(groupId);
       return this.getActiveGroup();
